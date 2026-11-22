@@ -117,8 +117,9 @@ The names come from a courtroom, because the method is about who has to
 prove what. Each description also carries the plain name (next issue, PR
 review), so the agent picks the right skill when you ask in your own words.
 `docket` is the exception: it starts only when you name it, because a long
-run should never start by itself. Its frontmatter tells the runtimes not
-to pick it on their own.
+run should never start by itself. `disable-model-invocation` in its
+frontmatter tells Claude Code and Pi not to pick it on their own, and
+`agents/openai.yaml` tells Codex.
 
 | Skill | Plain name | Use it when |
 | --- | --- | --- |
@@ -250,8 +251,9 @@ parser and the lesson names it.
 [lesson L14](https://github.com/daiyanze/breaker-delta/blob/develop/docs/lessons.md))
 
 **Three rounds, then the owner decided.** The pull request that rewrote
-this repository (#18) was reviewed three times. Each round asked for changes, each for a
-narrower problem: a script that did nothing when reached through a link;
+this repository ([#18](https://github.com/daiyanze/Onus/pull/18)) was
+reviewed three times. Each round asked for changes, each for a narrower
+problem: a script that did nothing when reached through a link;
 then two shapes the documents said were caught and were not; then one
 sentence. The recurring cause was the same claim restated in four places.
 The fix was structural: one statement of what the check covers, at the top
