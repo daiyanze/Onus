@@ -1,12 +1,12 @@
 {
-  "name": "surgical-dev",
+  "name": "onus",
   "version": "0.4.0",
   "private": true,
   "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks. Agent Skills for Claude Code, Pi and Codex.",
   "type": "module",
   "scripts": {
-    "test": "node --test skills/adopt/templates/scripts/*.test.mjs",
-    "check": "node skills/adopt/templates/scripts/check-agent-files.mjs --skills skills"
+    "test": "node --test skills/charter/templates/scripts/*.test.mjs",
+    "check": "node skills/charter/templates/scripts/check-agent-files.mjs --skills skills"
   },
   "devDependencies": {
     "yaml": "^2.0.0"

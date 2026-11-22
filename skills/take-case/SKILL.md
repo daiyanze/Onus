@@ -1,9 +1,9 @@
 ---
-name: next
-description: Find the next issue the agent may do (the project's agent label) and do it end to end - branch, implement, check, PR, CI, independent review. Use when the owner asks for the next issue or names an issue to do.
+name: take-case
+description: Next issue - find the next issue the agent may do (the project's agent label) and do it end to end - branch, implement, check, PR, CI, independent review. Use when the owner asks for the next issue or names an issue to do.
 ---
 
-# Next issue
+# Take a case: the next issue
 
 Pick the next issue the agent may do, and do it. Nothing starts work by
 itself: a label marks an issue as the agent's to do, and this skill is how a
@@ -68,7 +68,7 @@ candidates, then start. The owner can redirect you at any point.
 Follow `docs/development.md` from step 1 (Explore) to step 7 (Learn): branch
 from the base branch, implement, run the check command, push, open a PR with
 `Closes #n`, wait for CI, then start a separate agent with no context from
-this session and have it follow the `pr-review` skill on the PR. Never
+this session and have it follow the `cross-examine` skill on the PR. Never
 merge; the owner does.
 
 Stop and ask before building if the issue contradicts a recorded decision,

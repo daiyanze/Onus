@@ -36,14 +36,14 @@ something. Nobody measured missed defects.
 | Part | In Breaker Delta | In this repository's wording |
 | --- | --- | --- |
 | The loop, PR format, lessons rules (`docs/development.md`) | Used on the pull requests above | Reworded to remove project names. Not run since rewording |
-| `pr-review` (named `review` there) | Used 29 times on 23 pull requests | Generalized, and run three times on this repository's pull request #18. All three rounds asked for changes, each for a narrower problem; the last was one sentence in a comment. No round approved, so by the method's own rule the merge was the owner's decision. The places where each round found the skill hard to follow were fixed in that pull request |
-| `pr-review`: a line per acceptance criterion | Not in use | New here. Used in the three rounds on #18 |
-| `pr-review`: a verdict covers one commit; later commits need a re-review unless they only fix its notes | Practised without being written down: 20 of the 23 pull requests were merged at a later commit than the reviewed one | New wording. On #18 each round reviewed the commits after the last verdict; the exception for note fixes was not exercised |
-| `pr-review`: the exact posting command, and reading the comment back | Not in use; four reviews were lost without it | New here. Used in rounds 2 and 3 on #18; the read-back caught an altered link once |
-| `next` | Written and available; how often it was invoked was not counted | Dependency and milestone rules simplified. Not run since |
-| `long-run` | Written, **never run**. It already parks an issue after three review rounds | Same, plus parking after three failed fixes of the same check. **Never run** |
-| `adopt` | Done by hand, over several pull requests | New skill. Steps 1 to 5 were dry-run in two scratch repositories by the reviewer of #18; seven unclear steps were fixed. **Never run on a real repository** |
-| `make-verify-skill` | One verify skill built by hand (`verify-local`) and exercised in CI | New skill. **Never run** |
+| `cross-examine` (named `review` there, `pr-review` in this repository at first) | Used 29 times on 23 pull requests | Generalized, and run three times on this repository's pull request #18. All three rounds asked for changes, each for a narrower problem; the last was one sentence in a comment. No round approved, so by the method's own rule the merge was the owner's decision. The places where each round found the skill hard to follow were fixed in that pull request |
+| `cross-examine`: a line per acceptance criterion | Not in use | New here. Used in the three rounds on #18 |
+| `cross-examine`: a verdict covers one commit; later commits need a re-review unless they only fix its notes | Practised without being written down: 20 of the 23 pull requests were merged at a later commit than the reviewed one | New wording. On #18 each round reviewed the commits after the last verdict; the exception for note fixes was not exercised |
+| `cross-examine`: the exact posting command, and reading the comment back | Not in use; four reviews were lost without it | New here. Used in rounds 2 and 3 on #18; the read-back caught an altered link once |
+| `take-case` (named `next` there) | Written and available; how often it was invoked was not counted | Dependency and milestone rules simplified. Not run since |
+| `docket` (named `long-run` there) | Written, **never run**. It already parks an issue after three review rounds | Same, plus parking after three failed fixes of the same check. **Never run** |
+| `charter` (named `adopt` in this repository at first) | Done by hand, over several pull requests | New skill. Steps 1 to 5 were dry-run in two scratch repositories by the reviewer of #18; seven unclear steps were fixed. **Never run on a real repository** |
+| `evidence-kit` (named `make-verify-skill` in this repository at first) | One verify skill built by hand (`verify-local`) and exercised in CI | New skill. **Never run** |
 | `check-agent-files.mjs` | A Bun and TypeScript version runs in CI as a test | Ported to plain JavaScript for Bun and Node, with a command line. Its tests, including the command line, pass on both here |
 | Claude Code finds the rules and skills | Observed in sessions | Same layout |
 | Pi and Codex find the rules and skills | **Not confirmed on a machine.** Rests on their documentation and on reading Pi's source. Pi loads project skills only in a trusted project | Same |
@@ -56,13 +56,13 @@ something. Nobody measured missed defects.
 npm install          # one dev dependency: yaml
 npm test             # the check script's tests, on Node
 npm run check        # this repository's own skills pass the check
-bun test skills/adopt/templates/scripts/   # the same tests on Bun; they pass with and without yaml
+bun test skills/charter/templates/scripts/   # the same tests on Bun; they pass with and without yaml
 ```
 
 ## Limits
 
 - One project, one owner, one model family, three days.
-- Apart from `pr-review` on this repository's pull request #18, the
+- Apart from `cross-examine` on this repository's pull request #18, the
   generalized skills have not been run in any repository. The first adoption
   outside Breaker Delta is the next test, and its findings belong in this
   file.

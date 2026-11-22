@@ -4,7 +4,7 @@ The method every coding agent (Claude Code, Pi, Codex, ...) and every human
 follows in this repository. `AGENTS.md` holds the rules; this file holds the
 working method. Read `docs/lessons.md` before starting.
 
-The method is Surgical Dev (github.com/daiyanze/surgical-dev). Its sources:
+The method is Onus (github.com/daiyanze/Onus). Its sources:
 Karpathy's LLM coding guidelines
 (github.com/multica-ai/andrej-karpathy-skills), Anthropic's Claude Code best
 practices (explore, plan, code, commit; show evidence, not claims), and the
@@ -28,7 +28,7 @@ for each mistake and what enforces it).
 ## Picking work
 
 Issues labelled `<agent label>` are the agent's to do; any other issue needs
-the owner. A session finds the next one with the `next` skill, or takes the
+the owner. A session finds the next one with the `take-case` skill, or takes the
 one the owner names. Nothing starts work by itself: a label marks an issue,
 it does not trigger anything.
 
@@ -36,9 +36,9 @@ The procedures are skills. Each runtime calls a skill by name:
 
 | Runtime | Finds skills in | Call |
 | --- | --- | --- |
-| Claude Code | `.claude/skills` | `/next`, `/long-run <goal>` |
-| Pi | `.agents/skills` | `/skill:next` |
-| Codex | `.agents/skills` | `$next`, or pick it from `/skills` |
+| Claude Code | `.claude/skills` | `/take-case`, `/docket <goal>` |
+| Pi | `.agents/skills` | `/skill:take-case` |
+| Codex | `.agents/skills` | `$take-case`, or pick it from `/skills` |
 
 One of the two folders links to the other, so there is one copy of each
 skill. On a Windows clone without symlinks enabled the link is a plain file,
@@ -72,7 +72,7 @@ and the runtimes on the linked side find no skills.
    and what was not verified locally). Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
-   reviews the PR with the `pr-review` skill. The writer fixes blocking
+   reviews the PR with the `cross-examine` skill. The writer fixes blocking
    issues; a new agent re-reviews. After three rounds the owner decides. A
    verdict covers the commit it names: later commits need a re-review,
    unless they only fix that review's non-blocking notes or merge the base
@@ -117,8 +117,8 @@ The loop above is the default. Two kinds of work add steps.
 ## Long runs
 
 When the owner gives a goal rather than an issue ("finish milestone 2",
-"clear every open issue you can"), use the `long-run` skill. It loops the
-`next` skill until a stated exit condition holds, without stopping to ask
+"clear every open issue you can"), use the `docket` skill. It loops the
+`take-case` skill until a stated exit condition holds, without stopping to ask
 for "continue". The rules:
 
 - **Exit condition first.** Before the first issue, write it as something a
@@ -145,7 +145,7 @@ for "continue". The rules:
 
 ## Review checklist
 
-Project-specific questions the `pr-review` skill asks of every PR, on top
+Project-specific questions the `cross-examine` skill asks of every PR, on top
 of its own passes. One line each; number them so `AGENTS.md` can point at them.
 
 1. <Does the change alter <invariant 1>?>

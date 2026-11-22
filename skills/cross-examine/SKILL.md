@@ -1,9 +1,9 @@
 ---
-name: pr-review
-description: Review a pull request as an independent agent with no context from the session that wrote it - read the diff first, run it, find issues in three passes, prove each one, post one comment. Never for the session that wrote the PR.
+name: cross-examine
+description: PR review - review a pull request as an independent agent with no context from the session that wrote it - read the diff first, run it, find issues in three passes, prove each one, post one comment. Never for the session that wrote the PR.
 ---
 
-# PR review
+# Cross-examine: independent PR review
 
 You are reviewing a pull request. You did not write it and you have none of
 the writing session's context. That is the point: review what the change
