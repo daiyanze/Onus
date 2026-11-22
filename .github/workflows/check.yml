@@ -39,3 +39,17 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun test skills/charter/templates/scripts/
+
+  # The bench's harness and graders, with a fake runtime. Needs Bun for the
+  # fixture app and the full history for the older-ref test.
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+      - run: npm run test:bench

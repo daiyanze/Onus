@@ -284,11 +284,23 @@ exact posting command (`-F body=@file`) and reads the comment back.
 - It is not proven across models or teams. One project, one model family so
   far.
 
+## 📏 Bench
+
+[`bench/`](bench/README.md) runs the same small tasks with no method, with
+this version and with an earlier one, on Claude Code, Codex and Pi, and
+records each trial's result and token use. Three checkpoints, each testing
+one claim: a bug that only shows on the running server, a PR with two
+planted bugs, and the same PR without them. Graders check what happened, not
+what the agent reports. Results: [`bench/RESULTS.md`](bench/RESULTS.md).
+
+```sh
+node bench/run.mjs --runtime claude --arms none,onus,onus@<previous tag> --trials 3
+node bench/report.mjs
+```
+
 ## 🗺️ Next
 
-- A benchmark: one test project with planted checkpoints, run without the
-  method, with this version and with the previous one, on Claude Code, Pi
-  and Codex, with token use recorded. Results will live in this repository.
+- Bench results for this version on all three runtimes, then a tag.
 - `clerk` (watch a PR through CI and review), `recess` (pause safely),
   `precedent` (find repeated mistakes in the history and turn them into
   checks), `debrief` (propose skill edits after a run), `brief` (turn a goal
