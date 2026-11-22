@@ -1,264 +1,168 @@
-![Surgical Dev — Goal-driven autonomous development](docs/images/banner.png)
-
 # Surgical Dev
 
-**Give your coding agent a goal, agree on success, and let it work.**
+**A development method for coding agents: one writer, an independent
+reviewer that proves what it finds, and lessons that turn into checks.**
 
-Surgical Dev is a goal-driven workflow for coding agents. You describe the outcome;
-the agent discusses it, writes a full acceptance draft, plans Todo dependencies, then
-implements, checks, repairs, and reviews the work — without you coordinating roles or
-repeatedly saying "continue".
+It is plain Markdown: five Agent Skills, four document templates and one
+check script. There is no runtime and no controller to install. Claude Code,
+Pi and Codex read the same files.
 
-The methods are portable Agent Skills. The bundled **enforced automatic loop** is
-currently implemented for **Pi only**: discussion and confirmation, Todo execution,
-checks, independent review, repair, and bounded stopping.
-
-> **What you get on each host.** On **Pi** you get the full automatic loop described
-> below. On **Codex, Claude Code and other Agent Skills hosts** you get the written
-> methods (Skills, templates, a reviewer role) only: the host does not enforce
-> confirmation, budgets or review, and you start the independent review yourself.
-> See [Supported agent runtimes](#-supported-agent-runtimes).
+The method was extracted from a real project,
+[Breaker Delta](https://github.com/daiyanze/breaker-delta), where it took
+shape over a few days of real pull requests. What has and has not been tried
+is in [VALIDATION.md](VALIDATION.md); read that before you rely on a part of
+it.
 
 ## 🎯 The problem it solves
 
-Coding agents can generate a plausible change and still leave you with a fragile
-outcome:
+Coding agents write a plausible change quickly. The trouble starts after:
 
-- **Acceptance and scope stay unclear.** Assumptions are not written down, the task
-  quietly grows, and unrelated code changes along the way.
-- **You become the coordinator.** Planning, implementation, and review bounce between
-  contexts. You restore missing context and relay feedback between roles.
-- **"Done" is hard to verify.** The author reviews its own work, checks refer to an
-  earlier revision, or separately passing pieces fail when combined.
+- **"Done" is a claim, not evidence.** Tests pass, but nobody started the
+  app. The PR says "behaviour unchanged" and nothing shows it.
+- **The author reviews its own work.** The session that wrote the change
+  believes its own description of it.
+- **The same mistake comes back.** A correction lives in one chat and is
+  gone in the next. A rule in a document is read, agreed with, and broken.
+- **Each tool sees different rules.** Instructions written for one agent
+  runtime are invisible to the others.
 
-Surgical Dev makes the goal executable: a confirmed specification with scope,
-non-goals, constraints and acceptance criteria; one Worker that stays with the
-implementation; real project checks; and a fresh independent Verifier for the final
-candidate. Findings go back to the Worker that understands the change.
+## 🧭 The method on one page
 
-## 🚀 Quickstart with Pi
+1. **One rules file.** `AGENTS.md` holds what the project is, its commands,
+   its invariants, and a table of what enforces each rule. `CLAUDE.md` only
+   imports it, so every runtime reads the same text.
+2. **One loop for every change:** explore, plan, code, verify, PR, review,
+   learn. Four principles run through it: think before coding, simplicity
+   first, surgical changes, goal-driven execution.
+3. **Verify on the real thing.** The check command covers types, lint and
+   tests. Anything a user can see is also driven on the running app with the
+   project's own verify skill, which keeps the evidence.
+4. **An independent review on every PR.** A fresh agent with none of the
+   writer's context reads the diff before the description, runs the change,
+   looks for problems in three passes, and reports only what it can prove: a
+   bug needs a run that shows it, a rule violation needs the rule quoted. It
+   answers each acceptance criterion and posts one comment. Its verdict
+   covers one commit.
+5. **Lessons become checks.** A mistake caught by the owner, CI or the
+   review is written down with its scope. If a check can enforce it, the
+   check is added, at the highest level that works: architecture, then
+   types, then lint or CI, then a test, and written rules last. A mistake
+   that repeats moves its rule one level up.
+6. **Long runs with an exit condition.** Given a goal instead of an issue,
+   the agent states a condition a command can check, works issue after
+   issue, keeps a decision log, parks what needs the owner, and never
+   relaxes the condition to finish.
+7. **The owner merges.** The agent never merges, never pushes to the base
+   branch, and stops for anything that cannot be undone.
 
-Pi runs the complete guided loop. You still supply two things: a repository whose
-checks work, and one explicit confirmation of the full acceptance draft.
+## 🚀 Quickstart
 
-**Requirements:** Pi **1.5.2+**, Node **24** (verified; Pi declares 22.19+), Git, and Linux or macOS. Authenticate
-a model through Pi's normal setup first. Details: [Pi setup](adapters/pi/SETUP.md).
+You need a repository on GitHub, the `gh` CLI, and one of the supported
+agents.
 
-### 1. Install the full package
+**1. Put the skills in your repository.** Copy the five folders under
+[`skills/`](skills) into `.claude/skills/` in your project. The
+[skills CLI](https://github.com/vercel-labs/skills) can do it for several
+agents at once:
 
 ```bash
-pi install git:github.com/daiyanze/surgical-dev
+npx skills add daiyanze/surgical-dev
 ```
 
-This installs the six Skills and the `/surgical` extension. Installing the Skills
-alone does **not** activate the automatic loop.
-
-### 2. Configure the repository
-
-In the target repository, create `.surgical-dev.json` with checks that already exist
-in your project:
-
-```json
-{
-  "checks": [["npm", "test"]]
-}
-```
-
-The example is a template, not proof that `npm test` verifies your goal. Use the
-real commands your project needs. Commit this configuration and any prior work, then
-start a fresh Pi session at a clean Git repository root with an existing commit.
-
-### 3. State the goal and confirm the draft
+**2. Ask your agent to adopt the method.**
 
 ```text
-/surgical Add search pagination. Keep the API; cover empty results and the final page.
+/adopt
 ```
 
-The agent reads the project in a read-only discussion, asks only material questions,
-and shows the complete draft goal, scope, non-goals, constraints and acceptance
-criteria. No implementation starts yet.
+(`/skill:adopt` in Pi, `$adopt` in Codex.) The agent reads your repository,
+writes `AGENTS.md`, `CLAUDE.md`, `docs/development.md` and
+`docs/lessons.md`, links the skill folders so every runtime finds them, adds
+the check, and opens a pull request. It changes no product code.
 
-Review the full draft, then reply with the supported confirmation phrase:
+**3. Do the owner's part.** The pull request lists it: create the agent
+label, protect your default branch, decide the protected paths, strike any
+proposed invariant you do not want. Then merge.
+
+**4. Work.**
 
 ```text
-confirm and start
+/next                         the next issue the agent may do, end to end
+/next #42                     that issue
+/long-run finish milestone 2  issue after issue, until the exit condition holds
 ```
 
-Chinese: reply with `确认，开始` instead.
+Each issue ends as a pull request with green CI and an independent review
+comment. You read the comment and merge.
 
-The confirmation freezes the displayed revision and starts the loop automatically.
-`/surgical confirm` followed by `/surgical run` is the advanced equivalent. See
-[Pi setup](adapters/pi/SETUP.md) for the full command reference and recovery details.
+## 📚 What is in the box
+
+| Skill | Use it when | What you get |
+| --- | --- | --- |
+| [`adopt`](skills/adopt/SKILL.md) | Once per repository | The rules file, the method and lessons docs, wired skill folders, the check, as a PR |
+| [`next`](skills/next/SKILL.md) | You want the next issue done | A branch, a PR with evidence, CI, an independent review |
+| [`long-run`](skills/long-run/SKILL.md) | You have a goal, not an issue | PRs for every issue the agent can do, a decision log, a list of what waits on you |
+| [`review`](skills/review/SKILL.md) | A PR is open and CI is green | One comment: verdict, acceptance criteria, proven findings |
+| [`make-verify-skill`](skills/make-verify-skill/SKILL.md) | Once per project with something a user can see | A verify skill and harness for your app, exercised in CI |
+
+Templates, in [`skills/adopt/templates/`](skills/adopt/templates):
+`AGENTS.md`, `CLAUDE.md`, `docs/development.md` (the method as the agent
+reads it), `docs/lessons.md`, and `scripts/check-agent-files.mjs`.
 
 ## 🤖 Supported agent runtimes
 
-Any host that can read Agent Skills can load the methods. What differs is how much
-of the loop the host can enforce.
+| Runtime | Reads rules from | Finds skills in | Call a skill |
+| --- | --- | --- | --- |
+| Claude Code | `CLAUDE.md`, which imports `AGENTS.md` | `.claude/skills` | `/next` |
+| Pi | `AGENTS.md` | `.agents/skills` | `/skill:next` |
+| Codex | `AGENTS.md` | `.agents/skills` | `$next`, or `/skills` |
 
-| Runtime | What you get | Independent review |
-|---|---|---|
-| **Pi** | Package with the bundled guided automatic loop: requirement discussion, explicit confirmation, Todo dependency planning, sequential implementation, project checks, repairs, fresh final review and bounded stopping | The extension launches a fresh read-tool Pi reviewer on a Git snapshot |
-| **Codex** | Portable Skills and setup guidance; no bundled Surgical Dev loop controller | Separate reviewer subagent or session; see [Codex setup](adapters/codex/SETUP.md) |
-| **Claude Code** | Portable Skills and setup guidance; no bundled Surgical Dev loop controller | Fresh non-fork reviewer subagent or session; see [Claude Code setup](adapters/claude/SETUP.md) |
-| **Other Agent Skills hosts** | The methods can be loaded through the portable Skill format | Runtime integration is untested and host-dependent; provide an independent review context |
+One of the two skill folders is a link to the other, so there is one copy.
+`check-agent-files.mjs` fails your check command when the copies drift, when
+a file would outrank `AGENTS.md`, or when a skill's frontmatter would make a
+runtime drop it.
 
-Codex and Claude Code can automate parts of their own execution, but they do not
-ship Surgical Dev's controller. Their complete workflows have not been runtime-tested
-in this repository.
+## 🔍 Why the review works this way
 
-### Install and invoke
+- **No shared context.** The reviewer is a new agent. It gets the PR, not
+  the conversation that produced it.
+- **Diff first.** A description that says "no bugs" lowers a reviewer's
+  detection rate, so claims are read after the code and treated as things to
+  test.
+- **Proof or silence.** A finding nobody can reproduce costs the owner
+  attention and teaches everyone to skim the review. Unproven candidates are
+  dropped.
+- **One comment.** Verdict, acceptance criteria, blocking issues, at most
+  three nits.
 
-Run from your project directory:
+In Breaker Delta the first review asked for changes on 6 of 23 pull
+requests, each time with a reproduction or a quoted rule. Details and limits:
+[VALIDATION.md](VALIDATION.md).
 
-```bash
-# Codex: all six Skills
-npx skills add daiyanze/surgical-dev --skill '*' -a codex -y
+## 🛡️ What it does not do
 
-# Claude Code: all six Skills
-npx skills add daiyanze/surgical-dev --skill '*' -a claude-code -y
-```
+- It does not merge, deploy or delete. Those stay with the owner.
+- It does not enforce itself with code. The skills are instructions; what
+  holds them in place is your check command, your branch rules, and the fact
+  that only you merge. Say in `AGENTS.md` what your branch rules really
+  require.
+- It does not replace your tests or CI. It uses them.
+- It is not proven across models or teams. One project, one model family so
+  far.
 
-Then invoke the entry Skill in an interactive session:
+## Sources
 
-| Runtime | Invocation |
-|---|---|
-| Codex | `$surgical-dev Fix duplicate form submissions. Keep the API and add a regression test.` |
-| Claude Code | `/surgical-dev Fix duplicate form submissions. Keep the API and add a regression test.` |
-| Pi | `/skill:surgical-dev <goal>` loads the instructions only; `/surgical <goal>` uses the extension |
-
-For just the entry Skill, replace `--skill '*'` with `--skill surgical-dev`. The
-[skills CLI](https://github.com/vercel-labs/skills) requires Node 22.20+. See
-[installation options](docs/distribution.md) for scope and other hosts.
-
-## 🔄 What a run looks like
-
-A typical Pi run, simplified and illustrative rather than a transcript of a real
-session:
-
-1. You ask for search pagination and clarify which API must stay stable.
-2. The agent proposes a full draft with scope, non-goals and acceptance criteria.
-   You review it and reply `确认，开始`.
-3. The agent plans Todo dependencies and implements eligible Todos sequentially in
-   the same Worker session, running real project checks after each.
-4. A fresh independent Verifier reviews the final combined source snapshot and the
-   evidence for every original acceptance criterion.
-5. A failed project check returns to the same Worker and is repaired in the current
-   Todo before checks run again. Verifier findings produce an additive repair Todo,
-   followed by fresh checks and a renewed final review.
-6. The run ends at `PR_READY` when every required Todo, criterion, check and final
-   review passes — or stops visibly at `BLOCKED`, `ESCALATED`, `CANCELLED` or `TIMED_OUT`.
-
-![Surgical Dev workflow: a goal enters one Worker context; failed project checks and required review fixes return to that same Worker. Passing checks sends a fixed snapshot to a fresh Verifier. Passing independent review leads to PR Ready.](docs/images/workflow.png)
-
-The image illustrates the inner execution loop; the guided flow also includes
-discussion, an explicit confirmation boundary, and Todo planning before it runs.
-
-Use `/surgical status` for the current state and `/surgical stop` to interrupt an
-active run. Optional advanced control: `/surgical import requirements.md`, then
-`/surgical status`, `/surgical confirm`, and `/surgical run`. `/surgical` alone shows
-status and guidance; the [Pi setup guide](adapters/pi/SETUP.md) documents commands,
-state and safety behavior.
-
-## 👥 Roles
-
-Surgical Dev uses two roles. They are conceptual responsibilities, not agents you must
-create or coordinate.
-
-| Role | What it owns | When it participates |
-|---|---|---|
-| **Worker** | Requirement clarification, Todo planning, implementation, tests, fixes and evidence. The same Worker keeps its context across repairs. | For every task. See [Worker](roles/worker.md). |
-| **Verifier** | A fresh, independent context that inspects the actual code snapshot and evidence against each agreed acceptance criterion. Returns `PASS`, `CHANGES_REQUIRED` or `BLOCKED`, with findings sent to the same Worker. It never implements or expands scope. | After implementation, for independent acceptance. See [Verifier](roles/verifier.md). |
-
-Pi bundles one persistent Worker and a fresh reviewer process. Most tasks with a known
-goal need only these two roles.
-
-Product Scout, delivery (release, publish, deploy) and incident-response roles and
-their Skills are not part of this package. The earlier target design that included them
-is in git history at commit `5399c29`.
-
-## 🧠 Learning Loop — an advisory hint for repeated failures
-
-When the same check failure or blocking Verifier finding recurs in one repository,
-the Pi extension counts it locally. It is advisory context, not a gate.
-
-On the second occurrence, the Worker's repair feedback includes one line such as:
-
-```text
-LEARNING (advisory, not a gate): this failure has occurred 2 times in this repository: <label>.
-```
-
-- **What is counted:** a configured project check that fails, and a blocking finding
-  from the independent Verifier. Each is keyed by a normalized signature with a label and count.
-- **Where it lives:** `<git-common-dir>/surgical-dev/learning.json`, outside the source
-  snapshot. Secrets are redacted before storage.
-- **Scope:** records stay in that local repository. They do not sync between clones
-  and are never committed.
-- **What it does not do:** it does not change acceptance criteria, checks, scope or
-  budgets, and it cannot block `PR_READY`. There is no lesson lifecycle or promotion step.
-- **Inspect:** `/surgical lessons` lists the latest 20 records.
-- **Other hosts:** the manual [learn-from-failures](skills/learn-from-failures/SKILL.md)
-  Skill covers observations Pi does not see. Details: [learning reference](references/learning.md).
-
-## 📚 The six Skills
-
-Start with **`surgical-dev`** for everyday work. It selects the relevant methods, so
-you do not need to learn a sequence; request a specific Skill when you already know
-what you need.
-
-| Skill | When to use it | What it produces |
-|---|---|---|
-| [surgical-dev](skills/surgical-dev/SKILL.md) | Start from a development goal | Selects the relevant method, then guides the work |
-| [ship-feature](skills/ship-feature/SKILL.md) | Add a feature or change behavior | Acceptance criteria, focused implementation, tests, and a review handoff |
-| [fix-bug](skills/fix-bug/SKILL.md) | Investigate and repair a defect | Reproduction evidence, a supported cause, a minimal fix, and regression checks |
-| [engineering-discipline](skills/engineering-discipline/SKILL.md) | Keep any coding task focused | Explicit assumptions, simple design, scoped edits, and observable checks |
-| [verify-change](skills/verify-change/SKILL.md) | Independently assess a candidate | `PASS`, `CHANGES_REQUIRED`, or `BLOCKED`, with evidence and actionable findings |
-| [learn-from-failures](skills/learn-from-failures/SKILL.md) | Review recurring failures by hand | A manual signature review and a prevention note; no automatic gate |
-
-**Independent review needs a separate context.** Run `verify-change` in a fresh
-reviewer session or subagent that did not write the change. Supply the goal, fixed
-source snapshot, and check results using the [review request](templates/review-request.md);
-running it inside the author's conversation does not establish independent acceptance.
-
-## 🛡️ Boundaries and evidence
-
-`PR_READY` means the current candidate has been checked and independently reviewed
-for the confirmed specification. It is not perpetual approval: later edits need
-another run.
-
-- **No automatic delivery.** The loop does not commit, create a pull request, merge,
-  publish or deploy. Implementation stays in your checkout.
-- **One Worker, sequentially.** Parallel Workers are not run.
-- **Bounded recovery.** Interrupted runs are not resumed automatically; use
-  `/surgical stop` for immediate cancellation.
-- **Your checks, your project.** Runs your configured project checks; Worker can add
-  tests needed for the goal without replacing your test setup.
-- **Explicit limits.** Turns, check attempts, review/repair cycles, planning rounds
-  and time are bounded. Missing evidence or exhausted limits stop visibly.
-- **Usage may be unknown.** Token and cost totals are `UNKNOWN` when unreported;
-  measured subtotals are never presented as zero.
-
-Pi's lifecycle has been exercised with real Pi processes and a local deterministic
-model. That validates integration mechanics, not real-model workflow quality; a
-real-model evaluation remains open. Codex and Claude Code Skills rely on the host
-for a separate review context. See [validation](VALIDATION.md) for exact coverage.
-
-## Further reading
-
-- [Installation and distribution](docs/distribution.md) — package scope, Skills CLI options and host capability tiers.
-- [Pi setup](adapters/pi/SETUP.md), [Codex setup](adapters/codex/SETUP.md) and [Claude Code setup](adapters/claude/SETUP.md) — commands, configuration and reviewer setup.
-- [Detailed workflow](references/workflow.md) and [review request](templates/review-request.md) — handoffs, repair cycles, and reusable task/acceptance starting points.
-- [Contracts and limits](contracts/README.md) — the review-report schema and what it cannot check.
-- [Architecture](ARCHITECTURE.en.md) · [中文摘要](ARCHITECTURE.zh-CN.md) — implemented scope and not-yet-implemented work.
-- [Validation](VALIDATION.md) — completed checks and evidence limits; [remaining runtime work](docs/runtime-next.md) — parallel work, delivery and recovery.
-
-## References
-
-- [Anthropic: When to fold subagents into your main agent loop](https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop) — context continuity and selective delegation.
-- [Andrej Karpathy's coding observations](https://x.com/karpathy/status/2015883857489522876) and [community Skill implementation](https://github.com/multica-ai/andrej-karpathy-skills) — assumptions, simplicity, focused changes, and verifiable outcomes.
-- [Superpowers](https://github.com/obra/superpowers) — reusable engineering methods, review, and verification.
-- [Multica Best Practices](https://github.com/it235/multica-best-practices) — role boundaries, handoffs, and evidence.
-- [Beyond Division of Labor: How Roles Shape Feedback and Recovery in Multi-Agent Systems](https://arxiv.org/abs/2611.03931) — feedback access and recovery as design considerations; this is not a software productivity benchmark.
-- [Agent Skills specification](https://agentskills.io/specification) — the portable Skill format.
-
-See [sources and verification scope](references/sources.md) for source details,
-official host documentation, and the limits of the claims drawn from them.
+- [Andrej Karpathy's coding observations](https://x.com/karpathy/status/2015883857489522876)
+  and the [community Skill](https://github.com/multica-ai/andrej-karpathy-skills):
+  the four principles.
+- Anthropic's Claude Code best practices and its `code-review` plugin:
+  explore, plan, code, commit; evidence over claims; independent finders,
+  then validation of every finding.
+- [pstack](https://github.com/cursor/plugins/tree/main/pstack) by poteto:
+  verify on the real surface, playbooks per kind of work, exit conditions
+  for long runs, a rule for each mistake and what enforces it.
+- [Agent Skills specification](https://agentskills.io/specification): the
+  portable skill format.
+- The earlier Surgical Dev design (in this repository's history): a verdict
+  per acceptance criterion, a verdict bound to one commit, and budgets for
+  unattended work.

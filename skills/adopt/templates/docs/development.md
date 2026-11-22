@@ -1,0 +1,175 @@
+# How changes are made
+
+The method every coding agent (Claude Code, Pi, Codex, ...) and every human
+follows in this repository. `AGENTS.md` holds the rules; this file holds the
+working method. Read `docs/lessons.md` before starting.
+
+The method is Surgical Dev (github.com/daiyanze/surgical-dev). Its sources:
+Karpathy's LLM coding guidelines
+(github.com/multica-ai/andrej-karpathy-skills), Anthropic's Claude Code best
+practices (explore, plan, code, commit; show evidence, not claims), and the
+pstack plugin (github.com/cursor/plugins, `pstack`: verify on the real
+surface, playbooks per kind of work, exit conditions for long runs, a rule
+for each mistake and what enforces it).
+
+## Four principles
+
+1. **Think before coding.** State assumptions. If a request can be read two
+   ways, say so instead of picking one silently. If a simpler approach exists,
+   say so.
+2. **Simplicity first.** The minimum code that solves the issue. No features,
+   abstractions or configuration nobody asked for.
+3. **Surgical changes.** Every changed line traces to the issue. Do not
+   reformat, refactor or "improve" neighbouring code. Remove only what your
+   own change made unused; mention other dead code instead of deleting it.
+4. **Goal-driven execution.** Turn the issue's acceptance criteria into checks
+   (a test, a command, an observable result) and loop until they pass.
+
+## Picking work
+
+Issues labelled `<agent label>` are the agent's to do; any other issue needs
+the owner. A session finds the next one with the `next` skill, or takes the
+one the owner names. Nothing starts work by itself: a label marks an issue,
+it does not trigger anything.
+
+The procedures are skills. Each runtime calls a skill by name:
+
+| Runtime | Finds skills in | Call |
+| --- | --- | --- |
+| Claude Code | `.claude/skills` | `/next`, `/long-run <goal>` |
+| Pi | `.agents/skills` | `/skill:next` |
+| Codex | `.agents/skills` | `$next`, or pick it from `/skills` |
+
+One of the two folders links to the other, so there is one copy of each
+skill. On a Windows clone without symlinks enabled the link is a plain file,
+and the runtimes on the linked side find no skills.
+
+## The loop
+
+1. **Explore.** Read the issue, `AGENTS.md`, the recorded decisions it
+   touches, `docs/lessons.md` and the code involved. Before choosing an
+   approach, check what the design already decided.
+2. **Plan.** List assumptions and every point where the plan differs from a
+   recorded decision. A difference from a recorded decision is the owner's
+   call: ask before building on it. Everything else: decide, note it, carry
+   on. Before writing logic, name the data shape: the types, the table or
+   the state the change works on. If the change crosses a package or a
+   function boundary, sketch two shapes (types, signatures, which module
+   owns what) and pick the one where each piece of state has one owner and
+   callers need to know least. Put both in the PR when the choice was close.
+3. **Code.** Tests first for rules and pure logic. Keep each PR to one
+   concern.
+4. **Verify.** Run the check command. Report evidence: commands and their
+   results. If a check cannot run here (no network, no tool), say which one
+   and wait for CI before calling the work done. If the change is something
+   a user can see or do, also drive it on the real app with the project's
+   verify skill and cite what it recorded. A unit test shows a branch works;
+   it does not show the app does the thing.
+5. **PR.** Title: `type(scope): subject`. The description has these
+   headings, empty ones dropped: `## Why` (the goal, first), `## What
+   changed`, `## Scope` (protected paths, deviations from recorded
+   decisions, what is left out), `## Verification` (commands and results,
+   and what was not verified locally). Claims such as "behaviour unchanged"
+   come with the test that shows it.
+6. **Review.** A separate agent with no context from the writing session
+   reviews the PR with the `review` skill. The writer fixes blocking issues;
+   a new agent re-reviews. After three rounds the owner decides. A verdict
+   covers the commit it names: later commits need a re-review, unless they
+   only fix that review's non-blocking notes or merge the base branch, and
+   the writer lists them in a PR comment.
+7. **Learn.** When the owner corrects something, or CI or review catches a
+   mistake the writer made, add a lesson (below). Do it in the same PR when
+   the lesson is about that PR.
+
+## Kinds of work
+
+The loop above is the default. Two kinds of work add steps.
+
+**Bug fix.** Every changed line traces to evidence from a run.
+
+1. Reproduce it yourself on the surface where it happens: the verify skill
+   for the app, a failing test for a pure function. Ask the owner only after
+   driving it as far as it goes, and say why it cannot go further.
+2. Find the cause by elimination: list the candidate causes, then take the
+   check that rules out the most of them, until one is left. When state is
+   unclear, add logging and read it; do not guess.
+3. Fix it where it first went wrong. A guard that hides a state is a fix
+   only when that state is legitimate.
+4. The failing test or repro lands in its own commit before the fix, so the
+   history shows it failing and then passing. Paste both outputs in the PR.
+5. Nothing that "might help" ships. If evidence refutes a hypothesis, revert
+   what it motivated.
+
+**Feature.** The data shape is decided before any logic (step 2 above).
+
+1. Trace the code the feature touches, then name the shape. Prefer one
+   structure (a table, a typed model, a state machine) over conditionals
+   spread across files.
+2. Build in small units that each end in a passing check, and commit each
+   before starting the next.
+3. Verify on the real app for anything a user sees, and add or update that
+   feature's file in the verify skill.
+
+## Long runs
+
+When the owner gives a goal rather than an issue ("finish milestone 2",
+"clear every open issue you can"), use the `long-run` skill. It loops the
+`next` skill until a stated exit condition holds, without stopping to ask
+for "continue". The rules:
+
+- **Exit condition first.** Before the first issue, write it as something a
+  command can check, for example "every open `<agent label>` issue in
+  milestone 2 whose dependencies are closed has an open PR with green CI and
+  an approving review". Never relax it to finish. A plateau is a reason to
+  change approach, not to stop.
+- **Decision log.** One TSV file per run in `.runs/` (git-ignored): one row
+  per decision, with time, phase, decision, why, evidence (a PR, a SHA, a
+  file) and result. Not every action: forks taken, units finished with
+  their check result, reverts and blockers.
+- **Pick up, do not redo.** A new session continuing a run reads the log,
+  the open PRs and `git log` first, names the resume point, and checks
+  inherited claims against CI and the code rather than redoing the work.
+- **Budgets.** An issue is parked for the owner after three review rounds
+  without approval, or when the same check has failed three times after
+  three different fixes. Then the premise is probably wrong: write it down
+  with the evidence instead of trying a fourth fix.
+- **Stops.** The owner merges; a run never does. It parks an issue for the
+  owner on a conflict with a recorded decision, a secret or account it
+  needs, a protected path the issue does not mention, a spent budget, or
+  anything that cannot be undone (deploys, data deletion, messages to
+  people). It logs why and moves to the next issue.
+
+## Review checklist
+
+Project-specific questions the `review` skill asks of every PR, on top of
+its own passes. One line each; number them so `AGENTS.md` can point at them.
+
+1. <Does the change alter <invariant 1>?>
+2. <Does a schema change come with a migration?>
+3. <...>
+
+## Lessons
+
+`docs/lessons.md` is the project's memory of mistakes, so they are not
+repeated. Rules for it:
+
+- **When to add one:** the owner corrected the work; CI or review caught a
+  mistake the writer made; the same problem happened twice.
+- **What an entry holds:** what happened (with a PR link), a one-line rule,
+  its scope (which paths or kinds of work it applies to), and the evidence.
+  Scope keeps a lesson from being applied where it does not fit.
+- **Prefer a check, at the highest level that works.** In order:
+  architecture (one owner, one way, so the mistake cannot be written), types
+  or a structural check (it fails to compile or to pass the check command),
+  a lint or CI check whose message names the fix, a test, and only then
+  written rules. Keep the lesson as a pointer to its check. Prove a new
+  check fails on the mistake it is for.
+- **A repeat is a level-up.** If a mistake comes back while its lesson or
+  rule exists, the rule did not work: enforce it one level higher, and
+  update "What enforces each rule" in `AGENTS.md`. When that touches a
+  protected path the issue does not mention, open it as its own PR for the
+  owner instead of adding it to the issue's PR.
+- **Retire, do not delete.** A lesson that turns out wrong or obsolete is
+  marked retired with the reason, so the record stays honest.
+- **Keep it short.** Merge duplicates. If the file grows past what an agent
+  reads in a minute, promote the durable rules to `AGENTS.md` or a check.
