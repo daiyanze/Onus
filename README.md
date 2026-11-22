@@ -83,8 +83,8 @@ the check, and opens a pull request. It changes no product code; on a Node
 project it adds one dev dependency (`yaml`) for the check.
 
 **3. Do the owner's part.** The pull request lists it: create the agent
-label, protect your default branch, decide the protected paths, strike any
-proposed invariant you do not want. Then merge.
+label, protect your base branch (usually the default branch), decide the
+protected paths, strike any proposed invariant you do not want. Then merge.
 
 **4. Work.**
 
@@ -121,12 +121,13 @@ method as the agent reads it), `docs/lessons.md`, and
 | Codex | `AGENTS.md` | `.agents/skills` | `$next`, or `/skills` |
 
 One of the two skill folders is a link to the other, so there is one copy.
-`check-agent-files.mjs` fails your check command when a skill is in one
-folder only or exists as two copies, when a file would give one runtime its
-own rules, or when a skill's frontmatter would make a runtime drop it. Pi
-loads a project's `.agents/skills` only after you trust the project. The
-review skill is called `pr-review`, not `review`, because Claude Code ships
-its own `/review`.
+`check-agent-files.mjs` fails your check command when the runtimes would not
+see the same rules and skills; the comment at the top of
+[the script](skills/adopt/templates/scripts/check-agent-files.mjs) lists
+exactly what it fails on and what it does not see. Pi loads a project's
+`.agents/skills` only after you trust the project. The review skill is
+called `pr-review`, not `review`, because Claude Code ships its own
+`/review`.
 
 ## 🔍 Why the review works this way
 

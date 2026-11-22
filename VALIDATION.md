@@ -36,7 +36,7 @@ something. Nobody measured missed defects.
 | Part | In Breaker Delta | In this repository's wording |
 | --- | --- | --- |
 | The loop, PR format, lessons rules (`docs/development.md`) | Used on the pull requests above | Reworded to remove project names. Not run since rewording |
-| `pr-review` (named `review` there) | Used 29 times on 23 pull requests | Generalized, and run once: on this repository's pull request #18, where it asked for changes. Nine places where it was hard to follow were fixed in that pull request; the fixed text has not been run |
+| `pr-review` (named `review` there) | Used 29 times on 23 pull requests | Generalized, and run on this repository's pull request #18: two rounds asked for changes. The places where each round found the skill hard to follow were fixed in that pull request |
 | `pr-review`: a line per acceptance criterion | Not in use | New here. Run once (#18) |
 | `pr-review`: a verdict covers one commit; later commits need a re-review unless they only fix its notes | Practised without being written down: 20 of the 23 pull requests were merged at a later commit than the reviewed one | New wording. Never run as a rule |
 | `pr-review`: the exact posting command, and reading the comment back | Not in use; four reviews were lost without it | New here. Never run |
@@ -56,14 +56,15 @@ something. Nobody measured missed defects.
 npm install          # one dev dependency: yaml
 npm test             # the check script's tests, on Node
 npm run check        # this repository's own skills pass the check
-bun test skills/adopt/templates/scripts/   # the same tests on Bun, no dependency
+bun test skills/adopt/templates/scripts/   # the same tests on Bun; they pass with and without yaml
 ```
 
 ## Limits
 
 - One project, one owner, one model family, three days.
-- The generalized skills have not been run in any repository yet. The first
-  adoption outside Breaker Delta is the next test, and its findings belong
-  in this file.
+- Apart from `pr-review` on this repository's pull request #18, the
+  generalized skills have not been run in any repository. The first adoption
+  outside Breaker Delta is the next test, and its findings belong in this
+  file.
 - The skills are instructions. Nothing here stops an agent that ignores
   them; a project's check command, branch rules and the owner's merge do.

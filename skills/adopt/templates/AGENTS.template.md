@@ -47,12 +47,11 @@ Say what a check really covers, and list its gaps below the table.
 | <Invariant 2> | <...> | <...> |
 | Protected paths | <CODEOWNERS; what the branch rules really require; who merges> | check / owner |
 | Lessons with a check | each lesson's `Check:` line in `docs/lessons.md` | check |
-| Every runtime finds the rules and the skills | `scripts/check-agent-files.mjs` in the check command: `CLAUDE.md` is the import plus a short note, no `AGENTS.override.md`, no `.claude/CLAUDE.md` or `.claude/rules`, every skill in both skill folders as one copy, valid frontmatter | check |
+| Every runtime finds the rules and the skills | `scripts/check-agent-files.mjs` in the check command; the comment at its top lists what it fails on and what it does not see | check |
 
 Rows marked review only are the next to enforce. Known gaps in the checks:
-`check-agent-files.mjs` cannot tell a note from a rule in the lines after
-the import, and does not look at personal files (`CLAUDE.local.md`) or at
-`AGENTS.md` files in subfolders. <Add the gaps of your own checks.>
+<what each check above does not cover. Keep each list in one place, next to
+the check, and point to it from here.>
 
 ## Protected paths
 

@@ -12,7 +12,8 @@ next to this file.
 
 Needs: a Git repository on GitHub, the `gh` CLI, and a working tree with no
 changes other than the skill folders you were just given. Work on a branch
-from the default branch.
+from the base branch: the default branch, unless the project integrates
+work on another one.
 
 ## 1. Read the repository first
 
@@ -40,6 +41,11 @@ which paths need the owner's approval.
 If `AGENTS.md` or `CLAUDE.md` already has content, keep that content aside
 first: step 3 moves all of it into the new `AGENTS.md`.
 
+If `docs/development.md` or `docs/lessons.md` already exists, do not
+overwrite it. Stop and ask the owner: the skills expect the method at those
+two paths, so the existing file has to move or be merged, and that is the
+owner's call.
+
 ## 3. Fill `AGENTS.md`
 
 Replace every `<...>`. Delete a line or a section that does not apply to
@@ -55,8 +61,8 @@ placeholder behind.
 - **Other tools' instruction files.** Leave them as they are and list them
   in the PR, with any place where they contradict `AGENTS.md`, so the owner
   can decide.
-- **Base branch.** `<base branch>` is the default branch, unless the project
-  integrates work on another one; then use that and say so.
+- **Base branch.** `<base branch>` is the branch you started from in the
+  first step. If it is not the default branch, say so in the PR.
 - **Invariants.** Take them from what the project already states (README,
   decision records, comments that say "never" or "must"). If you propose one
   the project does not state, mark it "(proposed)" so the owner can strike
@@ -81,13 +87,17 @@ Claude Code reads `.claude/skills`; Pi and Codex read `.agents/skills`.
 Every skill in either folder must be in both, as one copy. The check in
 step 6 holds the project to that.
 
-- If a skills installer already put them in both places with links, keep
-  that.
-- Otherwise put the real folders in `.claude/skills` and make
-  `.agents/skills` a link to it: `mkdir -p .agents && ln -s ../.claude/skills
-  .agents/skills`.
-- If both folders already hold skills, link each skill that is missing on
-  one side from the other side, including skills the project had before.
+Look at what exists, then do the one that fits:
+
+- **Both folders exist.** Keep them. Link each skill that is missing on one
+  side from the other side, including skills the project had before. A
+  skills installer that already linked everything leaves nothing to do.
+- **Only `.claude/skills` exists.** Make `.agents/skills` a link to it:
+  `mkdir -p .agents && ln -s ../.claude/skills .agents/skills`. Do this only
+  when `.agents/skills` does not exist; inside an existing folder the same
+  command leaves a link that leads nowhere.
+- **Only `.agents/skills` exists.** The other way round:
+  `mkdir -p .claude && ln -s ../.agents/skills .claude/skills`.
 
 Do not name a skill `run`, `review` or `code-review`: Claude Code ships
 skills with those names.
@@ -95,11 +105,10 @@ skills with those names.
 ## 6. The check
 
 Copy `templates/scripts/check-agent-files.mjs` and its test to `scripts/`.
-It fails when `CLAUDE.md` holds more than the import and a short note, when
-a file exists that gives one runtime its own rules (`AGENTS.override.md`,
-`.claude/CLAUDE.md`, `.claude/rules`), when a skill is missing from one of
-the two folders or exists as two copies, and when a skill's frontmatter is
-not valid YAML with a matching `name` and a `description`.
+It fails the check command when the runtimes would not see the same rules
+and skills. The comment at the top of the script is the one place that
+lists exactly what it fails on and what it does not see; read it, and point
+to it instead of repeating it.
 
 - Add it to the project's check command, so CI runs it. If the project has
   no check command or no CI, add a script entry that runs it and say in the

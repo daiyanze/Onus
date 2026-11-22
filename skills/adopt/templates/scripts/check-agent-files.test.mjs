@@ -26,6 +26,7 @@ test("each kind of broken skill is reported, and sound ones are not", () => {
   symlinkSync(join(dir, "good"), join(dir, "linked"));
   symlinkSync(join(dir, "nowhere"), join(dir, "dangling"));
 
+  const tooLong = "a".repeat(65);
   const broken = {
     "no-file": null,
     "no-frontmatter": "# Just a heading\n",
@@ -44,6 +45,8 @@ test("each kind of broken skill is reported, and sound ones are not", () => {
     Bad_Name: `---\nname: Bad_Name\n${ok}\n---\n`,
     run: `---\nname: run\n${ok}\n---\n`,
     review: `---\nname: review\n${ok}\n---\n`,
+    "code-review": `---\nname: code-review\n${ok}\n---\n`,
+    [tooLong]: `---\nname: ${tooLong}\n${ok}\n---\n`,
   };
   for (const [name, content] of Object.entries(broken)) skill(dir, name, content);
 
@@ -58,6 +61,21 @@ test("each kind of broken skill is reported, and sound ones are not", () => {
   for (const name of Object.keys(broken)) {
     assert.equal(about(name).length, 1, `${name}: ${JSON.stringify(about(name))}`);
   }
+  // The repeated key is named by this check, whichever parser is in use.
+  assert.deepEqual(about("twice"), ['twice: frontmatter repeats the key "description"']);
+  for (const name of ["run", "review", "code-review"]) {
+    assert.match(about(name)[0], /already ships/);
+  }
+});
+
+test("the yaml package is the parser when it is installed", async (t) => {
+  const installed = await import("yaml").then(
+    () => true,
+    () => false,
+  );
+  if (!installed) return t.skip("the yaml package is not installed");
+  // Bun's own parser accepts a repeated quoted key; `yaml`, which Pi uses, refuses it.
+  assert.throws(() => parse('"a": 1\n"a": 2\n'));
 });
 
 function repository() {
@@ -82,6 +100,8 @@ test("the rules: one file, imported, nothing outranking it", () => {
   for (const more of [
     "A rule.\n".repeat(4),
     "@docs/more-rules.md\n",
+    "For Claude Code, also follow @docs/claude-only-rules.md when you edit.\n",
+    "# More rules\n",
     "- Always do this.\n",
     "1. Always do this.\n",
   ]) {
@@ -92,6 +112,9 @@ test("the rules: one file, imported, nothing outranking it", () => {
 
   mkdirSync(join(root, ".claude", "rules"), { recursive: true });
   assert.ok(!wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
+  mkdirSync(join(root, ".claude", "rules", "frontend"));
+  writeFileSync(join(root, ".claude", "rules", "frontend", "style.md"), "Use tabs.\n");
+  assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/rules")), "a nested rules file");
   writeFileSync(join(root, ".claude", "rules", "style.md"), "Use tabs.\n");
   assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
   writeFileSync(join(root, ".claude", "CLAUDE.md"), "Use tabs.\n");
@@ -133,6 +156,21 @@ test("the skills: every runtime finds the same ones", { skip: process.platform =
   assert.deepEqual(wiringProblems(c), [
     "next: .claude/skills and .agents/skills hold two copies; link one",
   ]);
+
+  // Skills for Pi and Codex only: Claude Code has no skills folder at all.
+  const e = repository();
+  skill(join(e, ".agents", "skills"), "next", text);
+  assert.ok(wiringProblems(e).includes(".claude/skills is missing or a broken link"));
+
+  // A link left behind that leads nowhere, in either folder.
+  const f = repository();
+  skill(join(f, ".claude", "skills"), "next", text);
+  skill(join(f, ".agents", "skills"), "next", text);
+  symlinkSync("../.claude/skills", join(f, ".agents", "skills", "skills"));
+  symlinkSync(join(f, "gone"), join(f, ".claude", "skills", "old"));
+  const found = wiringProblems(f);
+  assert.ok(found.includes(".agents/skills/skills: broken link"), JSON.stringify(found));
+  assert.ok(found.includes(".claude/skills/old: broken link"), JSON.stringify(found));
 
   // A link that points somewhere else.
   const d = repository();
@@ -194,7 +232,8 @@ test("as a program: reached through a link it still checks", { skip: process.pla
 });
 
 test("as a program: an option it does not know is an error, not a pass", () => {
-  for (const args of [["--root=x"], ["--rooot", "x"], ["--root"], ["--root", "a", "b"], ["x"]]) {
+  const malformed = [["--root=x"], ["--rooot", "x"], ["--root"], ["--root", ""], ["--root", "a", "b"], ["x"]];
+  for (const args of malformed) {
     assert.throws(() => options(args), /usage/, JSON.stringify(args));
   }
   const good = sound();

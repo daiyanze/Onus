@@ -10,13 +10,34 @@
  * Prints one line per problem and exits 1 if there is any; exits 2 when it
  * cannot run (unknown option, no YAML parser).
  *
- * The runtimes read skill frontmatter with a YAML parser, so this check does
- * too: the `yaml` package when it is installed (it is the parser Pi uses),
- * otherwise Bun's own. On Node, add it with `npm i -D yaml`.
+ * This comment is the one place that says what the check covers. Other
+ * documents point here instead of repeating it. Every line under "It fails
+ * when" has a test in check-agent-files.test.mjs.
  *
- * What it does not see: whether the lines after the import in CLAUDE.md are a
- * note or a rule (it only caps them), personal files such as CLAUDE.local.md,
- * and AGENTS.md files in subfolders.
+ * It fails when:
+ * - AGENTS.md is missing, or AGENTS.override.md exists;
+ * - CLAUDE.md does not start with the line `@AGENTS.md`, or holds after it
+ *   another import (`@path`, anywhere in a line), a heading, a list item, or
+ *   more than three lines of text;
+ * - .claude/CLAUDE.md exists, or .claude/rules holds a .md file at any depth;
+ * - .claude/skills or .agents/skills is missing, a skill is in only one of
+ *   them, a skill exists as two copies, or either folder holds a broken link
+ *   (not checked on Windows, where links may be plain files);
+ * - a skill has no SKILL.md; its frontmatter is missing, is not valid YAML,
+ *   is not a mapping, or repeats a plain top-level key; its name differs from
+ *   its folder, is not lowercase words joined by "-", is over 64 characters,
+ *   or is a name Claude Code already ships; its description is missing, empty
+ *   or over 1024 characters.
+ *
+ * It does not see:
+ * - whether the lines of text after the import in CLAUDE.md are a note or a
+ *   rule;
+ * - CLAUDE.md, CLAUDE.local.md and AGENTS.md files outside the repository
+ *   root (subfolders, the home folder);
+ * - frontmatter that Bun's parser accepts and the `yaml` package refuses,
+ *   when it runs on Bun without `yaml` (a repeated plain top-level key
+ *   excepted). `yaml` is the parser Pi uses and is preferred when installed;
+ *   on Node it is required (`npm i -D yaml`).
  */
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -44,8 +65,9 @@ export async function loadYaml() {
 function frontmatter(text, parse) {
   const block = text.replace(/\r\n/g, "\n").match(/^---\n([\s\S]*?)\n---(\n|$)/)?.[1];
   if (block === undefined) return "SKILL.md does not start with frontmatter";
-  // Parsers disagree on a repeated key (Bun keeps one, `yaml` refuses), so it
-  // is refused here whichever parser runs. Top-level keys start in column 0.
+  // Parsers disagree on a repeated key (Bun keeps one, `yaml` refuses). A
+  // plain top-level key, which starts in column 0, is refused here whichever
+  // parser runs; quoted or nested repeats are left to the parser.
   const keys = [...block.matchAll(/^([A-Za-z0-9_-]+)[ \t]*:/gm)].map((m) => m[1]);
   const repeated = keys.find((key, at) => keys.indexOf(key) !== at);
   if (repeated !== undefined) return `frontmatter repeats the key "${repeated}"`;
@@ -71,12 +93,16 @@ function isFolder(path) {
   }
 }
 
-/** Skill folders under `dir`: name -> real path of its SKILL.md (null if it has none). */
-function skillsIn(dir) {
+/**
+ * Skill folders under `dir`: name -> real path of its SKILL.md (null if it has
+ * none). Links that lead nowhere are added to `broken`.
+ */
+function skillsIn(dir, broken = []) {
   const found = new Map();
   if (!isFolder(dir)) return found;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const folder = join(dir, entry.name);
+    if (entry.isSymbolicLink() && !existsSync(folder)) broken.push(entry.name);
     if (!isFolder(folder)) continue;
     const file = join(folder, "SKILL.md");
     found.set(entry.name, existsSync(file) ? realpathSync(file) : null);
@@ -137,10 +163,12 @@ export function wiringProblems(root) {
   if (lines[0]?.trim() !== "@AGENTS.md") {
     problems.push("CLAUDE.md must start with the line @AGENTS.md");
   }
-  // The import and a short note saying so. Another import, a heading, a list
-  // or more than three lines of text is a second set of rules.
+  // The import and a short note saying so. Another import anywhere in a line
+  // (Claude Code follows `@path` in the middle of a sentence too), a heading,
+  // a list or more than three lines of text is a second set of rules.
   const rest = lines.slice(1);
-  if (rest.length > 3 || rest.some((line) => /^\s*(@|#|[-*+]\s|\d+[.)]\s)/.test(line))) {
+  const more = (line) => /(^|\s)@\S/.test(line) || /^\s*(#|[-*+]\s|\d+[.)]\s)/.test(line);
+  if (rest.length > 3 || rest.some(more)) {
     problems.push("CLAUDE.md must only import AGENTS.md: put rules in AGENTS.md");
   }
   // Other places only Claude Code reads rules from.
@@ -148,7 +176,8 @@ export function wiringProblems(root) {
     problems.push(".claude/CLAUDE.md holds rules only Claude Code reads: move them to AGENTS.md");
   }
   const rulesDir = join(root, ".claude", "rules");
-  if (isFolder(rulesDir) && readdirSync(rulesDir).some((name) => name.endsWith(".md"))) {
+  const ruleFiles = isFolder(rulesDir) ? readdirSync(rulesDir, { recursive: true }) : [];
+  if (ruleFiles.some((name) => String(name).endsWith(".md"))) {
     problems.push(".claude/rules holds rules only Claude Code reads: move them to AGENTS.md");
   }
 
@@ -160,8 +189,12 @@ export function wiringProblems(root) {
   if (process.platform !== "win32") {
     if (!isFolder(claudeDir)) problems.push(".claude/skills is missing or a broken link");
     if (!isFolder(agentsDir)) problems.push(".agents/skills is missing or a broken link");
-    const forClaude = skillsIn(claudeDir);
-    const forOthers = skillsIn(agentsDir);
+    const brokenClaude = [];
+    const brokenOthers = [];
+    const forClaude = skillsIn(claudeDir, brokenClaude);
+    const forOthers = skillsIn(agentsDir, brokenOthers);
+    for (const name of brokenClaude) problems.push(`.claude/skills/${name}: broken link`);
+    for (const name of brokenOthers) problems.push(`.agents/skills/${name}: broken link`);
     for (const name of new Set([...forClaude.keys(), ...forOthers.keys()])) {
       if (!forOthers.has(name)) {
         problems.push(`${name}: in .claude/skills only, so Pi and Codex will not find it`);
@@ -181,7 +214,7 @@ const USAGE = "usage: check-agent-files.mjs [--root <dir>] | [--skills <dir>]";
 export function options(args) {
   if (args.length === 0) return { root: "." };
   const [flag, dir, ...extra] = args;
-  if (extra.length > 0 || dir === undefined || dir.startsWith("--")) throw new Error(USAGE);
+  if (extra.length > 0 || !dir || dir.startsWith("--")) throw new Error(USAGE);
   if (flag === "--root") return { root: dir };
   if (flag === "--skills") return { skills: dir };
   throw new Error(USAGE);

@@ -104,14 +104,19 @@ When the PR changes product code under the project's protected paths (not
 the agent files), and a model from another vendor is available to this
 session, give that model the same brief for step 4: the diff, the rules,
 and "find what breaks; prove each finding with a run". Validate its
-candidates the same way and merge them with yours.
+candidates the same way and merge them with yours. If the project names no
+protected paths, or the PR touches no product code under them, it is "not
+needed".
 
 ## 6. Classify
 
 - **Blocking:** confirmed, and one of: it breaks an invariant or an
   `AGENTS.md` rule (quoted); it is definitely wrong behaviour; it fails to
   compile or run; an acceptance criterion is not met; the PR states
-  something false about what the change does or what enforces a rule.
+  something false about what the change does or what enforces a rule. "The
+  PR states" means its description and the documents it adds or changes for
+  readers to rely on (README, rules, instructions, an enforcement table). A
+  code comment that overstates is a note.
 - **Non-blocking:** confirmed and worth fixing, but not blocking. No limit
   on these. Nits (wording, naming) are also listed here: three at most.
 - **Do not report:** issues that existed in this repository before the PR,
@@ -138,8 +143,12 @@ _Review by an independent agent (<model>), at <full head SHA>._
 **Non-blocking notes**
 - ...
 
-**Claims checked:** each claim from the description: confirmed, or not.
+**Claims checked:** each claim from the description (in a re-review: from
+the writer's reply): confirmed, or not.
 **Not checked:** what you could not run or reach, and why.
+**How this review ran:** where the rules and commands came from if the
+repository has no `AGENTS.md`; whether the passes were separate agents or
+shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
 ```
@@ -165,8 +174,21 @@ The verdict covers the commit it names. What later commits need is the same
 everywhere in the method (`docs/development.md`, step 6):
 
 - After **request changes**: when the writer has fixed the blocking issues,
-  a new reviewer agent reviews only the new commits and the earlier blocking
-  items. After three rounds without approval, the owner decides.
+  a new reviewer agent re-reviews. After three rounds without approval, the
+  owner decides.
 - After an **approval**: later commits need a re-review, unless they only
   fix that review's non-blocking notes or merge the base branch, and the
   writer has listed them in a PR comment.
+
+A re-review is a smaller run of the same steps:
+
+- **Diff:** `git diff <reviewed commit> <head>`, read first. Then the earlier
+  review and the writer's reply; the reply's claims are this round's
+  hypotheses.
+- **Scope:** the new commits; every earlier blocking item (fixed or not);
+  the earlier notes the writer says are fixed; and unchanged text that the
+  new commits made false.
+- **Passes and proof:** the three passes of step 4 and the rules of step 5,
+  on that scope.
+- **Acceptance criteria block:** one line per earlier blocking item (fixed
+  or not, with the evidence), then any criterion the new commits affect.
