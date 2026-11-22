@@ -1,43 +1,14 @@
 {
   "name": "surgical-dev",
-  "version": "0.3.0-content",
+  "version": "0.4.0",
   "private": true,
-  "description": "Goal-driven software methods as portable Agent Skills, with an automatic development, verification and repair loop for Pi only.",
+  "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks. Agent Skills for Claude Code, Pi and Codex.",
   "type": "module",
-  "keywords": [
-    "pi-package",
-    "agent-skills",
-    "software-development"
-  ],
-  "pi": {
-    "skills": [
-      "./skills"
-    ],
-    "extensions": [
-      "./adapters/pi/extensions/surgical.ts"
-    ]
-  },
-  "files": [
-    "README.md",
-    "VALIDATION.md",
-    "roles",
-    "skills",
-    "references",
-    "templates",
-    "contracts",
-    "examples",
-    "adapters",
-    "docs",
-    "ARCHITECTURE.en.md",
-    "ARCHITECTURE.zh-CN.md"
-  ],
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "sync": "node scripts/sync-skill-references.mjs",
-    "sync:check": "node scripts/sync-skill-references.mjs --check",
-    "test:pi-host": "node --test tests/pi-host-smoke.mjs"
+    "test": "node --test skills/adopt/templates/scripts/*.test.mjs",
+    "check": "node skills/adopt/templates/scripts/check-agent-files.mjs --skills skills"
   },
   "devDependencies": {
-    "ajv": "^8.20.0"
+    "yaml": "^2.0.0"
   }
 }
