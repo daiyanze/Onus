@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test skills/charter/templates/scripts/*.test.mjs",
-    "check": "node skills/charter/templates/scripts/check-agent-files.mjs --skills skills"
+    "check": "node skills/charter/templates/scripts/check-agent-files.mjs --skills skills",
+    "test:bench": "node --test bench/test/*.test.mjs",
+    "bench": "node bench/run.mjs",
+    "bench:report": "node bench/report.mjs"
   },
   "devDependencies": {
     "yaml": "^2.0.0"

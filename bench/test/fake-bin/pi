@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+// A stand-in for `pi --mode json` used by the bench's own tests. It does the
+// task the way a correct agent would and prints Pi-shaped JSONL.
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+
+const sh = (cmd, args) => execFileSync(cmd, args, { stdio: "pipe" }).toString();
+const prompt = process.argv.at(-1);
+if (existsSync("issues/1.md")) {
+  sh("git", ["checkout", "-q", "-b", "fix/tag-filter"]);
+  writeFileSync("src/server.ts", readFileSync("src/server.ts", "utf8").replace("tag.trim)", "tag.trim())"));
+  writeFileSync("test/server.test.ts", `import { expect, test } from "bun:test";
+import { handle } from "../src/server.ts";
+test("GET ?tag=work", async () => {
+  const res = await handle(new Request("http://x/api/notes?tag=work"));
+  expect((await res.json()).map((n) => n.id)).toEqual([1, 3]);
+});
+`);
+  writeFileSync("PULL_REQUEST.md", "# fix(server): call trim\n");
+  sh("git", ["add", "-A"]);
+  sh("git", ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "fix"]);
+} else {
+  const buggy = readFileSync("src/notes.ts", "utf8").includes("return index !== -1");
+  writeFileSync("REVIEW.md", buggy ? "BLOCKING src/notes.ts:44 splice(-1)\nBLOCKING src/server.ts:29 204 for missing\n" : "APPROVE\n");
+}
+const usage = (i, o) => ({ input: i, output: o, cacheRead: 10, cacheWrite: 0, totalTokens: i + o + 10, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0.01 } });
+console.log(JSON.stringify({ type: "message_end", message: { role: "assistant", model: "fake-model", usage: usage(100, 20) } }));
+console.log(JSON.stringify({ type: "message_end", message: { role: "toolResult", usage: usage(5, 1) } }));
+console.log(JSON.stringify({ type: "message_end", message: { role: "user" } }));
+console.log(JSON.stringify({ type: "agent_end", prompt: prompt.length }));
