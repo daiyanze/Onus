@@ -36,7 +36,7 @@ Coding agents write a plausible change quickly. The trouble starts after:
 | The writer | "Done", "behaviour unchanged", "tests cover it" | Commands and their output; the app driven on its real surface |
 | The reviewer | "This is a bug" | A run that shows it fail. Reading the code finds a bug; it does not prove one |
 | The reviewer | "This breaks a rule" | The rule quoted, and the lines that break it |
-| A document | "This check enforces X" | A test that breaks X and watches the check fail |
+| A document | "This check enforces X" | The check that fails when X breaks, named, and only what its code covers. Where it is cheap, X broken in a scratch copy and the check seen to fail |
 | The owner | "Merge" | The owner's own decision. The agent never merges |
 
 Everything else in the method follows from this table.
@@ -114,9 +114,11 @@ comment. You read the comment and merge.
 ## 📚 The skills
 
 The names come from a courtroom, because the method is about who has to
-prove what. Each description also carries the plain name (next issue, long
-run, PR review), so the agent picks the right skill when you ask in your own
-words.
+prove what. Each description also carries the plain name (next issue, PR
+review), so the agent picks the right skill when you ask in your own words.
+`docket` is the exception: it starts only when you name it, because a long
+run should never start by itself. Its frontmatter tells the runtimes not
+to pick it on their own.
 
 | Skill | Plain name | Use it when |
 | --- | --- | --- |
@@ -151,8 +153,10 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 ### `take-case`: the next issue
 
 - **Picks:** an open issue with the agent label, whose "Depends on" issues
-  are closed and that no open PR already covers. Among those, the one that
-  unblocks the most other issues. It reads the body of labelled issues only.
+  are closed and that no open PR already covers. If the project works by
+  milestone, only those in the earliest milestone that still has one. Among
+  those, the one that unblocks the most other issues, then the lowest
+  number. It reads the body of labelled issues only.
 - **Does:** the loop in `docs/development.md`: branch, implement, check,
   verify on the real app if a user can see the change, push, PR, wait for CI,
   start an independent `cross-examine`.
@@ -245,8 +249,8 @@ parser and the lesson names it.
 ([review](https://github.com/daiyanze/breaker-delta/pull/199#issuecomment-7080396875),
 [lesson L14](https://github.com/daiyanze/breaker-delta/blob/develop/docs/lessons.md))
 
-**Three rounds, then the owner decided.** This repository's first pull
-request was reviewed three times. Each round asked for changes, each for a
+**Three rounds, then the owner decided.** The pull request that rewrote
+this repository (#18) was reviewed three times. Each round asked for changes, each for a
 narrower problem: a script that did nothing when reached through a link;
 then two shapes the documents said were caught and were not; then one
 sentence. The recurring cause was the same claim restated in four places.
@@ -260,9 +264,12 @@ decision to the owner, who chose to merge.
 **Four reviews were never posted.** In Breaker Delta, four review comments
 hold a file name instead of the review: `gh api -f body=@file` sends
 `@file` as the text and does not read the file. Those pull requests were
-merged without a readable review. `cross-examine` now names the exact posting
-command and reads the comment back. In a later round, the read-back caught a
-link the posting had altered.
+merged without a readable review on the PR. `cross-examine` now names the
+exact posting command (`-F body=@file`) and reads the comment back.
+([#177](https://github.com/daiyanze/breaker-delta/pull/177#issuecomment-7061908475),
+[#178](https://github.com/daiyanze/breaker-delta/pull/178#issuecomment-7062356065),
+[#179](https://github.com/daiyanze/breaker-delta/pull/179#issuecomment-7062784471),
+[#181](https://github.com/daiyanze/breaker-delta/pull/181#issuecomment-7063079058))
 
 ## 🛡️ What it does not do
 
