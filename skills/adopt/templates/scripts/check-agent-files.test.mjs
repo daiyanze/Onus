@@ -1,10 +1,12 @@
 // Run with `node --test` (needs the `yaml` package) or `bun test`.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { loadYaml, skillProblems, wiringProblems } from "./check-agent-files.mjs";
+import { fileURLToPath } from "node:url";
+import { loadYaml, options, skillProblems, wiringProblems } from "./check-agent-files.mjs";
 
 const parse = await loadYaml();
 const ok = "description: Does a thing.";
@@ -35,11 +37,13 @@ test("each kind of broken skill is reported, and sound ones are not", () => {
     "comment-only": "---\nname: comment-only\ndescription: # todo\n---\n",
     "a-list": "---\nname: a-list\ndescription: [a, b]\n---\n",
     "second-colon": "---\nname: second-colon\ndescription: Use when: asked.\n---\n",
+    "twice": `---\nname: twice\n${ok}\ndescription: Does another thing.\n---\n`,
     "tab-indent": `---\nname: tab-indent\n${ok}\nmetadata:\n\tkey: value\n---\n`,
     "not-a-mapping": "---\n- name\n- description\n---\n",
     long: `---\nname: long\ndescription: ${"x".repeat(1025)}\n---\n`,
     Bad_Name: `---\nname: Bad_Name\n${ok}\n---\n`,
     run: `---\nname: run\n${ok}\n---\n`,
+    review: `---\nname: review\n${ok}\n---\n`,
   };
   for (const [name, content] of Object.entries(broken)) skill(dir, name, content);
 
@@ -75,8 +79,23 @@ test("the rules: one file, imported, nothing outranking it", () => {
   assert.ok(wiringProblems(root).includes("CLAUDE.md must start with the line @AGENTS.md"));
   writeFileSync(join(root, "CLAUDE.md"), "@AGENTS.md\n\n# Rules\n\nA second copy.\n");
   assert.ok(wiringProblems(root).includes(onlyImport));
-  writeFileSync(join(root, "CLAUDE.md"), `@AGENTS.md\n${"A rule.\n".repeat(6)}`);
-  assert.ok(wiringProblems(root).includes(onlyImport));
+  for (const more of [
+    "A rule.\n".repeat(4),
+    "@docs/more-rules.md\n",
+    "- Always do this.\n",
+    "1. Always do this.\n",
+  ]) {
+    writeFileSync(join(root, "CLAUDE.md"), `@AGENTS.md\n\n${more}`);
+    assert.ok(wiringProblems(root).includes(onlyImport), JSON.stringify(more));
+  }
+  writeFileSync(join(root, "CLAUDE.md"), "@AGENTS.md\n\nThe rules are in AGENTS.md.\n");
+
+  mkdirSync(join(root, ".claude", "rules"), { recursive: true });
+  assert.ok(!wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
+  writeFileSync(join(root, ".claude", "rules", "style.md"), "Use tabs.\n");
+  assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
+  writeFileSync(join(root, ".claude", "CLAUDE.md"), "Use tabs.\n");
+  assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/CLAUDE.md")));
 
   writeFileSync(join(root, "AGENTS.override.md"), "# Other rules\n");
   assert.ok(
@@ -124,4 +143,63 @@ test("the skills: every runtime finds the same ones", { skip: process.platform =
   assert.deepEqual(wiringProblems(d), [
     "next: in .claude/skills only, so Pi and Codex will not find it",
   ]);
+});
+
+// The command line is what a project's check command runs, so it is tested as
+// a program: exit codes, output, and being reached through a link.
+const script = fileURLToPath(new URL("./check-agent-files.mjs", import.meta.url));
+const run = (file, args, cwd) =>
+  spawnSync(process.execPath, [file, ...args], { cwd, encoding: "utf8" });
+
+function sound() {
+  const root = repository();
+  skill(join(root, ".claude", "skills"), "next", `---\nname: next\n${ok}\n---\n`);
+  mkdirSync(join(root, ".agents"));
+  symlinkSync(join(root, ".claude", "skills"), join(root, ".agents", "skills"));
+  return root;
+}
+
+test("as a program: 0 and a line when sound, 1 and the problems when not", () => {
+  const good = sound();
+  for (const result of [run(script, ["--root", good]), run(script, [], good)]) {
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /agent files ok/);
+  }
+
+  const empty = mkdtempSync(join(tmpdir(), "cli-"));
+  const bad = run(script, ["--root", empty]);
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /agent files: AGENTS\.md is missing/);
+  // --root is honoured: the sound folder is not what gets checked.
+  assert.equal(run(script, ["--root", empty], good).status, 1);
+
+  // Default mode also reads the skills' frontmatter.
+  const noText = sound();
+  skill(join(noText, ".claude", "skills"), "next", "---\nname: next\n---\n");
+  const result = run(script, ["--root", noText]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /next: no description text/);
+
+  const only = run(script, ["--skills", join(noText, ".claude", "skills")]);
+  assert.equal(only.status, 1);
+});
+
+test("as a program: reached through a link it still checks", { skip: process.platform === "win32" }, () => {
+  const empty = mkdtempSync(join(tmpdir(), "cli-"));
+  const links = mkdtempSync(join(tmpdir(), "cli-links-"));
+  symlinkSync(script, join(links, "check.mjs"));
+  symlinkSync(empty, join(links, "repo"));
+  assert.equal(run(join(links, "check.mjs"), ["--root", empty]).status, 1);
+  assert.equal(run(script, ["--root", join(links, "repo")]).status, 1);
+});
+
+test("as a program: an option it does not know is an error, not a pass", () => {
+  for (const args of [["--root=x"], ["--rooot", "x"], ["--root"], ["--root", "a", "b"], ["x"]]) {
+    assert.throws(() => options(args), /usage/, JSON.stringify(args));
+  }
+  const good = sound();
+  const result = run(script, ["--root=/nowhere"], good);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /usage/);
+  assert.equal(run(script, ["--root", join(good, "missing")]).status, 2);
 });

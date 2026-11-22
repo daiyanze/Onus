@@ -5,7 +5,7 @@ true. If code and this file disagree, fix one of them in the same PR.
 
 Every agent runtime reads this one file: Pi and Codex read `AGENTS.md`
 directly, and `CLAUDE.md` imports it for Claude Code. The procedures are
-skills (`next`, `long-run`, `review`), found in `.claude/skills` and
+skills (`next`, `long-run`, `pr-review`), found in `.claude/skills` and
 `.agents/skills`.
 
 ## What this is
@@ -47,9 +47,12 @@ Say what a check really covers, and list its gaps below the table.
 | <Invariant 2> | <...> | <...> |
 | Protected paths | <CODEOWNERS; what the branch rules really require; who merges> | check / owner |
 | Lessons with a check | each lesson's `Check:` line in `docs/lessons.md` | check |
-| Every runtime finds the rules and the skills | `scripts/check-agent-files.mjs` in the check command | check |
+| Every runtime finds the rules and the skills | `scripts/check-agent-files.mjs` in the check command: `CLAUDE.md` is the import plus a short note, no `AGENTS.override.md`, no `.claude/CLAUDE.md` or `.claude/rules`, every skill in both skill folders as one copy, valid frontmatter | check |
 
-Rows marked review only are the next to enforce.
+Rows marked review only are the next to enforce. Known gaps in the checks:
+`check-agent-files.mjs` cannot tell a note from a rule in the lines after
+the import, and does not look at personal files (`CLAUDE.local.md`) or at
+`AGENTS.md` files in subfolders. <Add the gaps of your own checks.>
 
 ## Protected paths
 
@@ -63,13 +66,14 @@ before starting a task.
 
 1. Pick an issue (the `next` skill finds the next one labelled
    `<agent label>`; the `long-run` skill works through a whole goal). Branch
-   from `<base branch>`. Never push to `<base branch>` directly.
+   from `<base branch>`. Never push to `<base branch>` directly. Stop and
+   ask before anything that cannot be undone.
 2. Implement, then run the check command locally. Drive anything a user sees
    on the real app with the project's verify skill, if it has one.
 3. Push the branch and open a PR. CI runs the check command.
 4. A separate review agent, with no context from the writing session,
-   reviews the PR with the `review` skill. The session that wrote a PR does
-   not review it.
+   reviews the PR with the `pr-review` skill. The session that wrote a PR
+   does not review it.
 5. The owner merges.
 6. A mistake caught by the owner, CI or review becomes a lesson in
    `docs/lessons.md`, or a check.

@@ -38,8 +38,10 @@ line. Derive it from the goal and the issue tracker, for example:
 > head, and an approving review that covers that head.
 
 A review covers a head when it names that commit, or an earlier one followed
-only by fixes for its non-blocking notes or merges of the base branch
-(`docs/development.md`, step 6).
+only by fixes for its non-blocking notes or merges of the base branch that
+the writer has listed in a PR comment (`docs/development.md`, step 6). The
+listing comment is what a command can check; without it the head is not
+covered.
 
 Issues that wait on the owner (no agent label, an unmerged dependency, a
 parked question) are outside the condition, and the final report lists them.
@@ -71,7 +73,7 @@ Park the issue and move on, instead of asking, when:
 
 Everything reversible: decide, log it, carry on.
 
-Never merge, never push to the base branch, never deploy by hand.
+Never merge, never push to the base branch, never deploy.
 
 ## 4. Report
 

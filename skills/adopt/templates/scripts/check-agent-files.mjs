@@ -7,28 +7,35 @@
  *   node scripts/check-agent-files.mjs --root <dir>     check another folder
  *   node scripts/check-agent-files.mjs --skills <dir>   check only the skills in <dir>
  *
- * Prints one line per problem and exits 1 if there is any. Runs on Bun as it
- * is. On Node it needs the `yaml` package (`npm i -D yaml`): the runtimes read
- * skill frontmatter with a YAML parser, so this check does too.
+ * Prints one line per problem and exits 1 if there is any; exits 2 when it
+ * cannot run (unknown option, no YAML parser).
+ *
+ * The runtimes read skill frontmatter with a YAML parser, so this check does
+ * too: the `yaml` package when it is installed (it is the parser Pi uses),
+ * otherwise Bun's own. On Node, add it with `npm i -D yaml`.
+ *
+ * What it does not see: whether the lines after the import in CLAUDE.md are a
+ * note or a rule (it only caps them), personal files such as CLAUDE.local.md,
+ * and AGENTS.md files in subfolders.
  */
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 /**
- * Names a runtime already uses. Claude Code ships a `run` skill; a project
- * skill of that name with `disable-model-invocation` puts the bundled one in
- * the model's list instead.
+ * Names a runtime already uses. Claude Code ships `run` and `code-review`
+ * (also called as `/review`); a project skill with one of these names can be
+ * left out of the model's list or replaced there by the bundled one.
  */
-const RESERVED = ["run"];
+const RESERVED = ["run", "review", "code-review"];
 
-/** A YAML parse function: Bun's own, or the `yaml` package on Node. */
+/** A YAML parse function: the `yaml` package if installed, otherwise Bun's own. */
 export async function loadYaml() {
-  if (typeof Bun !== "undefined" && Bun.YAML) return (text) => Bun.YAML.parse(text);
   try {
     return (await import("yaml")).parse;
   } catch {
+    if (typeof Bun !== "undefined" && Bun.YAML) return (text) => Bun.YAML.parse(text);
     throw new Error('no YAML parser: run this with Bun, or add the "yaml" package (npm i -D yaml)');
   }
 }
@@ -37,6 +44,11 @@ export async function loadYaml() {
 function frontmatter(text, parse) {
   const block = text.replace(/\r\n/g, "\n").match(/^---\n([\s\S]*?)\n---(\n|$)/)?.[1];
   if (block === undefined) return "SKILL.md does not start with frontmatter";
+  // Parsers disagree on a repeated key (Bun keeps one, `yaml` refuses), so it
+  // is refused here whichever parser runs. Top-level keys start in column 0.
+  const keys = [...block.matchAll(/^([A-Za-z0-9_-]+)[ \t]*:/gm)].map((m) => m[1]);
+  const repeated = keys.find((key, at) => keys.indexOf(key) !== at);
+  if (repeated !== undefined) return `frontmatter repeats the key "${repeated}"`;
   let parsed;
   try {
     parsed = parse(block);
@@ -125,9 +137,19 @@ export function wiringProblems(root) {
   if (lines[0]?.trim() !== "@AGENTS.md") {
     problems.push("CLAUDE.md must start with the line @AGENTS.md");
   }
-  // The import and a sentence saying so. More than that is a second copy.
-  if (lines.length > 5 || lines.some((line) => line.startsWith("#"))) {
+  // The import and a short note saying so. Another import, a heading, a list
+  // or more than three lines of text is a second set of rules.
+  const rest = lines.slice(1);
+  if (rest.length > 3 || rest.some((line) => /^\s*(@|#|[-*+]\s|\d+[.)]\s)/.test(line))) {
     problems.push("CLAUDE.md must only import AGENTS.md: put rules in AGENTS.md");
+  }
+  // Other places only Claude Code reads rules from.
+  if (existsSync(join(root, ".claude", "CLAUDE.md"))) {
+    problems.push(".claude/CLAUDE.md holds rules only Claude Code reads: move them to AGENTS.md");
+  }
+  const rulesDir = join(root, ".claude", "rules");
+  if (isFolder(rulesDir) && readdirSync(rulesDir).some((name) => name.endsWith(".md"))) {
+    problems.push(".claude/rules holds rules only Claude Code reads: move them to AGENTS.md");
   }
 
   // Claude Code reads .claude/skills; Pi and Codex read .agents/skills. Either
@@ -153,18 +175,28 @@ export function wiringProblems(root) {
   return problems;
 }
 
-async function main(args) {
-  const value = (flag) => {
-    const at = args.indexOf(flag);
-    return at === -1 ? null : (args[at + 1] ?? null);
-  };
+const USAGE = "usage: check-agent-files.mjs [--root <dir>] | [--skills <dir>]";
+
+/** `--root <dir>` or `--skills <dir>`, one at most. Anything else is an error. */
+export function options(args) {
+  if (args.length === 0) return { root: "." };
+  const [flag, dir, ...extra] = args;
+  if (extra.length > 0 || dir === undefined || dir.startsWith("--")) throw new Error(USAGE);
+  if (flag === "--root") return { root: dir };
+  if (flag === "--skills") return { skills: dir };
+  throw new Error(USAGE);
+}
+
+export async function main(args) {
+  const chosen = options(args);
   const parse = await loadYaml();
-  const only = value("--skills");
   let problems;
-  if (only !== null) {
-    problems = skillProblems(resolve(only), parse);
+  if (chosen.skills !== undefined) {
+    if (!isFolder(resolve(chosen.skills))) throw new Error(`not a folder: ${chosen.skills}`);
+    problems = skillProblems(resolve(chosen.skills), parse);
   } else {
-    const root = resolve(value("--root") ?? ".");
+    const root = resolve(chosen.root);
+    if (!isFolder(root)) throw new Error(`not a folder: ${chosen.root}`);
     const skills = join(root, ".claude", "skills");
     problems = wiringProblems(root);
     if (isFolder(skills)) problems = problems.concat(skillProblems(skills, parse));
@@ -174,7 +206,17 @@ async function main(args) {
   return problems.length === 0 ? 0 : 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+/** True when this file is the program being run, also when reached through a link. */
+function isProgram() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isProgram()) {
   try {
     process.exit(await main(process.argv.slice(2)));
   } catch (err) {

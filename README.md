@@ -42,7 +42,8 @@ Coding agents write a plausible change quickly. The trouble starts after:
    looks for problems in three passes, and reports only what it can prove: a
    bug needs a run that shows it, a rule violation needs the rule quoted. It
    answers each acceptance criterion and posts one comment. Its verdict
-   covers one commit.
+   covers one commit; later commits need a new review unless they only fix
+   its notes.
 5. **Lessons become checks.** A mistake caught by the owner, CI or the
    review is written down with its scope. If a check can enforce it, the
    check is added, at the highest level that works: architecture, then
@@ -53,7 +54,7 @@ Coding agents write a plausible change quickly. The trouble starts after:
    issue, keeps a decision log, parks what needs the owner, and never
    relaxes the condition to finish.
 7. **The owner merges.** The agent never merges, never pushes to the base
-   branch, and stops for anything that cannot be undone.
+   branch, and stops to ask before anything that cannot be undone.
 
 ## 🚀 Quickstart
 
@@ -78,7 +79,8 @@ npx skills add daiyanze/surgical-dev
 (`/skill:adopt` in Pi, `$adopt` in Codex.) The agent reads your repository,
 writes `AGENTS.md`, `CLAUDE.md`, `docs/development.md` and
 `docs/lessons.md`, links the skill folders so every runtime finds them, adds
-the check, and opens a pull request. It changes no product code.
+the check, and opens a pull request. It changes no product code; on a Node
+project it adds one dev dependency (`yaml`) for the check.
 
 **3. Do the owner's part.** The pull request lists it: create the agent
 label, protect your default branch, decide the protected paths, strike any
@@ -102,12 +104,13 @@ comment. You read the comment and merge.
 | [`adopt`](skills/adopt/SKILL.md) | Once per repository | The rules file, the method and lessons docs, wired skill folders, the check, as a PR |
 | [`next`](skills/next/SKILL.md) | You want the next issue done | A branch, a PR with evidence, CI, an independent review |
 | [`long-run`](skills/long-run/SKILL.md) | You have a goal, not an issue | PRs for every issue the agent can do, a decision log, a list of what waits on you |
-| [`review`](skills/review/SKILL.md) | A PR is open and CI is green | One comment: verdict, acceptance criteria, proven findings |
+| [`pr-review`](skills/pr-review/SKILL.md) | A PR is open and CI is green | One comment: verdict, acceptance criteria, proven findings |
 | [`make-verify-skill`](skills/make-verify-skill/SKILL.md) | Once per project with something a user can see | A verify skill and harness for your app, exercised in CI |
 
 Templates, in [`skills/adopt/templates/`](skills/adopt/templates):
-`AGENTS.md`, `CLAUDE.md`, `docs/development.md` (the method as the agent
-reads it), `docs/lessons.md`, and `scripts/check-agent-files.mjs`.
+`AGENTS.template.md`, `CLAUDE.template.md`, `docs/development.md` (the
+method as the agent reads it), `docs/lessons.md`, and
+`scripts/check-agent-files.mjs` with its tests.
 
 ## 🤖 Supported agent runtimes
 
@@ -118,9 +121,12 @@ reads it), `docs/lessons.md`, and `scripts/check-agent-files.mjs`.
 | Codex | `AGENTS.md` | `.agents/skills` | `$next`, or `/skills` |
 
 One of the two skill folders is a link to the other, so there is one copy.
-`check-agent-files.mjs` fails your check command when the copies drift, when
-a file would outrank `AGENTS.md`, or when a skill's frontmatter would make a
-runtime drop it.
+`check-agent-files.mjs` fails your check command when a skill is in one
+folder only or exists as two copies, when a file would give one runtime its
+own rules, or when a skill's frontmatter would make a runtime drop it. Pi
+loads a project's `.agents/skills` only after you trust the project. The
+review skill is called `pr-review`, not `review`, because Claude Code ships
+its own `/review`.
 
 ## 🔍 Why the review works this way
 
@@ -132,8 +138,8 @@ runtime drop it.
 - **Proof or silence.** A finding nobody can reproduce costs the owner
   attention and teaches everyone to skim the review. Unproven candidates are
   dropped.
-- **One comment.** Verdict, acceptance criteria, blocking issues, at most
-  three nits.
+- **One comment.** Verdict, acceptance criteria, blocking issues, notes,
+  and what could not be checked.
 
 In Breaker Delta the first review asked for changes on 6 of 23 pull
 requests, each time with a reproduction or a quoted rule. Details and limits:

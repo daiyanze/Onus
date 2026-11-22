@@ -72,14 +72,18 @@ and the runtimes on the linked side find no skills.
    and what was not verified locally). Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
-   reviews the PR with the `review` skill. The writer fixes blocking issues;
-   a new agent re-reviews. After three rounds the owner decides. A verdict
-   covers the commit it names: later commits need a re-review, unless they
-   only fix that review's non-blocking notes or merge the base branch, and
-   the writer lists them in a PR comment.
+   reviews the PR with the `pr-review` skill. The writer fixes blocking
+   issues; a new agent re-reviews. After three rounds the owner decides. A
+   verdict covers the commit it names: later commits need a re-review,
+   unless they only fix that review's non-blocking notes or merge the base
+   branch, and the writer lists them in a PR comment.
 7. **Learn.** When the owner corrects something, or CI or review catches a
    mistake the writer made, add a lesson (below). Do it in the same PR when
    the lesson is about that PR.
+
+At any step: stop and ask the owner before anything that cannot be undone (a
+deploy, deleting data, a message to people, a force-push). The owner merges;
+the agent never does.
 
 ## Kinds of work
 
@@ -141,8 +145,8 @@ for "continue". The rules:
 
 ## Review checklist
 
-Project-specific questions the `review` skill asks of every PR, on top of
-its own passes. One line each; number them so `AGENTS.md` can point at them.
+Project-specific questions the `pr-review` skill asks of every PR, on top
+of its own passes. One line each; number them so `AGENTS.md` can point at them.
 
 1. <Does the change alter <invariant 1>?>
 2. <Does a schema change come with a migration?>
