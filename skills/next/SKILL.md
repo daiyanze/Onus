@@ -22,7 +22,7 @@ gh issue list --label "<agent label>" --state open --limit 300 \
   --json number,title,milestone,body
 gh issue list --state open --limit 300 --json number,title,milestone,labels
 gh pr list --state open --json number,headRefName,body --jq '.[] | {number, headRefName,
-  closes: [(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #([0-9]+)") | .[0]]}'
+  closes: [(.body // "") | scan("(?i)\\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #([0-9]+)") | .[0]]}'
 ```
 
 Read the body of labelled issues only, and of pull requests only the issue

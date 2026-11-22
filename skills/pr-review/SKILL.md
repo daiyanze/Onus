@@ -115,13 +115,19 @@ needed".
   compile or run; an acceptance criterion is not met; the PR states
   something false about what the change does or what enforces a rule. "The
   PR states" means its description and the documents it adds or changes for
-  readers to rely on (README, rules, instructions, an enforcement table). A
-  code comment that overstates is a note.
+  readers to rely on (README, rules, instructions, an enforcement table),
+  and any text those documents name as the statement of record, such as a
+  comment at the top of a check. Any other code comment that overstates is
+  a note.
 - **Non-blocking:** confirmed and worth fixing, but not blocking. No limit
   on these. Nits (wording, naming) are also listed here: three at most.
 - **Do not report:** issues that existed in this repository before the PR,
   style a linter or formatter handles, speculation that depends on unlikely
   inputs, and suggestions to rewrite working code.
+
+The verdict follows from the classes: any blocking issue is **request
+changes**; none, but notes, is **approve with nits**; neither is
+**approve**.
 
 ## 7. Output
 
@@ -166,7 +172,9 @@ gh pr comment <n> --body-file review.md
 
 With `gh api`, `-F` reads the file; `-f` would post the file's name as the
 comment. Fetch the comment you posted and check that it starts with the
-header line. A review that was not posted did not happen.
+header line and reads as you wrote it. If it came back altered, edit that
+comment; do not post a second one. A review that was not posted did not
+happen.
 
 ## 8. After the verdict
 
@@ -182,12 +190,14 @@ everywhere in the method (`docs/development.md`, step 6):
 
 A re-review is a smaller run of the same steps:
 
-- **Diff:** `git diff <reviewed commit> <head>`, read first. Then the earlier
-  review and the writer's reply; the reply's claims are this round's
+- **Order:** the rules and commands as in step 2, then `git diff <reviewed
+  commit> <head>`, then the earlier reviews, the writer's reply and the PR
+  description as it is now (it may have been edited; edits are not in the
+  diff). The reply's and the description's claims are this round's
   hypotheses.
-- **Scope:** the new commits; every earlier blocking item (fixed or not);
-  the earlier notes the writer says are fixed; and unchanged text that the
-  new commits made false.
+- **Scope:** the new commits; every blocking item from every earlier round
+  (fixed or not); the earlier notes the writer says are fixed; and unchanged
+  text that the new commits made false.
 - **Passes and proof:** the three passes of step 4 and the rules of step 5,
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed

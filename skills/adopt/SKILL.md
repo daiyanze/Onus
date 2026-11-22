@@ -61,15 +61,16 @@ placeholder behind.
 - **Other tools' instruction files.** Leave them as they are and list them
   in the PR, with any place where they contradict `AGENTS.md`, so the owner
   can decide.
-- **Base branch.** `<base branch>` is the branch you started from in the
-  first step. If it is not the default branch, say so in the PR.
+- **Base branch.** `<base branch>` is the branch you branched from. If it
+  is not the default branch, say so in the PR.
 - **Invariants.** Take them from what the project already states (README,
   decision records, comments that say "never" or "must"). If you propose one
   the project does not state, mark it "(proposed)" so the owner can strike
   it in the PR. Three true invariants beat ten guesses.
 - **What enforces each rule.** For each invariant, find what actually fails
   when it is broken: a type, a test, a lint rule. Say only what that check
-  covers, and list its gaps under the table. If nothing fails, write "review
+  covers. Keep the list of what it does not cover in one place, next to the
+  check, and point to it under the table. If nothing fails, write "review
   checklist n" and add the question in step 4. When it is cheap, break the
   rule in a scratch copy and watch the check fail before you write that it
   does.

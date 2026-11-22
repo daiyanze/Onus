@@ -39,7 +39,8 @@ must know. A table of concepts if there are more than three.>
 
 A rule nothing enforces is only as good as the next reader. When a mistake
 repeats, move its rule up this table (`docs/development.md`, "Lessons").
-Say what a check really covers, and list its gaps below the table.
+Say what a check really covers, and below the table point to where each
+check lists what it does not cover.
 
 | Rule | Enforced by | Kind |
 | --- | --- | --- |

@@ -1,7 +1,7 @@
 // Run with `node --test` (needs the `yaml` package) or `bun test`.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -10,6 +10,9 @@ import { loadYaml, options, skillProblems, wiringProblems } from "./check-agent-
 
 const parse = await loadYaml();
 const ok = "description: Does a thing.";
+const script = fileURLToPath(new URL("./check-agent-files.mjs", import.meta.url));
+const run = (file, args, cwd) =>
+  spawnSync(process.execPath, [file, ...args], { cwd, encoding: "utf8" });
 
 function skill(dir, name, content) {
   mkdirSync(join(dir, name), { recursive: true });
@@ -112,11 +115,14 @@ test("the rules: one file, imported, nothing outranking it", () => {
 
   mkdirSync(join(root, ".claude", "rules"), { recursive: true });
   assert.ok(!wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
+  const inRules = () => wiringProblems(root).some((p) => p.startsWith(".claude/rules"));
+  writeFileSync(join(root, ".claude", "rules", "style.md"), "Use tabs.\n");
+  assert.ok(inRules(), "a rules file");
+  rmSync(join(root, ".claude", "rules", "style.md"));
+  assert.ok(!inRules());
   mkdirSync(join(root, ".claude", "rules", "frontend"));
   writeFileSync(join(root, ".claude", "rules", "frontend", "style.md"), "Use tabs.\n");
-  assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/rules")), "a nested rules file");
-  writeFileSync(join(root, ".claude", "rules", "style.md"), "Use tabs.\n");
-  assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/rules")));
+  assert.ok(inRules(), "a nested rules file");
   writeFileSync(join(root, ".claude", "CLAUDE.md"), "Use tabs.\n");
   assert.ok(wiringProblems(root).some((p) => p.startsWith(".claude/CLAUDE.md")));
 
@@ -172,6 +178,17 @@ test("the skills: every runtime finds the same ones", { skip: process.platform =
   assert.ok(found.includes(".agents/skills/skills: broken link"), JSON.stringify(found));
   assert.ok(found.includes(".claude/skills/old: broken link"), JSON.stringify(found));
 
+  // One folder linking to the other: a broken link in it is reported once.
+  const g = repository();
+  skill(join(g, ".claude", "skills"), "next", text);
+  symlinkSync(join(g, "gone"), join(g, ".claude", "skills", "old"));
+  mkdirSync(join(g, ".agents"));
+  symlinkSync(join(g, ".claude", "skills"), join(g, ".agents", "skills"));
+  assert.deepEqual(wiringProblems(g), [".claude/skills/old: broken link"]);
+  const once = run(script, ["--root", g]);
+  assert.equal(once.status, 1);
+  assert.equal(once.stderr.trim().split("\n").length, 1, once.stderr);
+
   // A link that points somewhere else.
   const d = repository();
   skill(join(d, ".claude", "skills"), "next", text);
@@ -185,9 +202,6 @@ test("the skills: every runtime finds the same ones", { skip: process.platform =
 
 // The command line is what a project's check command runs, so it is tested as
 // a program: exit codes, output, and being reached through a link.
-const script = fileURLToPath(new URL("./check-agent-files.mjs", import.meta.url));
-const run = (file, args, cwd) =>
-  spawnSync(process.execPath, [file, ...args], { cwd, encoding: "utf8" });
 
 function sound() {
   const root = repository();

@@ -21,19 +21,25 @@
  *   more than three lines of text;
  * - .claude/CLAUDE.md exists, or .claude/rules holds a .md file at any depth;
  * - .claude/skills or .agents/skills is missing, a skill is in only one of
- *   them, a skill exists as two copies, or either folder holds a broken link
- *   (not checked on Windows, where links may be plain files);
+ *   them, a skill exists as two copies, or either folder holds a broken link.
+ *   None of this line is checked on Windows, where links may be plain files;
  * - a skill has no SKILL.md; its frontmatter is missing, is not valid YAML,
  *   is not a mapping, or repeats a plain top-level key; its name differs from
  *   its folder, is not lowercase words joined by "-", is over 64 characters,
- *   or is a name Claude Code already ships; its description is missing, empty
- *   or over 1024 characters.
+ *   or is `run`, `review` or `code-review`, which Claude Code ships; its
+ *   description is missing, empty, not text, or over 1024 characters.
  *
  * It does not see:
  * - whether the lines of text after the import in CLAUDE.md are a note or a
  *   rule;
- * - CLAUDE.md, CLAUDE.local.md and AGENTS.md files outside the repository
- *   root (subfolders, the home folder);
+ * - CLAUDE.local.md anywhere, and CLAUDE.md and AGENTS.md files outside the
+ *   repository root (subfolders, the home folder);
+ * - other things only one runtime reads: .claude/commands, skill folders in
+ *   subfolders, settings files;
+ * - other skill names a runtime ships. The three above are the ones seen to
+ *   collide; Claude Code bundles more;
+ * - on Windows, the skill folders, and a skill's frontmatter when
+ *   .claude/skills is a plain file there;
  * - frontmatter that Bun's parser accepts and the `yaml` package refuses,
  *   when it runs on Bun without `yaml` (a repeated plain top-level key
  *   excepted). `yaml` is the parser Pi uses and is preferred when installed;
@@ -176,7 +182,13 @@ export function wiringProblems(root) {
     problems.push(".claude/CLAUDE.md holds rules only Claude Code reads: move them to AGENTS.md");
   }
   const rulesDir = join(root, ".claude", "rules");
-  const ruleFiles = isFolder(rulesDir) ? readdirSync(rulesDir, { recursive: true }) : [];
+  let ruleFiles = [];
+  try {
+    if (isFolder(rulesDir)) ruleFiles = readdirSync(rulesDir, { recursive: true });
+  } catch {
+    // A folder that cannot be listed (a link that loops) is not a pass.
+    ruleFiles = ["unreadable.md"];
+  }
   if (ruleFiles.some((name) => String(name).endsWith(".md"))) {
     problems.push(".claude/rules holds rules only Claude Code reads: move them to AGENTS.md");
   }
@@ -193,8 +205,13 @@ export function wiringProblems(root) {
     const brokenOthers = [];
     const forClaude = skillsIn(claudeDir, brokenClaude);
     const forOthers = skillsIn(agentsDir, brokenOthers);
+    // When one folder is a link to the other, a broken link is reported once.
+    const sameFolder =
+      isFolder(claudeDir) && isFolder(agentsDir) && realpathSync(claudeDir) === realpathSync(agentsDir);
     for (const name of brokenClaude) problems.push(`.claude/skills/${name}: broken link`);
-    for (const name of brokenOthers) problems.push(`.agents/skills/${name}: broken link`);
+    if (!sameFolder) {
+      for (const name of brokenOthers) problems.push(`.agents/skills/${name}: broken link`);
+    }
     for (const name of new Set([...forClaude.keys(), ...forOthers.keys()])) {
       if (!forOthers.has(name)) {
         problems.push(`${name}: in .claude/skills only, so Pi and Codex will not find it`);
@@ -232,7 +249,12 @@ export async function main(args) {
     if (!isFolder(root)) throw new Error(`not a folder: ${chosen.root}`);
     const skills = join(root, ".claude", "skills");
     problems = wiringProblems(root);
-    if (isFolder(skills)) problems = problems.concat(skillProblems(skills, parse));
+    if (isFolder(skills)) {
+      // wiringProblems already named broken links, with the folder they are in.
+      const named = problems.some((p) => p.endsWith(": broken link"));
+      const inSkills = skillProblems(skills, parse);
+      problems = problems.concat(named ? inSkills.filter((p) => !p.endsWith(": broken link")) : inSkills);
+    }
   }
   for (const problem of problems) console.error(`agent files: ${problem}`);
   if (problems.length === 0) console.log("agent files ok");
