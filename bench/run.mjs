@@ -79,13 +79,14 @@ async function trial(arm, checkpoint, t) {
   if (leaked.length) console.warn(`${tag}: user-level files also load in this arm: ${leaked.join(", ")}`);
   if (o.strict && leaked.length) throw new Error("--strict: remove or move those files, or run on a clean account");
   if (o["dry-run"]) {
-    console.log(`\n== ${tag}\nworkspace: ${ws.dir}\ncommand: ${cmd} ${args.map((a) => (a === text ? "<prompt>" : a)).join(" ")}\n--- prompt\n${text}`);
+    console.log(`\n== ${tag}\nworkspace: ${ws.dir}${o.keep ? "" : " (removed; --keep keeps it)"}\ncommand: ${cmd} ${args.map((a) => (a === text ? "<prompt>" : a)).join(" ")}\n--- prompt\n${text}`);
+    if (!o.keep) rmSync(ws.dir, { recursive: true, force: true });
     return;
   }
 
   console.log(`${tag}: running in ${ws.dir}`);
   const started = new Date();
-  const r = await runAsync(cmd, args, { cwd: ws.dir, timeoutMs: Number(o["timeout-min"]) * 60_000 });
+  const r = await runAsync(cmd, args, { cwd: ws.dir, env: trialEnv(ws.dir), timeoutMs: Number(o["timeout-min"]) * 60_000 });
   const durationMs = Date.now() - started.getTime();
   const usage = rt.parse(r.stdout);
   const score = await grade(checkpoint, ws.dir, ws);
@@ -121,4 +122,18 @@ async function trial(arm, checkpoint, t) {
   if (!o.keep) rmSync(ws.dir, { recursive: true, force: true });
   if (r.code !== 0 || !usage) failures++;
   console.log(`${tag}: ${score.pass ? "pass" : "fail"}, ${usage?.total ?? "?"} tokens, ${Math.round(durationMs / 1000)}s -> ${out}`);
+}
+
+/**
+ * The environment a runtime starts with: ours, minus what points back at
+ * this checkout (npm's variables, the directory we were started from).
+ */
+function trialEnv(dir) {
+  const env = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (/^npm_/i.test(k) || ["INIT_CWD", "OLDPWD", "PWD"].includes(k)) continue;
+    env[k] = v;
+  }
+  env.PWD = dir;
+  return env;
 }

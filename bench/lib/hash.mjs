@@ -13,13 +13,14 @@ function walk(dir, out = []) {
 }
 
 /**
- * Identifies the bench itself: the fixture, the patches, the prompts and the
- * graders. Results with different hashes measured different tests and are
+ * Identifies the bench itself: the fixture, the rules a method arm gets for
+ * it, the patches, the prompts, the graders and the code that builds a
+ * workspace. Results with different hashes measured different tests and are
  * never averaged together.
  */
 export function benchHash() {
   const h = createHash("sha256");
-  for (const part of ["fixture", "patches", "prompts", "graders"]) {
+  for (const part of ["fixture", "fixture-rules", "patches", "prompts", "graders", "lib"]) {
     for (const f of walk(join(BENCH, part))) {
       h.update(relative(BENCH, f));
       h.update("\0");

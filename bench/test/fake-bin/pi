@@ -6,6 +6,16 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const sh = (cmd, args) => execFileSync(cmd, args, { stdio: "pipe" }).toString();
 const prompt = process.argv.at(-1);
+for (const k of ["INIT_CWD", "npm_package_json", "OLDPWD"]) {
+  if (process.env[k]) {
+    console.error(`fake pi: ${k} leaked into the trial`);
+    process.exit(3);
+  }
+}
+if (process.env.PWD !== process.cwd()) {
+  console.error(`fake pi: PWD is ${process.env.PWD}`);
+  process.exit(3);
+}
 if (existsSync("issues/1.md")) {
   sh("git", ["checkout", "-q", "-b", "fix/tag-filter"]);
   writeFileSync("src/server.ts", readFileSync("src/server.ts", "utf8").replace("tag.trim)", "tag.trim())"));
@@ -21,10 +31,11 @@ test("GET ?tag=work", async () => {
   sh("git", ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "fix"]);
 } else {
   const buggy = readFileSync("src/notes.ts", "utf8").includes("return index !== -1");
-  writeFileSync("REVIEW.md", buggy ? "BLOCKING src/notes.ts:44 splice(-1)\nBLOCKING src/server.ts:29 204 for missing\n" : "APPROVE\n");
+  writeFileSync("REVIEW.md", buggy ? "1. **BLOCKING** `src/notes.ts:44`: splice(-1) when the id is missing\n2. **BLOCKING** `src/server.ts:29`: 204 for a missing id, should be 404\n" : "**Blocking issues**\n\nBlocking: none\n\nAPPROVE\n");
 }
 const usage = (i, o) => ({ input: i, output: o, cacheRead: 10, cacheWrite: 0, totalTokens: i + o + 10, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0.01 } });
 console.log(JSON.stringify({ type: "message_end", message: { role: "assistant", model: "fake-model", usage: usage(100, 20) } }));
 console.log(JSON.stringify({ type: "message_end", message: { role: "toolResult", usage: usage(5, 1) } }));
 console.log(JSON.stringify({ type: "message_end", message: { role: "user" } }));
+console.log(JSON.stringify({ type: "compaction_end", result: { usage: usage(30, 4) } }));
 console.log(JSON.stringify({ type: "agent_end", prompt: prompt.length }));

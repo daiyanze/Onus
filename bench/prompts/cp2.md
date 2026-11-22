@@ -13,4 +13,5 @@ Write `REVIEW.md` with one finding per line:
   in the branch's version of the file.
 - `NOTE <reason>` for anything else.
 
-If nothing blocks, write `APPROVE` as the only line.
+If nothing blocks, write `APPROVE` as the only line. Only lines in this
+format are read: no headings, and one finding per line.

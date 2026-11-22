@@ -50,24 +50,29 @@ test("claude usage prefers modelUsage and keeps the cost", () => {
   assert.equal(usage.claude("not json"), null);
 });
 
-test("codex usage sums turn.completed and reports no cost", () => {
+test("codex usage takes the last turn.completed, a running total, and reports no cost", () => {
   const ev = (i, c, o, r) => JSON.stringify({ type: "turn.completed", usage: { input_tokens: i, cached_input_tokens: c, output_tokens: o, reasoning_output_tokens: r } });
-  const u = usage.codex([JSON.stringify({ type: "thread.started" }), ev(100, 80, 10, 4), ev(50, 40, 5, 1)].join("\n"));
-  assert.deepEqual([u.input, u.cacheRead, u.output, u.reasoning, u.total, u.turns, u.costUsd], [150, 120, 15, 5, 165, 2, null]);
+  const u = usage.codex([JSON.stringify({ type: "thread.started" }), ev(100, 80, 10, 4), ev(150, 120, 15, 5)].join("\n"));
+  assert.deepEqual([u.input, u.cacheRead, u.output, u.reasoning, u.total, u.turns, u.costUsd, u.cacheWrite], [150, 120, 15, 5, 165, 2, null, null]);
+  const w = usage.codex(JSON.stringify({ type: "turn.completed", usage: { input_tokens: 1, output_tokens: 1, cache_write_input_tokens: 7 } }));
+  assert.deepEqual([w.cacheWrite, w.reasoning], [7, null]);
   assert.equal(usage.codex("{}"), null);
 });
 
-test("pi usage counts assistant messages and tool results with nested usage", () => {
+test("pi usage counts assistant messages, tool results with nested usage, and compactions", () => {
   const u = (i, o, c) => ({ input: i, output: o, cacheRead: 1, cacheWrite: 2, totalTokens: i + o + 3, cost: { total: c } });
   const lines = [
     { type: "message_end", message: { role: "assistant", usage: u(10, 5, 0.1) } },
     { type: "message_end", message: { role: "toolResult", usage: u(4, 1, 0.05) } },
     { type: "message_end", message: { role: "user" } },
     { type: "message_update", message: { role: "assistant", usage: u(999, 999, 9) } },
+    { type: "compaction_end", result: { usage: u(20, 2, 0.02) } },
+    { type: "compaction_end", aborted: true },
   ].map((l) => JSON.stringify(l));
   const r = usage.pi(lines.join("\n"));
-  assert.deepEqual([r.input, r.output, r.cacheRead, r.cacheWrite, r.total, r.turns], [14, 6, 2, 4, 26, 1]);
-  assert.ok(Math.abs(r.costUsd - 0.15) < 1e-9);
+  assert.deepEqual([r.input, r.output, r.cacheRead, r.cacheWrite, r.total, r.turns, r.reasoning], [34, 8, 3, 6, 51, 1, null]);
+  assert.ok(Math.abs(r.costUsd - 0.17) < 1e-9);
+  assert.equal(usage.pi(JSON.stringify({ type: "message_end", message: { role: "assistant", usage: { ...u(1, 1, 0), reasoning: 3 } } })).reasoning, 3);
 });
 
 test("every arm gets the same prompt apart from the skill line", () => {
@@ -148,17 +153,54 @@ test("cp1 grader: a fix passes; a test that would catch the bug is credited", as
   rmSync(ws.dir, { recursive: true, force: true });
 });
 
+test("cp1 grader: a test only counts when it fails on the unfixed server", async () => {
+  const ws = prepare("cp1", null);
+  fixServer(ws.dir);
+  // A test of a new export fails on the old code only because the export is missing.
+  writeFileSync(join(ws.dir, "src/notes.ts"), `${readFileSync(join(ws.dir, "src/notes.ts"), "utf8")}\nexport const trimTag = (t: string) => t.trim();\n`);
+  writeFileSync(join(ws.dir, "test/trim.test.ts"), 'import { expect, test } from "bun:test";\nimport { trimTag } from "../src/notes.ts";\ntest("trim", () => expect(trimTag(" a ")).toBe("a"));\n');
+  let s = await cp1.grade(ws.dir, ws);
+  assert.equal(s.pass, true);
+  assert.equal(s.testCatchesBug, false);
+  assert.equal(s.regressionTest.files.find((f) => f.file === "test/trim.test.ts").onUnfixed, "load error");
+  // A catching test outside test/ still counts.
+  writeFileSync(join(ws.dir, "src/server.test.ts"), SERVER_TEST.replace("../src/server.ts", "./server.ts"));
+  s = await cp1.grade(ws.dir, ws);
+  assert.equal(s.testCatchesBug, true);
+  rmSync(ws.dir, { recursive: true, force: true });
+});
+
+test("cp1 grader: a fix that hard-codes the tag fails", async () => {
+  const ws = prepare("cp1", null);
+  writeFileSync(join(ws.dir, "src/server.ts"), readFileSync(join(ws.dir, "src/server.ts"), "utf8").replace("filterByTag(notes, tag.trim)", 'filterByTag(notes, "work")'));
+  const s = await cp1.grade(ws.dir, ws);
+  assert.deepEqual([s.e2e.tagLower, s.e2e.otherTags, s.pass], [true, false, false]);
+  rmSync(ws.dir, { recursive: true, force: true });
+});
+
 test("cp2 grader: finds, misses and false blocks", async () => {
   const bugs = cp2.plantedBugs();
-  const both = `BLOCKING src/notes.ts:${bugs[0].lines[0] + 2} splice\n- **BLOCKING** \`src/server.ts:${bugs[1].lines[0]}\` 204\nNOTE style`;
+  const [a, b] = [bugs[0].lines[0] + 2, bugs[1].lines[0] + 1];
+  const both = `BLOCKING src/notes.ts:${a} splice\n- **BLOCKING** \`src/server.ts:${b}\` 204\nNOTE style`;
   assert.equal(cp2.score(cp2.parseReview(both), "buggy").pass, true);
-  const one = cp2.score(cp2.parseReview(`BLOCKING ./src/notes.ts:${bugs[0].lines[1]} x\nBLOCKING test/notes.test.ts:3 no 404 test`), "buggy");
+  // Shapes a reviewer writes besides the prompted one all count.
+  for (const shape of [
+    `BLOCKING src/notes.ts:${a}: splices -1 when missing\nBLOCKING src/server.ts:${b}: 204 for an unknown id`,
+    `BLOCKING src/notes.ts:${a}, splice(-1)\nBLOCKING src/server.ts:${b}, always 204`,
+    `**BLOCKING:** src/notes.ts:${a} index -1\n**BLOCKING:** src/server.ts:${b} should be 404`,
+    `BLOCKING \`src/notes.ts\`:${a} splice\nBLOCKING \`src/server.ts\`:${b} 404`,
+    `1. BLOCKING src/notes.ts:${a} missing id\n2) BLOCKING src/server.ts:${b} not found`,
+  ]) assert.equal(cp2.score(cp2.parseReview(shape), "buggy").recall, 1, shape);
+  const one = cp2.score(cp2.parseReview(`BLOCKING ./src/notes.ts:${bugs[0].lines[1]} splice -1\nBLOCKING test/notes.test.ts:3 no 404 test`), "buggy");
   assert.deepEqual([one.pass, one.recall, one.otherBlocking.length], [false, 0.5, 1]);
   const far = cp2.score(cp2.parseReview("BLOCKING src/notes.ts:1 imports"), "buggy");
   assert.equal(far.recall, 0);
+  const wrongReason = cp2.score(cp2.parseReview(`BLOCKING src/notes.ts:${bugs[0].lines[0]} rename this\nBLOCKING src/server.ts:${bugs[1].lines[0] - 1} naming`), "buggy");
+  assert.equal(wrongReason.recall, 0, "the right place for an unrelated reason does not count");
   assert.equal(cp2.score(cp2.parseReview("APPROVE"), "clean").pass, true);
-  const fb = cp2.score(cp2.parseReview("BLOCKING src/server.ts:3 nit\nBLOCKING: no tests"), "clean");
-  assert.deepEqual([fb.pass, fb.falseBlocks], [false, 2]);
+  assert.equal(cp2.score(cp2.parseReview("**Blocking issues**\n\nBlocking: none\nBLOCKING: none\n\nAPPROVE"), "clean").pass, true);
+  const fb = cp2.score(cp2.parseReview("BLOCKING src/server.ts:3 nit\nBLOCKING: no tests\n1. BLOCKING src/notes.ts:40 x"), "clean");
+  assert.deepEqual([fb.pass, fb.falseBlocks], [false, 3]);
 
   const ws = prepare("cp2-buggy", null);
   assert.equal((await cp2.grade(ws.dir, { ...ws, variant: "buggy" })).process.reviewFile, false);
@@ -189,6 +231,9 @@ test("run.mjs: a full run with a fake runtime writes graded results with usage",
   const results = mkdtempSync(join(tmpdir(), "bench-results-"));
   const logs = mkdtempSync(join(tmpdir(), "bench-logs-"));
   const env = { ...process.env, PATH: `${join(BENCH, "test/fake-bin")}:${process.env.PATH}` };
+  // INIT_CWD and npm_package_json point back at this checkout; the fake runtime fails if they reach it.
+  env.INIT_CWD = REPO;
+  env.npm_package_json = join(REPO, "package.json");
   const r = run("node", [join(BENCH, "run.mjs"), "--runtime", "pi", "--arms", "none,onus", "--results", results, "--logs", logs], { env });
   assert.equal(r.code, 0, r.stderr + r.stdout);
   const files = run("find", [results, "-name", "*.json"]).stdout.trim().split("\n").sort();
@@ -196,7 +241,7 @@ test("run.mjs: a full run with a fake runtime writes graded results with usage",
   for (const f of files) {
     const j = JSON.parse(readFileSync(f, "utf8"));
     assert.equal(j.score.pass, true, `${f}: ${JSON.stringify(j.score)}`);
-    assert.equal(j.usage.total, 120 + 10 + 16);
+    assert.equal(j.usage.total, 120 + 10 + 16 + 44);
     assert.equal(j.modelReported, "fake-model");
     assert.match(j.bench, /^[0-9a-f]{12}$/);
     if (j.checkpoint === "cp1") assert.equal(j.score.testCatchesBug, true);
@@ -206,7 +251,7 @@ test("run.mjs: a full run with a fake runtime writes graded results with usage",
   const rep = run("node", [join(BENCH, "report.mjs"), "--results", results, "--out", out]);
   assert.equal(rep.code, 0, rep.stderr);
   const table = readFileSync(out, "utf8");
-  assert.match(table, /\| pi \| default \| none \| cp1 \| 1 \| 1\/1 \| test catches bug 1\/1; src lines 2\.0 \| 146 \(146-146\) \| \$0\.020 \|/);
+  assert.match(table, /\| pi \| default \| none \| cp1 \| 1 \| 1\/1 \| test catches bug 1\/1; src lines 2\.0 \| 190 \(190-190\) \| \$0\.030 \|/);
   assert.match(table, /\| cp2-buggy \| 1 \| 1\/1 \| recall 1\.00 \|/);
   assert.match(table, /\| cp2-clean \| 1 \| 1\/1 \| false blocks 0\.00 \|/);
   rmSync(results, { recursive: true, force: true });

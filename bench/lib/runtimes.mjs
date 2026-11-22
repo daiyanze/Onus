@@ -1,6 +1,6 @@
 // How each runtime is started for one trial, and where it reads user-level
 // instructions that would leak into every arm.
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { parsers } from "./usage.mjs";
@@ -14,7 +14,7 @@ const RUNTIMES = {
       ["-p", prompt, "--output-format", "json", "--permission-mode", "bypassPermissions",
         ...(model ? ["--model", model] : []), ...(budget ? ["--max-budget-usd", String(budget)] : [])],
     ],
-    userFiles: ["~/.claude/CLAUDE.md", "~/.claude/skills", "~/.claude/rules"],
+    userFiles: ["~/.claude/CLAUDE.md", "~/.claude/skills", "~/.claude/rules", "~/.claude/agents", "~/.claude/commands", "~/.claude/plugins", "~/.claude/settings.json"],
     reportedModel: (stdout) => {
       try { return Object.keys(JSON.parse(stdout.trim().split("\n").pop()).modelUsage ?? {}).join(",") || null; } catch { return null; }
     },
@@ -37,7 +37,7 @@ const RUNTIMES = {
       "pi",
       ["--mode", "json", "--no-session", "-a", ...(model ? ["--model", model] : []), prompt],
     ],
-    userFiles: ["~/.pi/agent/AGENTS.md", "~/.pi/agent/skills", "~/.agents/skills"],
+    userFiles: ["~/.pi/agent/AGENTS.override.md", "~/.pi/agent/AGENTS.md", "~/.pi/agent/AGENTS.MD", "~/.pi/agent/CLAUDE.md", "~/.pi/agent/CLAUDE.MD", "~/.pi/agent/SYSTEM.md", "~/.pi/agent/APPEND_SYSTEM.md", "~/.pi/agent/extensions", "~/.pi/agent/skills", "~/.agents/skills"],
     reportedModel: (stdout) => {
       const m = stdout.match(/"role":"assistant"[^\n]*?"model":"([^"]+)"/);
       return m ? m[1] : null;
@@ -57,11 +57,17 @@ export function runtime(name) {
  * User-level instruction and skill files this runtime would also load, and
  * AGENTS.md or CLAUDE.md files in the folders above the workspace. Any of
  * them makes the "none" arm not none. Best effort: these are the known
- * locations, not every one a runtime may read.
+ * locations, not every one a runtime may read. Claude Code also loads
+ * hooks, plugins, MCP servers and auto memory from ~/.claude; settings.json
+ * and plugins are listed because they can hold those. An empty folder is
+ * not listed.
  */
 export function leaks(name, workspace) {
   const home = homedir();
-  const found = RUNTIMES[name].userFiles.map((p) => p.replace(/^~/, home)).filter((p) => existsSync(p));
+  const found = RUNTIMES[name].userFiles.map((p) => p.replace(/^~/, home)).filter((p) => {
+    if (!existsSync(p)) return false;
+    try { return !statSync(p).isDirectory() || readdirSync(p).length > 0; } catch { return true; }
+  });
   for (let d = dirname(workspace); ; d = dirname(d)) {
     for (const f of ["AGENTS.md", "CLAUDE.md"]) if (existsSync(join(d, f))) found.push(join(d, f));
     if (dirname(d) === d) break;

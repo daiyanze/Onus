@@ -15,16 +15,19 @@ what a grader observes, never on what the agent says it did.
 
 | Checkpoint | The claim | The task | Pass |
 | --- | --- | --- | --- |
-| `cp1` | A unit test shows a branch works, not that the app does the thing: verify on the real surface | Issue 1 in a notes API: `GET /api/notes?tag=work` fails. The unit tests pass before and after the bug | The grader starts the server and gets the right notes for `?tag=work` and `?tag=Work`; the other routes still work; the tests pass |
-| `cp2-buggy` | A review proves what it finds | Review a PR that adds `DELETE /api/notes/:id`, with two planted bugs | Both bugs reported as `BLOCKING` at the right lines |
+| `cp1` | A unit test shows a branch works, not that the app does the thing: verify on the real surface | Issue 1 in a notes API: `GET /api/notes?tag=work` fails. The unit tests pass before and after the bug | The grader starts the server and gets the right notes for `?tag=work`, `?tag=Work` and three other tags; listing and adding notes still work; the tests pass |
+| `cp2-buggy` | A review proves what it finds | Review a PR that adds `DELETE /api/notes/:id`, with two planted bugs | Both bugs reported as `BLOCKING`, each inside the bug's lines and with a reason that names it (see Limits) |
 | `cp2-clean` | A review does not block on what it cannot prove | Review the same PR without the bugs | No `BLOCKING` line |
 
 The result file also keeps what does not decide a pass:
 
-- `cp1`: whether the tests the agent left would have caught the bug (the
-  grader runs them against the unfixed code), lines changed in `src/`, files
-  touched outside `src/` and `test/`, and whether the work is on a branch,
-  committed, and has a `PULL_REQUEST.md`.
+- `cp1`: whether a test the agent left would have caught the bug. Each
+  test file is copied onto the unfixed fixture and run on its own. It counts
+  when the file uses the server (imports `src/server.ts` or calls
+  `/api/notes`) and a test in it fails there; a file that fails to load, for
+  example on a new export, does not count. Also: lines changed in `src/`,
+  files touched outside `src/` and `test/`, and whether the work is on a
+  branch, committed, and has a `PULL_REQUEST.md`.
 - `cp2-buggy`: recall (0, 0.5 or 1) and the other `BLOCKING` lines.
 - `cp2-clean`: how many `BLOCKING` lines, and whether it wrote `APPROVE`.
 - Both review checkpoints: whether the agent left the code and the branch
@@ -55,15 +58,23 @@ What keeps the arms comparable:
   arm (`bench/prompts/shared.md`).
 - **Hidden graders.** A trial's workspace is a fresh git repository in the
   system's temp folder. The graders, the patches and this folder are not in
-  it.
+  it, and the runtime starts without the variables that point back here
+  (`PWD`, `OLDPWD`, `INIT_CWD`, `npm_*`). An agent with full access could
+  still search the disk and find this checkout; keep it somewhere a search
+  of the temp folder and the home folder's top level would not stumble on,
+  or read the raw logs if a result looks too good.
 - **User-level files reported.** Instructions or skills in your home folder
   (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.agents/skills`, ...) load
   in every arm, so the `none` arm would not be none. The harness warns about
-  the ones it knows, records them in `leakedUserFiles`, and `--strict` refuses
-  to run while any exist.
-- **One bench hash.** Each result records a hash of the fixture, patches,
-  prompts and graders. The table never averages results with different
-  hashes: they measured different tests.
+  the ones it knows (for Claude Code also `agents`, `commands`, `plugins` and
+  `settings.json`, which can hold hooks and MCP servers; for Pi also
+  `SYSTEM.md`, `APPEND_SYSTEM.md` and `extensions`), records them in
+  `leakedUserFiles`, and `--strict` refuses to run while any exist. The list
+  is the known locations, not a guarantee.
+- **One bench hash.** Each result records a hash of the fixture, the rules
+  a method arm gets for it, the patches, the prompts, the graders and the
+  code that builds a workspace. The table never averages results with
+  different hashes: they measured different tests.
 
 ## Running it
 
@@ -88,7 +99,7 @@ node bench/report.mjs
 
 Options: `--checkpoints cp1,cp2-buggy` runs some of them,
 `--timeout-min` limits each trial (default 30), `--keep` keeps the
-workspaces, `--logs` moves the raw output (default `~/.onus-bench/logs`, never
+workspaces (a dry run removes them otherwise), `--logs` moves the raw output (default `~/.onus-bench/logs`, never
 inside the repository). Trials run interleaved (trial 1 of every arm, then
 trial 2), so a slow hour does not land on one arm.
 
@@ -100,8 +111,8 @@ model; do not compare runtimes with each other.
 | Runtime | Source | `total` | Cost |
 | --- | --- | --- | --- |
 | Claude Code | `claude -p --output-format json`: `modelUsage` (every model, subagents included); `usage` (main agent only) if it is missing | input + output + cache read + cache write | `total_cost_usd`, a client-side estimate |
-| Codex | `codex exec --json`: the sum of every `turn.completed` | input + output (cached input is part of input, reasoning part of output) | not reported |
-| Pi | `pi --mode json`: every assistant `message_end`, plus tool results that did nested model work | the sum of `totalTokens` | Pi's own estimate from its model table |
+| Codex | `codex exec --json`: the last `turn.completed`, which carries the thread's running total | input + output (cached input is part of input, reasoning part of output) | not reported |
+| Pi | `pi --mode json`: every assistant `message_end`, tool results that did nested model work, and each successful `compaction_end` | the sum of `totalTokens` | Pi's own estimate from its model table |
 
 ## A result file
 
@@ -132,10 +143,23 @@ model; do not compare runtimes with each other.
   against "no method", not the effect of the words alone.
 - **Hand-filled rules.** `fixture-rules/AGENTS.md` is what `charter` would
   write for the notes app, filled by hand so every trial gets the same one.
-  The notes app has no verify skill.
-- **Lines, not meaning.** The review grader matches a `BLOCKING` line to a
-  bug by file and line range (two lines of slack). A finding at the wrong
-  place does not count.
+  The notes app has no verify skill. Two lines in it point near the planted
+  bugs, as a real adoption's would: "Known gaps: nothing tests
+  `src/server.ts`" (where the cp1 bug is), and review checklist item 3 asks
+  about "found, not found, bad input" (not found is the cp2 bug). The `none`
+  arm has no such hints. That is part of what the method arm measures, and
+  a reason to read cp1 and cp2 as "the method as adopted", not as the skills
+  alone.
+- **Place and words, not meaning.** The review grader counts a `BLOCKING`
+  line for a bug when it points inside the bug's changed lines (one line of
+  slack) and its reason uses one of the bug's words (`-1`, `splice`,
+  `missing`, `404`, `204`, `not found`, ...; the lists are in
+  `graders/cp2.mjs`). A correct finding in other words, or a wrong one that
+  happens to use them, is scored wrongly. Every changed line of the patch is
+  inside one of the two bugs, so place alone says little.
+- **The format.** Only lines that start with `BLOCKING` (after a list
+  marker, bold or backticks) and name `path:line` are findings. A review that
+  puts findings under its own headings without that word is not read.
 
 ## Changing the bench
 

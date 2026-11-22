@@ -43,7 +43,7 @@ const rows = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([
   const tokens = nums(rs, (r) => r.usage?.total);
   const cost = nums(rs, (r) => r.usage?.costUsd);
   const broken = rs.filter((r) => r.exitCode !== 0 || r.timedOut || !r.usage).length;
-  return `| ${bench} | ${runtime} | ${model} | ${arm} | ${cp} | ${rs.length} | ${rs.filter((r) => r.score.pass).length}/${rs.length} | ${extra(cp, rs)} | ${fmt(mean(tokens))} (${fmt(Math.min(...tokens))}-${fmt(Math.max(...tokens))}) | ${cost.length ? `$${fmt(mean(cost), 3)}` : "-"} | ${fmt(mean(nums(rs, (r) => r.durationMs)) / 60000, 1)} | ${broken} |`;
+  return `| ${bench} | ${runtime} | ${model} | ${arm} | ${cp} | ${rs.length} | ${rs.filter((r) => r.score.pass).length}/${rs.length} | ${extra(cp, rs)} | ${tokens.length ? `${fmt(mean(tokens))} (${fmt(Math.min(...tokens))}-${fmt(Math.max(...tokens))})` : "-"} | ${cost.length ? `$${fmt(mean(cost), 3)}` : "-"} | ${fmt(mean(nums(rs, (r) => r.durationMs)) / 60000, 1)} | ${broken} |`;
 });
 
 writeFileSync(o.out, `# Bench results
