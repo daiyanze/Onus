@@ -1,9 +1,9 @@
 ---
-name: adopt
-description: Set up the Surgical Dev method in the repository you are in - one rules file every agent runtime reads, the method and lessons docs, skill folders wired for Claude Code, Pi and Codex, and a check that keeps it so. Use once per repository, when the owner asks to adopt or install the method.
+name: charter
+description: Adopt the Onus method in the repository you are in (set up, install) - one rules file every agent runtime reads, the method and lessons docs, skill folders wired for Claude Code, Pi and Codex, and a check that keeps it so. Use once per repository, when the owner asks to adopt or install the method.
 ---
 
-# Adopt the method in this repository
+# Charter: adopt the method in this repository
 
 One-time setup. It writes documents and one check script and ends in a pull
 request the owner merges. It changes no product code; on a Node project it
@@ -120,14 +120,14 @@ to it instead of repeating it.
 
 Run it. It must print `agent files ok`.
 
-Add `.runs/` to `.gitignore` (long-run decision logs).
+Add `.runs/` to `.gitignore` (the `docket` skill's decision logs).
 
 ## 7. Open the pull request
 
 Follow the method you just installed: title `chore(agents): adopt the
-Surgical Dev method`; sections Why, What changed, Scope, Verification. Then
+Onus method`; sections Why, What changed, Scope, Verification. Then
 start a separate agent with no context from this session and have it follow
-the `pr-review` skill on the PR. Ask it in particular to test every
+the `cross-examine` skill on the PR. Ask it in particular to test every
 "Enforced by" entry against the code.
 
 List in the PR what only the owner can do:
@@ -145,4 +145,4 @@ List in the PR what only the owner can do:
 ## 8. Next
 
 If the project has something a user can see or do, create its verify skill
-with `make-verify-skill`. Then the owner can ask for the next issue.
+with `evidence-kit`. Then the owner can ask for the next issue.

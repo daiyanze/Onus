@@ -5,7 +5,7 @@ true. If code and this file disagree, fix one of them in the same PR.
 
 Every agent runtime reads this one file: Pi and Codex read `AGENTS.md`
 directly, and `CLAUDE.md` imports it for Claude Code. The procedures are
-skills (`next`, `long-run`, `pr-review`), found in `.claude/skills` and
+skills (`take-case`, `docket`, `cross-examine`), found in `.claude/skills` and
 `.agents/skills`.
 
 ## What this is
@@ -64,15 +64,15 @@ changes; the owner must approve them.
 The working method is `docs/development.md`; read it and `docs/lessons.md`
 before starting a task.
 
-1. Pick an issue (the `next` skill finds the next one labelled
-   `<agent label>`; the `long-run` skill works through a whole goal). Branch
+1. Pick an issue (the `take-case` skill finds the next one labelled
+   `<agent label>`; the `docket` skill works through a whole goal). Branch
    from `<base branch>`. Never push to `<base branch>` directly. Stop and
    ask before anything that cannot be undone.
 2. Implement, then run the check command locally. Drive anything a user sees
    on the real app with the project's verify skill, if it has one.
 3. Push the branch and open a PR. CI runs the check command.
 4. A separate review agent, with no context from the writing session,
-   reviews the PR with the `pr-review` skill. The session that wrote a PR
+   reviews the PR with the `cross-examine` skill. The session that wrote a PR
    does not review it.
 5. The owner merges.
 6. A mistake caught by the owner, CI or review becomes a lesson in

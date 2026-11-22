@@ -1,10 +1,10 @@
 ---
-name: long-run
-description: Work toward a goal the owner gave, issue after issue, until a stated exit condition holds, keeping a decision log. Only when the owner asks for a long run and names the goal. Never merges.
+name: docket
+description: Long run - work toward a goal the owner gave, issue after issue, until a stated exit condition holds, keeping a decision log. Only when the owner asks for a long run and names the goal. Never merges.
 disable-model-invocation: true
 ---
 
-# Long run
+# Docket: a long run toward one goal
 
 Work toward a goal the owner gave, issue after issue, until an exit
 condition holds. The rules are in `docs/development.md`, "Long runs"; this
@@ -52,9 +52,9 @@ names.
 
 Until the condition holds:
 
-1. Follow steps 1 and 2 of the `next` skill restricted to the goal's issues,
+1. Follow steps 1 and 2 of the `take-case` skill restricted to the goal's issues,
    skipping issues parked in this run. No candidate left: go to 4.
-2. Do the issue with step 3 of the `next` skill, which follows
+2. Do the issue with step 3 of the `take-case` skill, which follows
    `docs/development.md`. Each issue gets its own branch from the base branch
    and its own PR.
 3. While CI and the review agent run, start the next candidate; come back
