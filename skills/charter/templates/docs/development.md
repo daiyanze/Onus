@@ -44,6 +44,17 @@ One of the two folders links to the other, so there is one copy of each
 skill. On a Windows clone without symlinks enabled the link is a plain file,
 and the runtimes on the linked side find no skills.
 
+### Dependencies and milestones
+
+<Only if this project's issues name dependencies in other forms than `#n`,
+`#n to #m` and `None.`, or its milestones do not sort by due date or name.
+The `take-case` skill reads this before its own defaults. List each form as
+the issues write it and what it means, for example a code like `M1-04` for
+the issue whose title starts with `[M1-04]`; and say how milestones are
+ordered and which milestones' candidates count, for example two tracks,
+each with its own front, where only the front's candidates count. Delete
+this section otherwise.>
+
 ## The loop
 
 1. **Explore.** Read the issue, `AGENTS.md`, the recorded decisions it
