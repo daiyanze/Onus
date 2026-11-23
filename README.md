@@ -73,10 +73,11 @@ Everything else in the method follows from this table.
    relaxes the condition to finish.
 8. **The owner merges, or grants it.** By default the agent never merges.
    The owner can grant a long run the right to merge its own PRs: each
-   one only with an approving review of its current head, green CI, the
-   base branch merged in, and no protected path touched. The agent never
-   pushes to the base branch, and stops to ask before anything that cannot
-   be undone.
+   one only with an approving review of its current head (or of an
+   earlier one followed only by clean merges of the base branch), green CI,
+   the base branch merged in, and no protected path or CI workflow touched.
+   The agent never pushes to the base branch, and stops to ask before
+   anything that cannot be undone.
 
 ## 🚀 Quickstart
 
@@ -198,11 +199,12 @@ Pi loads a project's `.agents/skills` only after you trust the project.
   and `git log`, without redoing work.
 - **Merges** only if you grant it in the session (`/docket finish milestone
   2, you may merge`), and only a PR it opened that has an approving review
-  of its current head, green CI, the base branch merged in, and no
-  protected path. It merges that exact commit, never with `--admin`. A
-  failed CI run on the base branch after a merge stops all merging for the
-  run, and the issues that wait on a merge start only after the base
-  branch's CI passes. A new session or a scheduled run needs a new grant.
+  of its current head (or of an earlier one followed only by clean merges
+  of the base branch), green CI, the base branch merged in, and no
+  protected path, CI workflow or check-command change. It merges that
+  exact commit, never with `--admin`. A failed CI run on the base branch
+  after a merge stops all merging for the run, and the issues that wait on
+  a merge start only after the base branch's CI passes. A new session or a scheduled run needs a new grant.
   Unless `AGENTS.md` says a merge deploys nothing, a merge counts as
   deploying, and the grant must say that merging may deploy. Only comments
   from the run's own account count as its review.

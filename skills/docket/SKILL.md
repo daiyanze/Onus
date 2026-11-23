@@ -41,7 +41,7 @@ A review covers a head when it names that commit, or an earlier one followed
 only by fixes for its non-blocking notes or merges of the base branch that
 the writer has listed in a PR comment (`docs/development.md`, step 6). The
 listing comment is what a command can check; without it the head is not
-covered.
+covered. Only a listing comment from the run's own account counts.
 
 Issues that wait on the owner (no agent label, an unmerged dependency, a
 parked question) are outside the condition, and the final report lists them.
@@ -90,7 +90,8 @@ Until the condition holds:
    to fix blocking review items, then start a new review agent. Log a row
    with phase `review`, the verdict and the review comment's ID, which the
    review agent reports after reading its comment back.
-4. With a grant, merge each PR that meets step 5 as soon as it does.
+4. With a grant, merge each PR that meets the conditions in step 5
+   ("Merge, when granted") as soon as it does.
 5. Log one row per finished unit (PR opened, review verdict, fix pushed),
    per fork taken, per revert, and per parked issue with the reason.
 
@@ -115,22 +116,33 @@ merging, on its current head:
 
 1. **It is this run's.** Its number is in a `pr` row this run logged, for
    one of the goal's issues, and the issue is not parked.
-2. **No protected path.** List every file with its old name too, so a
-   rename out of a protected path shows:
+2. **No protected path, and not the gate.** `AGENTS.md` must have a
+   "Protected paths" section; without one, nothing merges under a grant.
+   List every file with its old name too, so a rename out of a protected
+   path shows:
    `gh api repos/<owner>/<repo>/pulls/<n>/files --paginate --jq '.[] |
-   .filename, (.previous_filename // empty)'`. No name may fall under
-   `AGENTS.md`, "Protected paths". If the list is shorter than the PR's
-   `changed_files`, stop: it was cut off.
+   .filename, (.previous_filename // empty)'`. No name may fall under a
+   protected path, or under `.github/`: CI on a pull request runs the PR's
+   own workflows, so a PR that changes them changes its own gate. Nor may
+   the PR change how the check command is defined (its script entry, or
+   its config). Count the `filename` entries alone; if there are fewer than
+   the PR's `changed_files`, stop: the list was cut off.
 3. **A real approval of this head.** The review comment is one whose ID
    this run logged in a `review` row. Its author is the account this run
    uses (`gh api user --jq .login`), and it has not been edited since that
-   row. Its verdict is approve or approve with nits, and it marks every
-   acceptance criterion "met". It names the current head. The only commits
-   allowed after the one it names are merges of the base branch that
-   resolved nothing by hand: `git show --remerge-diff <merge>` prints
-   nothing for each. Under a grant, the writer is also the one who merges,
-   so a fix for review notes needs a new review before merging. Comments
-   from any other account never count, whatever they say.
+   row. Comments from any other account never count, whatever they say.
+   Its verdict is approve or approve with nits. Every acceptance criterion
+   it lists is met, and on a re-review every earlier blocking item it lists
+   is fixed. It names a commit R that the head contains. Every commit in
+   `git rev-list --first-parent R..HEAD` must be a merge of the base branch
+   that resolved nothing by hand:
+   - it has two parents, and its second parent is on the base branch:
+     `git merge-base --is-ancestor <merge>^2 origin/<base branch>`;
+   - `git show --remerge-diff --format= <merge>` prints nothing.
+
+   Any other commit after R, a fix for review notes included, needs a new
+   review before merging: under a grant, the writer is also the one who
+   merges.
 4. **CI passed on this head.** `gh pr checks <n>`: every check passed or was
    skipped, none failed or is still running, and the job that runs the
    project's check command is among those that passed. A head with no

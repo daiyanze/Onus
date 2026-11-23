@@ -98,7 +98,9 @@ this section otherwise.>
    issues; a new agent re-reviews. After three rounds the owner decides. A
    verdict covers the commit it names: later commits need a re-review,
    unless they only fix that review's non-blocking notes or merge the base
-   branch, and the writer lists them in a PR comment.
+   branch, and the writer lists them in a PR comment. Before a merge under a
+   `docket` grant, only clean merges of the base branch are exempt (that
+   skill's step 5).
 7. **Learn.** When the owner corrects something, or CI or review catches a
    mistake the writer made, add a lesson (below). Do it in the same PR when
    the lesson is about that PR.
@@ -182,7 +184,8 @@ for "continue". The rules:
   owner on a conflict with a recorded decision, a secret or account it
   needs, a protected path the issue does not mention, a spent budget, or
   anything that cannot be undone (deploys, data deletion, messages to
-  people). It logs why and moves to the next issue.
+  people). A merge that the run's grant allows to deploy is not one of
+  these. It logs why and moves to the next issue.
 
 ## Review checklist
 

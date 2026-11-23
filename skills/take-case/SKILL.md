@@ -83,7 +83,9 @@ granted merging, and it merges in that skill, not here.
 Stop and ask before building if the issue contradicts a recorded decision,
 needs a secret or an account, touches a protected path it does not mention
 (`AGENTS.md`, "Protected paths"), or needs something that cannot be undone
-(a deploy, deleting data, a message to people, a force-push).
+(a deploy, deleting data, a message to people, a force-push). A merge that a
+`docket` grant allows to deploy is not one of these: the owner already
+decided it.
 
 ## 4. Report
 

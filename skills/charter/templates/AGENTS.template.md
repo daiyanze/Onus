@@ -67,7 +67,8 @@ before starting a task.
 1. Pick an issue (the `take-case` skill finds the next one labelled
    `<agent label>`; the `docket` skill works through a whole goal). Branch
    from `<base branch>`. Never push to `<base branch>` directly. Stop and
-   ask before anything that cannot be undone.
+   ask before anything that cannot be undone, except a merge that a
+   `docket` grant allows to deploy.
 2. Implement, then run the check command locally. Drive anything a user sees
    on the real app with the project's verify skill, if it has one.
 3. Push the branch and open a PR. CI runs the check command.
