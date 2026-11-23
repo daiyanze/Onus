@@ -67,14 +67,16 @@ before starting a task.
 1. Pick an issue (the `take-case` skill finds the next one labelled
    `<agent label>`; the `docket` skill works through a whole goal). Branch
    from `<base branch>`. Never push to `<base branch>` directly. Stop and
-   ask before anything that cannot be undone.
+   ask before anything that cannot be undone, except a merge that a
+   `docket` grant allows to deploy.
 2. Implement, then run the check command locally. Drive anything a user sees
    on the real app with the project's verify skill, if it has one.
 3. Push the branch and open a PR. CI runs the check command.
 4. A separate review agent, with no context from the writing session,
    reviews the PR with the `cross-examine` skill. The session that wrote a PR
    does not review it.
-5. The owner merges.
+5. The owner merges, or grants a `docket` run, in its session, the right to
+   merge its own PRs under that skill's conditions.
 6. A mistake caught by the owner, CI or review becomes a lesson in
    `docs/lessons.md`, or a check.
 

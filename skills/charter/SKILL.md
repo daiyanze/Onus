@@ -148,7 +148,8 @@ List in the PR what only the owner can do:
 - Protect the base branch: require a pull request and the check command.
 - Add `CODEOWNERS` for the protected paths, and decide whether code-owner
   approval is required. Until it is, the safeguard is that only the owner
-  merges; say so in the "Protected paths" row.
+  merges a PR that touches a protected path (a granted `docket` run never
+  merges one); say so in the "Protected paths" row.
 - Decide which invariants marked "(proposed)" stay.
 - In Pi, trust the project: Pi loads a project's `.agents/skills` only
   after that.
