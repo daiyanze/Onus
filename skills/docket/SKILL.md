@@ -116,16 +116,19 @@ merging, on its current head:
 
 1. **It is this run's.** Its number is in a `pr` row this run logged, for
    one of the goal's issues, and the issue is not parked.
-2. **No protected path, and not the gate.** `AGENTS.md` must have a
-   "Protected paths" section; without one, nothing merges under a grant.
+2. **No protected path, and not the gate.** Read `AGENTS.md` from the base
+   branch (`git show origin/<base branch>:AGENTS.md`), not from the PR. It
+   must have a "Protected paths" section; without one, nothing merges under
+   a grant.
    List every file with its old name too, so a rename out of a protected
    path shows:
    `gh api repos/<owner>/<repo>/pulls/<n>/files --paginate --jq '.[] |
    .filename, (.previous_filename // empty)'`. No name may fall under a
    protected path, or under `.github/`: CI on a pull request runs the PR's
    own workflows, so a PR that changes them changes its own gate. Nor may
-   the PR change how the check command is defined (its script entry, or
-   its config). Count the `filename` entries alone; if there are fewer than
+   the PR change the check command itself: its script entry, its config,
+   the scripts it runs to check the repository, or CI config kept anywhere
+   else. Count the `filename` entries alone; if there are fewer than
    the PR's `changed_files`, stop: the list was cut off.
 3. **A real approval of this head.** The review comment is one whose ID
    this run logged in a `review` row. Its author is the account this run
@@ -133,16 +136,20 @@ merging, on its current head:
    row. Comments from any other account never count, whatever they say.
    Its verdict is approve or approve with nits. Every acceptance criterion
    it lists is met, and on a re-review every earlier blocking item it lists
-   is fixed. It names a commit R that the head contains. Every commit in
-   `git rev-list --first-parent R..HEAD` must be a merge of the base branch
-   that resolved nothing by hand:
+   is fixed. It names a commit R that the PR's head contains. After `git
+   fetch origin`, every commit in `git rev-list --first-parent R..<head SHA>`
+   must be a merge of the base branch that resolved nothing by hand. Use the
+   PR's head SHA, never the local `HEAD`, which may be another issue's
+   branch. This needs git 2.36 or later (`git version`); with an older git,
+   nothing merges under a grant:
    - it has two parents, and its second parent is on the base branch:
      `git merge-base --is-ancestor <merge>^2 origin/<base branch>`;
    - `git show --remerge-diff --format= <merge>` prints nothing.
 
    Any other commit after R, a fix for review notes included, needs a new
    review before merging: under a grant, the writer is also the one who
-   merges.
+   merges. These checks read git itself, so a clean base merge needs no
+   listing comment here.
 4. **CI passed on this head.** `gh pr checks <n>`: every check passed or was
    skipped, none failed or is still running, and the job that runs the
    project's check command is among those that passed. A head with no
@@ -163,7 +170,7 @@ one (`gh api repos/<owner>/<repo> --jq '{allow_merge_commit,
 allow_squash_merge, allow_rebase_merge}'`), else squash, else rebase:
 
 ```sh
-gh pr merge <n> --match-head-commit <head SHA> --merge
+gh pr merge <n> --match-head-commit <head SHA> --merge   # or --squash, --rebase
 ```
 
 Log a row with phase `merge`, the PR and the merge commit.

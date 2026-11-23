@@ -77,7 +77,8 @@ Everything else in the method follows from this table.
    earlier one followed only by clean merges of the base branch), green CI,
    the base branch merged in, and no protected path or CI workflow touched.
    The agent never pushes to the base branch, and stops to ask before
-   anything that cannot be undone.
+   anything that cannot be undone, except a merge your grant allowed to
+   deploy.
 
 ## 🚀 Quickstart
 
