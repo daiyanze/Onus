@@ -201,6 +201,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 
 - **界定** 目标：把"完成"写成一项检查，并写明哪些不在范围内。一个 Pull Request
   就能做完的工作，会被退回正常的循环。
+- **访谈你：** 目标还不清楚时，一次问一个问题，每个都附上推荐答案，只问代码和文档
+  回答不了的事，直到"完成"能写成检查、范围已经划定。之后只在需要停下的地方才问你。
 - **打底：** 读不变量、已记录的决定、教训和代码。会改变方案结构的未知点，用探针去
   验证，而不是靠争论。
 - **勾出** 至少两种结构不同的方案：先写清结果会被怎么使用，再把方案写成代码放在
@@ -303,6 +305,9 @@ node bench/report.mjs
   并写明由什么来保证。`brief` 借鉴了 pstack 的 `architect`、`interrogate` 和
   `figure-it-out` 的思路：先写用法再定类型、至少两种结构不同的方案、必须证明自己
   发现的挑战者、风险最大的先做，以及放弃一个总要绕路的方案。
+- Matt Pocock 的 [`grill-me`](https://github.com/mattpocock/skills)：`brief` 的访谈
+  借鉴了它的做法：一次问一个问题并附上推荐答案，按决定之间的依赖顺序逐个问，问之前先
+  去代码里查。
 - [Agent Skills 规范](https://agentskills.io/specification)：可移植的 skill 格式。
 - 本仓库历史中的早期设计（当时名为 Surgical Dev）：按验收标准逐条给出结论、结论绑定
   到单个 commit、无人值守工作的预算。

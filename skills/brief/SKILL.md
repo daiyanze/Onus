@@ -1,6 +1,6 @@
 ---
 name: brief
-description: Plan work bigger than one issue (design, architecture, break down into issues) - ground the goal in the code and the recorded decisions, sketch at least two shapes in code, have an independent agent try to break the chosen one, record the decision, and split it into issues of one pull request each, with acceptance criteria and dependencies that a script checks. Use when the owner asks to design, plan or break down a goal. Never labels issues for the agent.
+description: Plan work bigger than one issue (design, architecture, break down into issues) - interview the owner one question at a time while the goal is unclear, ground the goal in the code and the recorded decisions, sketch at least two shapes in code, have an independent agent try to break the chosen one, record the decision, and split it into issues of one pull request each, with acceptance criteria and dependencies that a script checks. Use when the owner asks to design, plan or break down a goal. Never labels issues for the agent.
 ---
 
 # Brief: from a goal to a plan of issues
@@ -28,8 +28,25 @@ If one pull request can do it, say so and stop. That is an issue, and step 2
 of the loop in `docs/development.md` already sketches two shapes when a
 change crosses a boundary. A long task is not yet a plan.
 
-If the goal can be read two ways, ask now. Everything after builds on the
-reading you choose, so this is the question worth stopping for.
+If the goal can be read two ways, or "done" cannot yet be written as a
+check, interview the owner now. Everything after builds on these answers,
+so this is where questions are worth the owner's time:
+
+- **One question at a time**, each with your recommended answer and the
+  reason, so a "yes" settles it.
+- **Look it up first.** A question the code, the docs or the recorded
+  decisions can answer is not one for the owner. Ask only what is theirs to
+  decide: what they want, what they would give up for it, where the goal
+  ends.
+- **Follow the answers down.** When an answer opens a new choice, that is the
+  next question. Settle a choice before the ones that depend on it.
+- **Stop** when "done" is a check, the scope is drawn, and no open choice
+  would change the shape. Read the framing back in a few lines and get a
+  yes.
+
+If the owner is not there to answer, take your recommended answers, mark
+each one as assumed, and say so in the report. After this step, ask the
+owner nothing more except at the stops below.
 
 ## 2. Ground it
 
@@ -40,8 +57,9 @@ Read before designing:
 - the code: who calls what the goal changes, which module owns each piece of
   state it touches, and how that is tested and verified today.
 
-List the constraints, each with its source: an invariant, a decision, a
-caller, a lesson. A constraint you cannot source is an assumption; mark it.
+List the constraints, each with its source: an answer from the owner in
+step 1, an invariant, a decision, a caller, a lesson. A constraint you
+cannot source is an assumption; mark it.
 
 List the unknowns, the ones that would change the shape first. Settle the
 cheap ones with a probe instead of an argument: a throwaway script against
@@ -121,6 +139,7 @@ example a new `docs/adr/NNNN-<slug>.md`). A project that records none gets
 `docs/plans/<slug>.md`. The record holds:
 
 - the goal, what "done" means, and what is out of scope;
+- the owner's answers from step 1, and any answer taken as assumed;
 - the constraints with their sources, and each probe with what it showed;
 - the examples of use;
 - the shapes considered, and why each one lost;
@@ -218,8 +237,8 @@ exist on GitHub, leave it off and list it for the owner.
 
 ## 9. Report
 
-The record and the plan; the challenge rounds and what they found; the
-one-way doors; the risks left open; and what the owner does next: review and
+The record and the plan; any answer taken as assumed in step 1; the
+challenge rounds and what they found; the one-way doors; the risks left open; and what the owner does next: review and
 merge the plan, ask for the issues, and label the ones the agent may do,
 starting with the riskiest.
 

@@ -231,6 +231,10 @@ _Review by an independent agent (<model>), at <full head SHA>._
 
 - **Frames** the goal: what "done" is, as a check, and what is out of scope.
   Work one pull request can do is sent back to the normal loop.
+- **Interviews you** while the goal is unclear: one question at a time, each
+  with a recommended answer, only about what the code and the docs cannot
+  answer, until "done" is a check and the scope is drawn. After that it asks
+  only at the stops.
 - **Grounds** it in the invariants, the recorded decisions, the lessons and
   the code, and settles the unknowns that would change the shape with
   probes, not arguments.
@@ -357,6 +361,10 @@ node bench/report.mjs
   `figure-it-out`: usage before types, at least two structurally different
   shapes, adversaries that must prove what they find, riskiest work first,
   and abandoning a shape that keeps needing workarounds.
+- Matt Pocock's [`grill-me`](https://github.com/mattpocock/skills): `brief`'s
+  interview takes from it one question at a time with a recommended answer,
+  walking the choices in the order they depend on each other, and looking
+  in the code before asking.
 - [Agent Skills specification](https://agentskills.io/specification): the
   portable skill format.
 - The earlier design in this repository's history (as Surgical Dev): a
