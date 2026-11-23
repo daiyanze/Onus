@@ -201,8 +201,11 @@ Pi loads a project's `.agents/skills` only after you trust the project.
   of its current head, green CI, the base branch merged in, and no
   protected path. It merges that exact commit, never with `--admin`. A
   failed CI run on the base branch after a merge stops all merging for the
-  run. A new session or a scheduled run needs a new grant. If merging
-  deploys, the grant must say so.
+  run, and the issues that wait on a merge start only after the base
+  branch's CI passes. A new session or a scheduled run needs a new grant.
+  Unless `AGENTS.md` says a merge deploys nothing, a merge counts as
+  deploying, and the grant must say that merging may deploy. Only comments
+  from the run's own account count as its review.
 - **Never** pushes to the base branch, and deploys only through a merge
   that your grant allowed to deploy.
 
@@ -333,12 +336,14 @@ exact posting command (`-F body=@file`) and reads the comment back.
 
 ## 🛡️ What it does not do
 
-- It does not merge unless you grant it for one long run, and it does not
-  deploy or delete. Those stay with the owner.
+- It does not merge unless you grant it for one long run. It does not
+  delete, and it deploys only through a merge your grant allowed to deploy.
+  The rest stays with the owner.
 - It does not enforce itself with code. The skills are instructions; what
   holds them in place is your check command, your branch rules, and the fact
-  that only you merge, or grant merging. Say in `AGENTS.md` what your branch rules really
-  require.
+  that only you merge, or grant merging. No branch rule can read a review
+  verdict, so a granted merge rests on the agent following `docket`. Say in
+  `AGENTS.md` what your branch rules really require.
 - It does not replace your tests or CI. It uses them.
 - It is not proven across models or teams. One project, one model family so
   far.
