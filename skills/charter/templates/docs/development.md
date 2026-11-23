@@ -36,7 +36,7 @@ The procedures are skills. Each runtime calls a skill by name:
 
 | Runtime | Finds skills in | Call |
 | --- | --- | --- |
-| Claude Code | `.claude/skills` | `/take-case`, `/docket <goal>` |
+| Claude Code | `.claude/skills` | `/take-case`, `/docket <goal>`, `/brief <goal>` |
 | Pi | `.agents/skills` | `/skill:take-case` |
 | Codex | `.agents/skills` | `$take-case`, or pick it from `/skills` |
 
@@ -98,7 +98,15 @@ the agent never does.
 
 ## Kinds of work
 
-The loop above is the default. Two kinds of work add steps.
+The loop above is the default. Three kinds of work add steps.
+
+**Work bigger than one issue.** A goal that needs several pull requests is
+planned with the `brief` skill before any of it is built: two shapes
+sketched in code, the chosen one challenged by an independent agent,
+recorded as a decision, and split into issues with acceptance criteria and
+dependencies. An issue from such a plan follows its record. When the code
+needs something the record did not foresee, that is a difference from a
+recorded decision (step 2): say so in the PR instead of patching around it.
 
 **Bug fix.** Every changed line traces to evidence from a run.
 

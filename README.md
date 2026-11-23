@@ -4,8 +4,8 @@
 agents: one writer, an independent reviewer that proves what it finds, and
 lessons that turn into checks.
 
-It is plain Markdown: five Agent Skills, four document templates and one
-check script. There is no runtime and no controller to install. Claude Code,
+It is plain Markdown: six Agent Skills, four document templates and two
+check scripts. There is no runtime and no controller to install. Claude Code,
 Pi and Codex read the same files.
 
 The method was extracted from a real project,
@@ -63,11 +63,15 @@ Everything else in the method follows from this table.
    check is added, at the highest level that works: architecture, then
    types, then lint or CI, then a test, and written rules last. A mistake
    that repeats moves its rule one level up.
-6. **Long runs with an exit condition.** Given a goal instead of an issue,
+6. **Plan before a goal is built.** Work bigger than one issue is designed
+   first: at least two shapes sketched in code, the chosen one challenged by
+   an independent agent that must prove what it finds, a recorded decision,
+   and issues of one pull request each whose dependencies a script checks.
+7. **Long runs with an exit condition.** Given a goal instead of an issue,
    the agent states a condition a command can check, works issue after
    issue, keeps a decision log, parks what needs the owner, and never
    relaxes the condition to finish.
-7. **The owner merges.** The agent never merges, never pushes to the base
+8. **The owner merges.** The agent never merges, never pushes to the base
    branch, and stops to ask before anything that cannot be undone.
 
 ## 🚀 Quickstart
@@ -75,7 +79,7 @@ Everything else in the method follows from this table.
 You need a repository on GitHub, the `gh` CLI, and one of the supported
 agents.
 
-**1. Put the skills in your repository.** Copy the five folders under
+**1. Put the skills in your repository.** Copy the six folders under
 [`skills/`](skills) into `.claude/skills/` in your project. The
 [skills CLI](https://github.com/vercel-labs/skills) can do it for several
 agents at once:
@@ -106,6 +110,7 @@ protected paths, strike any proposed invariant you do not want. Then merge.
 /take-case #42                    that issue
 /docket finish milestone 2        issue after issue, until the exit condition holds
 /cross-examine 57                 an independent review of pull request 57
+/brief per-source rate limits     design it, then split it into issues
 ```
 
 Each issue ends as a pull request with green CI and an independent review
@@ -128,6 +133,7 @@ frontmatter tells Claude Code and Pi not to pick it on their own, and
 | [`docket`](skills/docket/SKILL.md) | long run | You have a goal, not an issue |
 | [`cross-examine`](skills/cross-examine/SKILL.md) | PR review | A PR is open and CI is green |
 | [`evidence-kit`](skills/evidence-kit/SKILL.md) | make a verify skill | Once per project with something a user can see |
+| [`brief`](skills/brief/SKILL.md) | design and split into issues | A goal needs more than one pull request |
 
 How to call one:
 
@@ -217,6 +223,35 @@ _Review by an independent agent (<model>), at <full head SHA>._
 **Second model** / **Protected paths touched**
 ```
 
+### `brief`: design a goal and split it into issues
+
+```text
+/brief per-source rate limits
+```
+
+- **Frames** the goal: what "done" is, as a check, and what is out of scope.
+  Work one pull request can do is sent back to the normal loop.
+- **Grounds** it in the invariants, the recorded decisions, the lessons and
+  the code, and settles the unknowns that would change the shape with
+  probes, not arguments.
+- **Sketches** at least two shapes that differ in structure, as code on
+  scratch branches the type check reads, after writing how the result will
+  be used. It compares them on one owner per piece of state, what a caller
+  must know, how each fails and is verified, the invariants, and the
+  one-way doors.
+- **Has it challenged** by a separate agent with no context, which reports
+  only what it proves. Three rounds at most, then you decide.
+- **Records** the decision, with the chosen types as the contract and the
+  signs that would mean the shape is wrong.
+- **Splits** it into `docs/plans/<slug>.yaml`: one concern per issue, riskiest
+  first, the contract early, acceptance criteria that are checks.
+  `scripts/check-plan.mjs` fails on missing criteria, unknown keys,
+  dependencies that point nowhere, and cycles, and prints the order to
+  create the issues in.
+- **Ends with** a pull request for you. After you merge it, and only when you
+  ask, it creates the issues, without the agent label: you label the ones
+  the agent may do.
+
 ### `evidence-kit`: make the project's verify skill
 
 Builds `.claude/skills/verify-<app>/` for your app: a small harness that
@@ -305,8 +340,7 @@ node bench/report.mjs
 - Bench results for this version on all three runtimes, then a tag.
 - `clerk` (watch a PR through CI and review), `recess` (pause safely),
   `precedent` (find repeated mistakes in the history and turn them into
-  checks), `debrief` (propose skill edits after a run), `brief` (turn a goal
-  into a plan of pull requests).
+  checks), `debrief` (propose skill edits after a run).
 
 ## Sources
 
@@ -318,7 +352,11 @@ node bench/report.mjs
   then validation of every finding.
 - [pstack](https://github.com/cursor/plugins/tree/main/pstack) by poteto:
   verify on the real surface, playbooks per kind of work, exit conditions
-  for long runs, a rule for each mistake and what enforces it.
+  for long runs, a rule for each mistake and what enforces it. `brief`
+  takes its ideas from pstack's `architect`, `interrogate` and
+  `figure-it-out`: usage before types, at least two structurally different
+  shapes, adversaries that must prove what they find, riskiest work first,
+  and abandoning a shape that keeps needing workarounds.
 - [Agent Skills specification](https://agentskills.io/specification): the
   portable skill format.
 - The earlier design in this repository's history (as Surgical Dev): a

@@ -150,4 +150,5 @@ List in the PR what only the owner can do:
 ## 8. Next
 
 If the project has something a user can see or do, create its verify skill
-with `evidence-kit`. Then the owner can ask for the next issue.
+with `evidence-kit`. Then the owner can ask for the next issue, or plan a
+goal bigger than one issue with `brief`.

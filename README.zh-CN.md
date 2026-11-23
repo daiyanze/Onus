@@ -5,7 +5,7 @@
 **举证责任在 agent 一方。** 一套面向编码 agent 的开发方法：一个写手，一个
 能证明自己发现的独立审查者，以及会变成检查项的教训。
 
-它就是纯 Markdown：五个 Agent Skill、四份文档模板和一个检查脚本。没有运行时，
+它就是纯 Markdown：六个 Agent Skill、四份文档模板和两个检查脚本。没有运行时，
 也没有需要安装的控制器。Claude Code、Pi 和 Codex 读的是同一批文件。
 
 这套方法提炼自一个真实项目
@@ -54,17 +54,20 @@ Pull Request 中逐渐成形。哪些部分验证过、哪些没有，写在
 5. **教训变成检查。** 被所有者、CI 或审查抓到的错误，连同适用范围一起记下来。如果能
    用检查来保证，就加上检查，并且放在能起作用的最高层级：架构，其次类型，再次 lint
    或 CI，然后测试，书面规则排在最后。重复出现的错误，其规则上移一级。
-6. **长时间运行要有退出条件。** 拿到的是目标而不是 issue，agent 就先写出一个
+6. **目标先规划再动手。** 超过一个 issue 的工作要先设计：用代码勾出至少两种
+   结构不同的方案，由一个必须证明自己发现的独立 agent 挑战选中的方案，记录成决定，
+   再拆成每个对应一个 Pull Request 的 issue，依赖关系由脚本检查。
+7. **长时间运行要有退出条件。** 拿到的是目标而不是 issue，agent 就先写出一个
    能用命令检查的条件，然后一个 issue 接一个 issue 地做，维护一份决策日志，把需要
    所有者决定的事情搁置下来，并且绝不为了收工而放宽条件。
-7. **由所有者合并。** agent 永远不合并，永远不推送到基础分支，在做任何无法撤销的事
+8. **由所有者合并。** agent 永远不合并，永远不推送到基础分支，在做任何无法撤销的事
    之前都会停下来询问。
 
 ## 🚀 快速开始
 
 你需要：一个 GitHub 上的仓库、`gh` CLI，以及任意一个受支持的 agent。
 
-**1. 把 skill 放进你的仓库。** 把 [`skills/`](skills) 下的五个文件夹复制到你项目的
+**1. 把 skill 放进你的仓库。** 把 [`skills/`](skills) 下的六个文件夹复制到你项目的
 `.claude/skills/` 中。[skills CLI](https://github.com/vercel-labs/skills)
 可以一次为多个 agent 完成这一步：
 
@@ -92,6 +95,7 @@ npx skills add daiyanze/Onus
 /take-case #42                    指定这个 issue
 /docket finish milestone 2        一个接一个 issue，直到退出条件成立
 /cross-examine 57                 对 Pull Request 57 做独立审查
+/brief per-source rate limits     先设计，再拆成 issue
 ```
 
 每个 issue 的终点都是一个 CI 全绿、带独立审查评论的 Pull Request。你读评论，然后合并。
@@ -111,6 +115,7 @@ skill。`docket` 是例外，只有你点名它才会启动，因为长时间运
 | [`docket`](skills/docket/SKILL.md) | 长时间运行 | 你手上是一个目标，而不是一个 issue |
 | [`cross-examine`](skills/cross-examine/SKILL.md) | PR 审查 | PR 已打开且 CI 全绿 |
 | [`evidence-kit`](skills/evidence-kit/SKILL.md) | 生成 verify skill | 每个有用户可见界面的项目一次 |
+| [`brief`](skills/brief/SKILL.md) | 设计并拆成 issue | 一个目标需要不止一个 Pull Request |
 
 如何调用：
 
@@ -188,6 +193,28 @@ _Review by an independent agent (<model>), at <full head SHA>._
 **Second model** / **Protected paths touched**
 ```
 
+### `brief`：设计一个目标并拆成 issue
+
+```text
+/brief per-source rate limits
+```
+
+- **界定** 目标：把"完成"写成一项检查，并写明哪些不在范围内。一个 Pull Request
+  就能做完的工作，会被退回正常的循环。
+- **打底：** 读不变量、已记录的决定、教训和代码。会改变方案结构的未知点，用探针去
+  验证，而不是靠争论。
+- **勾出** 至少两种结构不同的方案：先写清结果会被怎么使用，再把方案写成代码放在
+  临时分支上，让类型检查读到。比较的维度是：每份状态是否只有一个所有者、调用方需要
+  知道多少、各自怎么失败、怎么验证、是否守住不变量，以及哪些是单向门。
+- **挑战：** 由一个不带任何上下文的独立 agent 来挑战，它只报告自己能证明的东西。最多
+  三轮，之后由你决定。
+- **记录** 决定：选中方案的类型作为契约，并写明哪些迹象说明这个方案错了。
+- **拆分** 成 `docs/plans/<slug>.yaml`：每个 issue 只有一个关注点，风险最大的先做，
+  契约尽早落地，验收标准都是检查。`scripts/check-plan.mjs` 会在缺少验收标准、出现
+  未知的键、依赖指向不存在的地方或依赖成环时失败，并打印创建 issue 的顺序。
+- **结束于** 一个交给你的 Pull Request。你合并之后，并且只在你要求时，它才创建
+  issue，而且不加 agent 标签：哪些可以交给 agent，由你来打标签。
+
 ### `evidence-kit`：生成项目的 verify skill
 
 为你的应用生成 `.claude/skills/verify-<app>/`：一个小型测试装置，它会启动一个隔离的
@@ -263,7 +290,7 @@ node bench/report.mjs
 - 在全部三个运行时上跑出当前版本的基准结果，然后打 tag。
 - `clerk`（盯着一个 PR 走完 CI 和审查）、`recess`（安全暂停）、`precedent`
   （从历史中找出反复出现的错误并把它们变成检查）、`debrief`（运行结束后提出 skill
-  修改建议）、`brief`（把一个目标变成一系列 Pull Request 的计划）。
+  修改建议）。
 
 ## 参考来源
 
@@ -273,7 +300,9 @@ node bench/report.mjs
   证据优先于声明；独立的发现者，再对每个发现逐一验证。
 - poteto 的 [pstack](https://github.com/cursor/plugins/tree/main/pstack)：在真实
   界面上验证、按工作类型准备操作手册、长时间运行的退出条件、为每个错误配一条规则
-  并写明由什么来保证。
+  并写明由什么来保证。`brief` 借鉴了 pstack 的 `architect`、`interrogate` 和
+  `figure-it-out` 的思路：先写用法再定类型、至少两种结构不同的方案、必须证明自己
+  发现的挑战者、风险最大的先做，以及放弃一个总要绕路的方案。
 - [Agent Skills 规范](https://agentskills.io/specification)：可移植的 skill 格式。
 - 本仓库历史中的早期设计（当时名为 Surgical Dev）：按验收标准逐条给出结论、结论绑定
   到单个 commit、无人值守工作的预算。
