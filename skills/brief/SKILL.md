@@ -41,17 +41,21 @@ owner's time:
   would change the shape. Read the framing back in a few lines and get a
   yes.
 
-The owner is not there when the run is unattended (started by a schedule,
-or the owner said they would check back later) or a question has gone
-unanswered. Do not decide that they are away for any other reason. Then
-take your recommended answers, mark each one as assumed, write the framing
-into the report in place of the read-back, and carry on: the plan is still a
-pull request the owner reviews before anything is built.
+The owner is not there only when the run is unattended: started by a
+schedule, or the owner said they would check back later. Do not decide that
+they are away for any other reason. Then take your recommended answers, mark
+each one as assumed, write the framing into the report in place of the
+read-back, and carry on: what comes out is still a pull request or a draft
+issue the owner reviews before anything is built. An owner who is there but
+passes over a question: ask it once more; passed over twice, take your
+recommended answer for that question alone and mark it assumed.
 
 Now judge the size, with the scope as drawn (by the interview, if there was
 one). If one pull request can do it, say so and stop. That is an issue, and
 step 2 of the loop in `docs/development.md` already sketches two shapes when
-a change crosses a boundary. A long task is not yet a plan.
+a change crosses a boundary. A long task is not yet a plan. Hand the owner a
+draft of that issue, so the interview is not lost: the goal, "done" as a
+check, the scope, and any answer taken as assumed.
 
 After this step, ask the owner only when a later step turns up a choice that
 is theirs to make, or a probe breaks one of their answers: ask that one
@@ -68,8 +72,8 @@ Read before designing:
   state it touches, and how that is tested and verified today.
 
 List the constraints, each with its source: an answer from the owner, an
-invariant, a decision, a caller, a lesson. A constraint you
-cannot source is an assumption; mark it.
+invariant, a decision, a caller, a lesson. A constraint you cannot source is
+an assumption; mark it.
 
 List the unknowns, the ones that would change the shape first. Settle the
 cheap ones with a probe instead of an argument: a throwaway script against

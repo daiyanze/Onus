@@ -236,9 +236,10 @@ _Review by an independent agent (<model>), at <full head SHA>._
   with a recommended answer, only about what the code and the docs cannot
   answer, until "done" is a check and the scope is drawn. Then it judges the
   size, with that scope. Later it asks again only about a choice that is
-  yours. When you are away (a scheduled run, or an unanswered question), it
-  takes its recommended answers, marks them as assumed, and lists them for
-  you in the plan's pull request.
+  yours. When you are away (a scheduled run, or you said you would check
+  back), it takes its recommended answers, marks them as assumed, and lists
+  them for you in the plan's pull request, or in the draft issue when the
+  goal fits one pull request.
 - **Grounds** it in the invariants, the recorded decisions, the lessons and
   the code, and settles the unknowns that would change the shape with
   probes, not arguments.
