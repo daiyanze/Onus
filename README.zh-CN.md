@@ -210,8 +210,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
   三轮，之后由你决定。
 - **记录** 决定：选中方案的类型作为契约，并写明哪些迹象说明这个方案错了。
 - **拆分** 成 `docs/plans/<slug>.yaml`：每个 issue 只有一个关注点，风险最大的先做，
-  契约尽早落地，验收标准都是检查。`scripts/check-plan.mjs` 会在缺少验收标准、出现
-  未知的键、依赖指向不存在的地方或依赖成环时失败，并打印创建 issue 的顺序。
+  契约尽早落地，验收标准都是检查。`scripts/check-plan.mjs` 检查计划的格式，并打印
+  创建 issue 的顺序；它检查什么、不检查什么，写在脚本顶部的注释里。
 - **结束于** 一个交给你的 Pull Request。你合并之后，并且只在你要求时，它才创建
   issue，而且不加 agent 标签：哪些可以交给 agent，由你来打标签。
 

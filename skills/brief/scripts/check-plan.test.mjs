@@ -83,6 +83,7 @@ test("issues must be a list with something in it, of mappings", () => {
 test("an id must be there, well formed, and used once", () => {
   fails(/issue 1: id is missing/, plan("  - title: T\n    what: W\n    acceptance: [x]\n"));
   fails(/Bad_Id: id must be lowercase/, plan(issue("Bad_Id")));
+  fails(/issue 1: id must be lowercase/, plan(issue("5")));
   fails(/a: id is used twice/, plan(issue("a") + issue("a")));
 });
 
@@ -106,6 +107,7 @@ test("acceptance must be a list of text", () => {
 
 test("depends_on names ids in the plan or quoted issue numbers, with no loops", () => {
   fails(/a: depends_on must be a list/, plan(issue("a", "    depends_on: b\n") + issue("b")));
+  fails(/a: depends_on must be a list/, plan(issue("a", "    depends_on:\n")));
   fails(/a: depends_on "nowhere" is neither/, plan(issue("a", "    depends_on: [nowhere]\n")));
   fails(/a: depends_on "#0" is neither/, plan(issue("a", '    depends_on: ["#0"]\n')));
   fails(/write an issue number as "#12", quoted/, plan(issue("a", "    depends_on: [12]\n")));
@@ -114,6 +116,16 @@ test("depends_on names ids in the plan or quoted issue numbers, with no loops", 
     /cycle: a -> b -> c -> a/,
     plan(issue("a", "    depends_on: [b]\n") + issue("b", "    depends_on: [c]\n") + issue("c", "    depends_on: [a]\n")),
   );
+});
+
+test("the yaml package is the parser when it is installed", async (t) => {
+  const installed = await import("yaml").then(
+    () => true,
+    () => false,
+  );
+  if (!installed) return t.skip("the yaml package is not installed");
+  // Bun's own parser keeps one of two repeated keys; `yaml` refuses the file.
+  assert.throws(() => parse("goal: a\ngoal: b\n"));
 });
 
 test("the command line: ok and the order, problems, and usage", () => {

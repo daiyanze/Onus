@@ -27,9 +27,10 @@
  * - an issue's `acceptance` is missing, not a list, empty, or holds an item
  *   that is not text or is empty (an unquoted item holding ": " is read as a
  *   mapping, and is named as such);
- * - an issue's `depends_on`, when given, is not a list, or holds an entry that
- *   is neither an id in this plan nor an issue number written "#123"; an
- *   issue depends on itself; or the dependencies form a cycle.
+ * - an issue's `depends_on`, when given (an empty `depends_on:` counts), is
+ *   not a list, or holds an entry that is neither an id in this plan nor an
+ *   issue number written "#123"; an issue depends on itself; or the
+ *   dependencies form a cycle.
  *
  * It does not see:
  * - whether an issue is one concern that one pull request can land;
@@ -101,12 +102,14 @@ export function planProblems(plan, root = ".") {
       problems.push(`${where} is not a mapping`);
       return;
     }
-    const name = isText(issue.id) ? issue.id : where;
+    const name = typeof issue.id === "string" && issue.id.trim() !== "" ? issue.id : where;
     for (const key of Object.keys(issue)) {
       if (!ISSUE_KEYS.includes(key)) problems.push(`${name}: unknown key "${key}"`);
     }
-    if (!isText(issue.id)) problems.push(`${where}: id is missing`);
-    else if (!ID.test(issue.id)) problems.push(`${name}: id must be lowercase words joined by "-"`);
+    if (issue.id === undefined || issue.id === null || issue.id === "") problems.push(`${where}: id is missing`);
+    else if (typeof issue.id !== "string" || !ID.test(issue.id)) {
+      problems.push(`${name}: id must be lowercase words joined by "-"`);
+    }
     else if (byId.has(issue.id)) problems.push(`${name}: id is used twice`);
     else byId.set(issue.id, issue);
 
@@ -130,7 +133,7 @@ export function planProblems(plan, root = ".") {
   // Dependencies inside the plan, as edges from an issue to what it needs.
   const needs = new Map();
   for (const [id, issue] of byId) {
-    const deps = issue.depends_on ?? [];
+    const deps = issue.depends_on === undefined ? [] : issue.depends_on;
     needs.set(id, []);
     if (!Array.isArray(deps)) {
       problems.push(`${id}: depends_on must be a list`);
