@@ -371,6 +371,12 @@ node bench/report.mjs
   a recommended answer with each question, so a yes settles it, walking the
   choices in the order they depend on each other, and looking in the code
   before asking. Asking one question at a time is `brief`'s own choice.
+- Marcos Hernanz's AGENTS.md rules, shared on X in August 2026 (copied
+  in [this gist](https://gist.github.com/gulbaki/792d7430b3f0295b4bb43454a35ffbca)):
+  check what the dependencies already do before adding a package, prefer
+  maintained libraries, follow how mature products solve the problem, grow
+  from a version that works end to end, and, as an opt-in rule while
+  nothing outside depends on the code, no backward compatibility.
 - [Agent Skills specification](https://agentskills.io/specification): the
   portable skill format.
 - The earlier design in this repository's history (as Surgical Dev): a
