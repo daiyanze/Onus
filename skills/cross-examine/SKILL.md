@@ -171,9 +171,10 @@ gh pr comment <n> --body-file review.md
 ```
 
 With `gh api`, `-F` reads the file; `-f` would post the file's name as the
-comment. Fetch the comment you posted and check that it starts with the
-header line and reads as you wrote it. If it came back altered, edit that
-comment; do not post a second one. A review that was not posted did not
+comment. Fetch the comment you posted and compare the whole body with your
+file, not only the header line. A posting path has been seen to drop a `!`
+that came right before `<` or `[`. If it came back altered, reword the
+affected text and edit that comment; do not post a second one. A review that was not posted did not
 happen.
 
 ## 8. After the verdict

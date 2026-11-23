@@ -39,9 +39,9 @@ something. Nobody measured missed defects.
 | `cross-examine` (named `review` there, `pr-review` in this repository at first) | Used 29 times on 23 pull requests | Generalized, and run three times on this repository's pull request #18. All three rounds asked for changes, each for a narrower problem; the last was one sentence in a comment. No round approved, so by the method's own rule the merge was the owner's decision. The places where each round found the skill hard to follow were fixed in that pull request |
 | `cross-examine`: a line per acceptance criterion | Not in use | New here. Used in the three rounds on #18 |
 | `cross-examine`: a verdict covers one commit; later commits need a re-review unless they only fix its notes | Practised without being written down: 20 of the 23 pull requests were merged at a later commit than the reviewed one | New wording. On #18 each round reviewed the commits after the last verdict; the exception for note fixes was not exercised |
-| `cross-examine`: the exact posting command, and reading the comment back | Not in use; four reviews were lost without it | New here. Used in rounds 2 and 3 on #18 |
-| `take-case` (named `next` there) | Written and available; how often it was invoked was not counted | Dependency and milestone rules simplified. Not run since |
-| `docket` (named `long-run` there) | Written, **never run**. It already parks an issue after three review rounds | Same, plus parking after three failed fixes of the same check. **Never run** |
+| `cross-examine`: the exact posting command, and reading the comment back | Not in use; four reviews were lost without it. In the 2026-11-23 long run (below) the read-back caught a body changed in posting three times: a `!` dropped where it came right before `<` or `[` ([#211 round 2](https://github.com/daiyanze/breaker-delta/pull/211#issuecomment-7088009913), [#218 review](https://github.com/daiyanze/breaker-delta/pull/218#issuecomment-7091078891), and [the writer's reply](https://github.com/daiyanze/breaker-delta/pull/218#issuecomment-7091085595) on #218). The cause was not traced | New here. Used in rounds 2 and 3 on #18 |
+| `take-case` (named `next` there) | Written and available; how often it was invoked was not counted. Used for each issue of the 2026-11-23 long run | Dependency and milestone rules simplified. Not run since |
+| `docket` (named `long-run` there) | **Run once**, supervised by the owner, on 2026-11-23 (goal: the dependency check covers relative imports). See below | Same, plus parking after three failed fixes of the same check. Not run in this wording |
 | `charter` (named `adopt` in this repository at first) | Done by hand, over several pull requests | New skill. Steps 1 to 5 were dry-run in two scratch repositories by the reviewer of #18; seven unclear steps were fixed. **Never run on a real repository** |
 | `evidence-kit` (named `make-verify-skill` in this repository at first) | One verify skill built by hand (`verify-local`) and exercised in CI | New skill. **Never run** |
 | `check-agent-files.mjs` | A Bun and TypeScript version runs in CI as a test | Ported to plain JavaScript for Bun and Node, with a command line. Its tests, including the command line, pass on both here |
@@ -49,6 +49,28 @@ something. Nobody measured missed defects.
 | Pi and Codex find the rules and skills | **Not confirmed on a machine.** Rests on their documentation and on reading Pi's source. Pi loads project skills only in a trusted project | Same |
 | Second-model review | Written, never done | Same |
 | Installing with `npx skills add` | Not used | **Not tried** |
+
+## The first long run
+
+Breaker Delta, 2026-11-23, about four and a half hours, the owner watching
+and answering. Goal: `scripts/check-deps.ts` covers relative imports. The
+decision log stayed in that repository's git-ignored `.runs/`.
+
+| What | Observed |
+| --- | --- |
+| Issues | 3, opened by the run for the goal (#209, #210, #212); a fourth fix came out of a closed PR |
+| Pull requests | 4: [#211](https://github.com/daiyanze/breaker-delta/pull/211) (4 review rounds), [#214](https://github.com/daiyanze/breaker-delta/pull/214) (2), [#215](https://github.com/daiyanze/breaker-delta/pull/215) (3, closed), [#218](https://github.com/daiyanze/breaker-delta/pull/218) (1). Three were merged |
+| First verdicts | 3 request changes, 1 approve with nits. Each bug finding came with a probe file the reviewer ran; each rule finding quoted the rule |
+| Times the three-round budget stopped the run | 3 (#211 twice, #215 once). Each time the owner chose: fix again, merge and follow up, close |
+| Exit condition | Held at the end: every issue merged or closed by the owner's decision |
+| CI failures | 3, all formatting: the formatter could not be installed where the run worked, and a check of line lengths by hand missed its joins. The rule "a check that cannot run here is not passed: wait for CI" caught them before review |
+| A lesson that repeated | "Read a format with its parser" came back twice: a regex, then Bun's parser, then TypeScript's scanner each read imports differently from the build. Nothing available parsed TypeScript exactly as the build does, so the owner chose which kind of error to accept: loud false failures over silent misses |
+
+What it supports: the round budget and the owner's merge kept a run that
+kept finding new edge cases from going on without end, and the review's
+"prove it with a run" rule produced findings the writer could reproduce.
+What it does not support: anything unsupervised; the owner made three of
+the run's decisions and merged every pull request.
 
 ## Reproduce the checks in this repository
 
