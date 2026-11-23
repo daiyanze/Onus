@@ -142,7 +142,8 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 ### `charter`: adopt the method
 
 - **Reads:** your README, package scripts, CI workflows, any existing
-  `AGENTS.md` or `CLAUDE.md`, `CODEOWNERS`.
+  `AGENTS.md` or `CLAUDE.md`, `CODEOWNERS`, and how your own open issues
+  write "Depends on" and name milestones.
 - **Asks you:** only what the repository cannot say, usually the agent label
   and which paths need your approval.
 - **Writes:** the four documents, the skill-folder link, the check script.
@@ -155,8 +156,9 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 
 - **Picks:** an open issue with the agent label, whose "Depends on" issues
   are closed and that no open PR already covers. If the project works by
-  milestone, only those in the earliest milestone that still has one. Among
-  those, the one that unblocks the most other issues, then the lowest
+  milestone, only those in the earliest milestone that still has one, or
+  whatever order your `docs/development.md` gives. It reads the dependency
+  forms you list there too. Among those, the one that unblocks the most other issues, then the lowest
   number. It reads the body of labelled issues only.
 - **Does:** the loop in `docs/development.md`: branch, implement, check,
   verify on the real app if a user can see the change, push, PR, wait for CI,

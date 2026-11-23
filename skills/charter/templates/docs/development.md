@@ -51,8 +51,9 @@ and the runtimes on the linked side find no skills.
 The `take-case` skill reads this before its own defaults. List each form as
 the issues write it and what it means, for example a code like `M1-04` for
 the issue whose title starts with `[M1-04]`; and say how milestones are
-ordered, for example two tracks, each with its own front. Delete this
-section otherwise.>
+ordered and which milestones' candidates count, for example two tracks,
+each with its own front, where only the front's candidates count. Delete
+this section otherwise.>
 
 ## The loop
 
