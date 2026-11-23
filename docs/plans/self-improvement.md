@@ -1,10 +1,11 @@
 # Plan: anyone using Onus can appeal a problem with the method, and Onus improves from it
 
-Status: **draft**, written 2026-11-23 outside the `brief` skill. Steps 4
-(sketches in code) and 5 (an independent challenge) of `brief` were not
-run: the challenge is still owed before this plan is merged (see "Still
-owed"). The plan itself is `docs/plans/self-improvement.yaml`; it passes
-`check-plan.mjs`.
+Status: **draft for review**, written 2026-11-23/24. The plan itself is
+`docs/plans/self-improvement.yaml`; it passes `check-plan.mjs`. One round
+of independent challenge (`brief` step 5) ran on 2026-11-24 and found
+twelve problems; "Challenge" at the end lists them and how each was
+settled. Step 4 was done as two shapes in prose, not in code: this plan
+changes Markdown and a form, so there are no types to check against.
 
 ## Goal
 
@@ -22,13 +23,12 @@ owed"). The plan itself is `docs/plans/self-improvement.yaml`; it passes
 ## What "done" means
 
 - In a project that adopted Onus, `appeal` turns a person's complaint, or a
-  method note an agent raised at the end of a task, into an issue on
-  daiyanze/Onus, posted only after the person approved the exact text, and
-  read back.
-- Every skill's report ends with a `Method notes` section, and offers
+  method note an agent raised at the end of a task, into a prefilled appeal
+  form on daiyanze/Onus that the person reads and submits themselves.
+- Every skill's last step has a `### Method notes` subsection, and offers
   `appeal` when it is not empty.
-- This repository has an issue form and a triage rule for appeals, and a
-  bench baseline that an accepted appeal can be measured against.
+- This repository has an appeal form, a triage rule and a proof rule, and
+  a first bench result for the current version.
 - Each issue in the plan is merged or closed by the owner.
 
 ## Out of scope
@@ -42,6 +42,11 @@ owed"). The plan itself is `docs/plans/self-improvement.yaml`; it passes
 - Telemetry of any kind. Nothing leaves a project except an appeal its
   person approved.
 - Copying pstack's breadth: 34 skills, 24 principles, 22 playbooks.
+- Installing Onus as a Claude Code or Cursor plugin. A plugin installs the
+  skills outside the project, so Pi and Codex see none, and the project's
+  own `check-agent-files.mjs` fails ("a skill is in only one of them"). That
+  breaks the rule that every runtime reads the same text. Revisit only with
+  a way to keep the three runtimes on one copy.
 
 ## Answers from the owner (chat, 2026-11-23)
 
@@ -65,6 +70,7 @@ to fit `charter`, `docket`, `cross-examine` and `brief`.
 | A second-model review | `cross-examine` "Second model" (written, never done: `VALIDATION.md`) |
 | Keeping the verify skill current | `docs/development.md` Feature step 3 |
 | Root-cause fixing | `docs/development.md` Bug fix steps 2 and 3 |
+| A verify skill run in CI, and fixed when the app changes | `evidence-kit` step 4: "run it in CI … A skill that CI does not exercise drifts"; "fix the file in the same PR" |
 
 ## Constraints, with their sources
 
@@ -105,8 +111,9 @@ reports, and tells them when it looks like a project lesson instead.
 
 ### Signals an agent checks before writing its report
 
-Each is something the agent can see in the session or the repository,
-without judging itself:
+Signals 1 to 3 and 6 to 8 are things the agent can see in the session or
+the repository. Signals 4 and 5 need the person's reaction, so the agent
+reports them only when the person said so:
 
 1. **A budget spent.** Three review rounds without approval, or three failed
    fixes of one check.
@@ -134,50 +141,119 @@ says what it could not find.
 
 ### Where notes are written
 
-- **Every skill's report** gets a `Method notes` section: each note, or
-  `none`. Ends with "Run `appeal` to send these to Onus." when not empty.
+- **Every skill's last step** gets a `### Method notes` subsection: each
+  note, or `none`. In `charter` that is step 8 (Next), in `cross-examine`
+  step 8 (After the verdict), in `evidence-kit` step 4, and in the other
+  three their Report step. The line offering `appeal` is added by the
+  `appeal` issue, so no skill names a skill that does not exist yet.
 - **`cross-examine`'s comment** gets a `**Method notes:**` line, so the
   independent reviewer's notes are on the record where the person can find
   them later.
 - **`docket`** logs a row with phase `method`.
 
-### The `appeal` skill
+### Two shapes for getting an appeal to Onus
 
-1. **Intake.** Take what the person said, or the notes from this session's
-   reports. Ask only what is missing, one question at a time: which task,
-   what they expected, what happened. Never ask for code.
-2. **Locate.** Name the skill and step the problem traces to, with the
-   installed Onus version or commit (`charter` records it, issue
-   `onus-version`). If it is a project lesson, say so and offer to add it to
-   `docs/lessons.md` instead.
-3. **Evidence.** Gather what the session and the repository show: the
-   commands and their output, the review comment, the log rows. Keep only
-   what bears on the step.
-4. **Redact.** The issue quotes Onus text and describes the project in
-   general terms. No code, file contents, secrets, private URLs, names of
-   people, or anything a person said about themselves. A link the public
-   cannot open is described, not pasted. Borrowed from superpowers'
-   `diagnosing-superpowers`, and a lesson from Cursor's `continual-learning`,
-   which was reported to write personal memory into a tracked AGENTS.md.
-5. **Search.** Look for an existing appeal on daiyanze/Onus, open or closed.
-   A known problem gets a comment with the new evidence, not a copy.
-6. **Approve and post.** Show the person the exact title and body. Post only
-   what they approve, with the `appeal` issue form's fields, then read it
-   back (the `cross-examine` posting rule). Without `gh` or an account, write
-   the body to a file and give the person the link to open a new issue.
-   An unattended run never posts: it writes the draft and says so.
+**A. The agent posts.** `appeal` drafts the issue, shows it, and on approval
+posts it with `gh issue create`, then searches existing appeals by label.
+It loses on three counts:
+
+- GitHub drops labels set by anyone without push access to the repository
+  ("Labels are silently dropped otherwise", REST docs for creating an
+  issue), so every appeal from another project arrives unlabelled, and a
+  search by label misses it.
+- Searching means reading other people's unlabelled issue text in the
+  adopting project's agent session, which `take-case` forbids for exactly
+  this reason: "Read the body of labelled issues only".
+- It needs `gh` with access to another repository. Sandboxed sessions often
+  have neither (the challenge's own session could not reach the repository).
+
+**B. The person submits.** `appeal` builds a link to the appeal form,
+prefilled with the title and the fields, and the person opens it, reads it
+and presses Submit. The form applies the label. **Chosen.** It is also
+smaller: no posting code, no read-back, no cross-repository access, and
+the approval of the exact text is the person's own submit.
+
+### The `appeal` skill (shape B)
+
+1. **Intake.** Take what the person said; this session's `Method notes`;
+   rows with phase `method` in `.runs/*.tsv`; and `**Method notes:**` lines
+   on the PRs those rows or the person name (`gh pr view <n> --comments`,
+   in this project only). Ask only what is missing, one question at a time:
+   which task, what they expected, what happened. Never ask for code.
+2. **Locate.** Name the skill and step the problem traces to, and the
+   version in that skill's frontmatter (`metadata.onus-version`, issue
+   `skill-version`). If it is a project lesson, say so and offer to add it
+   to `docs/lessons.md` instead.
+3. **Evidence.** Keep only what bears on the step: the command and its
+   output, the rule quoted. Describe the project's code; do not paste it.
+4. **Redact.** The appeal quotes Onus text and describes the project in
+   general terms. No code, file contents, permalinks into a private
+   repository, secrets, names of people, or anything a person said about
+   themselves. Borrowed from superpowers' `diagnosing-superpowers`; and a
+   lesson from Cursor's `continual-learning`, which was reported to write
+   personal memory into a tracked AGENTS.md. Remind the person that the
+   appeal is public and posted under their account.
+5. **Look for duplicates by title only.** List appeal titles
+   (`gh issue list -R daiyanze/Onus --search "[appeal] in:title" --state
+   all --json number,title,state`, or the issues page), never their bodies.
+   Name the likely duplicates and let the person open them; if one fits,
+   they comment there instead.
+6. **Hand over the link.** Show the title and every field as text, then the
+   link. Long evidence that would make the link too long goes into a file
+   the person pastes. The skill never submits anything. An unattended run
+   writes the draft to a file and stops.
+
+Callable by name only: `disable-model-invocation: true` for Claude Code and
+Pi, and `agents/openai.yaml` with `allow_implicit_invocation: false` for
+Codex, as `docket` does.
+
+### Contract (the one-way doors)
+
+- Title: `[appeal] <skill> <step>: <one line>`, for example
+  `[appeal] cross-examine 7: posting drops "!" before "["`.
+- Form `.github/ISSUE_TEMPLATE/appeal.yml`, label `appeal`, field ids:
+  `skill`, `step`, `onus-version`, `signal` (1 to 8, or "felt by a
+  person"), `happened`, `expected`, `evidence`, `suggestion` (optional).
+- Each SKILL.md frontmatter: `metadata: {onus-version: <x.y.z>}`, equal to
+  `package.json`'s version; bumped with every change to a skill's wording.
+- `### Method notes` subsection in each skill's last step; `**Method
+  notes:**` line in the `cross-examine` comment; `method` phase in `.runs/`.
+
+### Examples of use
+
+```text
+> /appeal take-case skipped my half-reviewed PR and started a new issue
+  Traces to take-case step 1 ("an open PR already links it ... it is in
+  progress"), onus-version 0.5.0. Signal: felt by a person.
+  Possible duplicates by title: none.
+  Title: [appeal] take-case 1: an interrupted PR is never resumed
+  ... fields ...
+  Open to review and submit: https://github.com/daiyanze/Onus/issues/new?template=appeal.yml&title=...
+```
+
+```text
+(end of a docket report)
+### Method notes
+- Signal 3, cross-examine 7: `gh pr comment --body-file` dropped a "!" before
+  "[" in posting; read-back caught it (comment link).
+Run `appeal` to send these to Onus.
+```
 
 ### What happens to an appeal here
 
-- **Intake.** An issue form `.github/ISSUE_TEMPLATE/appeal.yml` with the same
-  fields `appeal` fills, and the label `appeal`. An appeal is never labelled
-  for the agent by anyone but the owner.
+- **Intake.** The form and label in "Contract". An appeal is never
+  labelled for the agent by anyone but the owner. `CONTRIBUTING.md` holds
+  the triage and proof rules; GitHub links it from the new-issue page.
 - **Triage**, by the owner: accepted (a real problem with the method),
   a project lesson (answered and closed), a duplicate, or needs evidence.
 - **Proof before a change.** The project rule "a lesson becomes a check",
   applied to Onus: an accepted appeal that claims a change in behaviour gets
   a bench scenario that fails on the current wording and passes on the new
-  one, with no other checkpoint worse. After superpowers' `writing-skills`:
+  one, with no other checkpoint worse. A new scenario changes the bench
+  hash, and results are kept per hash (`bench/README.md`), so the old
+  wording is run again as `onus@<ref>` under the new hash: a stored
+  baseline does not serve. "Passes" and "no worse" mean pass counts at
+  n ≥ 3 per cell, the bench's own minimum. After superpowers' `writing-skills`:
   a baseline without the change, and repeated runs, because one run proves
   little. A fix of a command, a missing file or a contradiction needs only a
   dry run of the step, linked in the PR. The PR names the appeal it answers.
@@ -205,18 +281,14 @@ says what it could not find.
 | Cursor `continual-learning` | A cautionary case: personal memory written into a tracked AGENTS.md | `appeal`'s redaction |
 | pstack `blast-radius` | See what a change reaches before planning it | `blast-radius` |
 | pstack playbooks and `explain-the-number` | More kinds of work, each with its proof | `kinds-of-work` |
-| pstack `maintain-verification-skill` | A verify skill is maintained, not only created | `verify-upkeep` |
 | pstack `poteto-agent`, `guard-the-context-window` | Delegates read the method first | `delegate-rules` |
 | pstack `setup-pstack` | The project names its review models | `second-model-run` |
-| pstack and Compound Engineering distribution | A plugin manifest and a marketplace install | `plugin-install` |
 
 ## One-way doors
 
-- The skill name `appeal`, the label `appeal`, and the issue form's field
-  names: projects call the skill by name and appeals are searched by label.
-- The `Method notes` section and `**Method notes:**` line.
-- What `charter` records as the Onus version: appeals compare against it.
-- The plugin name in the manifest.
+Everything in "Contract": the skill name, the title prefix, the label, the
+form's field ids, the frontmatter key, and the `Method notes` names.
+Projects call the skill by name and appeals are found by title.
 
 ## Risks
 
@@ -227,12 +299,47 @@ says what it could not find.
   form asks for the step and the evidence; triage closes the rest.
 - **Spam or injection.** Appeal text is a description of work. It never
   reaches an agent as work unless the owner labels it.
+- **Identity.** An appeal is posted under the person's own account, which
+  can name their employer or project even when the text is generic. The
+  skill says so before handing over the link.
+- **Versions that do not move.** If the version is not bumped with every
+  wording change, an appeal cannot say which wording it is about. The
+  `skill-version` check makes the six equal to `package.json`, not current;
+  bumping stays a rule for the owner.
+- **Plain-words requests.** With `disable-model-invocation`, a person who
+  says "send this to Onus" without the command may get nothing. The offer
+  line names the command.
 - **Cost of proof.** If the bench is too slow, the rule will be skipped; the
   dry-run path for small fixes keeps it honest.
 
+## Challenge
+
+Round 1, 2026-11-24, a separate agent with no context from the writing
+session. Verdict: holds with fixes. Each finding was checked against the
+code before it was settled.
+
+| # | Finding | Settled |
+| --- | --- | --- |
+| 1 | Labels set via the API by people without push access are dropped, so a label search misses appeals | Shape B: the person submits the form, which labels it; search by title prefix |
+| 2 | Searching reads strangers' unlabelled issue bodies in the adopting session | Titles only; the person opens candidates |
+| 3 | The version had two writers (AGENTS.md line vs the installed skills) and `charter` could not read it | Version in each SKILL.md's frontmatter (`skill-version`); AGENTS.md line dropped |
+| 4 | A plugin install breaks the three-runtime rule and the project's own check | `plugin-install` dropped; out of scope with the reason |
+| 5 | `method-notes` would point at `appeal` before it exists | The offer line moved to `appeal` |
+| 6 | `blast-radius` relied on a baseline it did not depend on, with no threshold | Compared against `onus@<base>` in the same run, pass counts at n ≥ 3 |
+| 7 | A stored baseline cannot serve a new scenario (new hash) | Proof rule re-runs the old wording as `onus@<ref>`; `bench-baseline` is a first data point, not a prerequisite |
+| 8 | `verify-upkeep`'s premise was false: `evidence-kit` already runs the verify skill in CI | Dropped; added to "What Onus already has" |
+| 9 | `appeal` lacked Codex's `agents/openai.yaml` | Added to the issue and its acceptance |
+| 10 | Notes written to PR comments and `.runs/` had no reader | Intake reads both |
+| 11 | No shapes, examples of use or contract in the record | Added: "Two shapes", "Examples of use", "Contract" |
+| 12 | Several criteria did not check what `what` asks | Rewritten: placement per skill, a skill listing, a frontmatter check, one choice for this repository's rules |
+
+Not settled, kept as risks: posting identity, versions that do not move,
+plain-words requests. `resume-case` no longer says "the agent's own PRs",
+since the agent posts under the person's account: it resumes an open PR that
+closes an issue with the agent label.
+
 ## Still owed
 
-- `brief` step 5: an independent agent tries to break this plan, before it
-  is merged.
+- A second challenge round on this wording, if the owner wants one.
 - The owner labels the issues the agent may do, starting with
   `method-notes`.
