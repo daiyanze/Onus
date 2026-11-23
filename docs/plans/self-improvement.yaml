@@ -1,0 +1,208 @@
+goal: Anyone using Onus, a person or an agent, can appeal a problem with the method to this repository with one skill command, and the gaps found against pstack and other plugins are closed
+record: docs/plans/self-improvement.md
+issues:
+  # M1: self-improvement. Riskiest first: the note format is a one-way door.
+  - id: method-notes
+    title: Every skill's report ends with method notes and offers appeal
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      As the record describes ("What counts as a method note", "Signals",
+      "Where notes are written"):
+      - Each of the six skills' report steps ends with a `Method notes` section
+        (each note, or `none`) after checking the eight signals, and one line
+        offering `appeal` when it is not empty.
+      - `cross-examine` step 7 template gains a `**Method notes:**` line.
+      - `docs/development.md` step 7 (Learn) gains the lesson-or-method-note test;
+        the Bug fix kind gains signal 8: name the PR that introduced the bug and
+        the step that should have caught it.
+      - `docket` gains the `method` log phase.
+      Touches `skills/` and the charter templates, which projects copy as agent files.
+    acceptance:
+      - "`npm run check` and `npm test` pass."
+      - "`grep -l 'Method notes' skills/*/SKILL.md` lists all six skills."
+      - One `cross-examine` run on a real PR in an adopting project posts a comment with a `**Method notes:**` line, read back unchanged; its link is added to VALIDATION.md.
+
+  - id: onus-version
+    title: charter records which Onus version a project runs
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      An appeal must say which wording it is about. `charter` writes the Onus
+      version and commit it installed into `AGENTS.md` (one line under "How to
+      work here"), and `check-agent-files.mjs` fails when the line is missing
+      or malformed. The version is the one in `package.json` (or the plugin
+      manifest, after `plugin-install`).
+    acceptance:
+      - "`npm test` passes, with a test that fails when the version line is missing and one that fails when it is malformed."
+      - A `charter` dry run in a scratch repository writes the line, and the check passes on the result.
+
+  - id: appeal-intake
+    title: An issue form, a label and a triage rule for appeals
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      This repository's side ("What happens to an appeal here"):
+      `.github/ISSUE_TEMPLATE/appeal.yml` with the fields `appeal` fills (skill
+      and step, Onus version, signal, what happened, what was expected,
+      evidence, suggested change), the label `appeal`, and this repository's own
+      agent rules (a new `AGENTS.md`, or a contributors section of the README)
+      with the triage outcomes and the proof rule: a bench scenario that fails
+      before and passes after for a change in behaviour; a dry run of the step for
+      a fix of a command, a missing file or a contradiction. The PR names the
+      appeal it answers. Touches `.github/`.
+    acceptance:
+      - "`npm run check` passes."
+      - Opening a new issue on GitHub offers the Appeal form with every field listed in `what`; a screenshot or the form's rendered fields are in the PR.
+      - "`gh label list` shows `appeal`."
+
+  - id: appeal
+    title: Add the appeal skill to submit a problem with the method to Onus
+    milestone: M1 Self-improvement
+    depends_on: [method-notes, onus-version, appeal-intake]
+    what: |
+      A seventh skill, `appeal`, as in the record ("The appeal skill"): intake
+      from the person's words or this session's method notes, one question at a
+      time; locate the skill and step and the Onus version; tell a project lesson
+      apart and offer `docs/lessons.md` instead; gather evidence; redact; search
+      daiyanze/Onus for an existing appeal and comment instead of copying; show
+      the exact text; post only on approval with the form's fields, then read it
+      back. Without `gh`, write the body to a file and give the new-issue link.
+      Never posts from an unattended run. Callable by the person; an agent only
+      offers it (`disable-model-invocation: true`). README, README.zh-CN and the
+      runtime table list it.
+    acceptance:
+      - "`npm run check` passes with seven skills."
+      - In an adopting project, a person's one-sentence complaint produces a drafted issue that holds no project code or file contents, and nothing is posted until approved; the transcript is linked in the PR.
+      - A complaint that is a project lesson is answered as one, with an offer to add it to `docs/lessons.md`, and no issue is drafted.
+      - One real appeal is posted to daiyanze/Onus from a project other than this repository, and read back.
+
+  - id: bench-baseline
+    title: Record a bench baseline for the current version
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      `bench/RESULTS.md` says "No results yet", so an accepted appeal has
+      nothing to be measured against. Run the bench for the current version
+      and the `none` arm on at least two runtimes, keep the result files, and
+      regenerate RESULTS.md. Note the token cost per trial.
+    acceptance:
+      - "`node bench/report.mjs` regenerates RESULTS.md with rows for at least two runtimes and both arms, and `git diff --exit-code bench/RESULTS.md` is clean after it."
+      - The bench README states the cost per trial measured in this run.
+
+  - id: lessons-refresh
+    title: Audit a project's lessons against its code
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      `docs/development.md` "Lessons" says to retire, merge and promote, but
+      nothing triggers it. Add a refresh step, run at the end of a `docket`
+      run and when the file grows past a minute's read: each `Check:` line
+      names a check that still exists and still fails on the mistake; each
+      scope path still exists; duplicates merged; retired entries kept.
+      Borrowed from Compound Engineering's learnings audit.
+    acceptance:
+      - "`npm run check` passes."
+      - A dry run against Breaker Delta's `docs/lessons.md` lists each lesson with check present/absent and scope present/absent, and the list is pasted in the PR.
+
+  # M2: gaps against pstack and others.
+  - id: resume-case
+    title: take-case resumes the agent's own unfinished pull request first
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      `take-case` step 1 treats an issue with an open PR as "in progress" and
+      skips it, so a single-issue session that stopped mid-review is never
+      picked up outside `docket`. Before new candidates, list the agent's own
+      open PRs whose latest review requests changes or whose CI failed, and
+      resume the oldest. A resume reads the PR, the last review and CI, and
+      checks inherited claims, as `docket` step 1 does.
+    acceptance:
+      - "`npm run check` passes."
+      - A dry run in a repository with one open agent PR carrying a request-changes verdict reports that PR as the resume point, not a new issue.
+
+  - id: kinds-of-work
+    title: Add refactoring, performance, investigation and spike to the kinds of work
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      `docs/development.md` has three kinds of work. Add four, each with its
+      proof, after pstack's playbooks:
+      - Refactoring: behaviour unchanged, shown by tests that pass before and
+        after with no test edited; callers migrated, then the old path deleted.
+      - Performance: a measurement before and after on the same command,
+        repeated, with the number explained (what dominates it).
+      - Investigation: a question, answered with the commands that show it; no PR.
+      - Spike: a throwaway branch, never merged; what it showed goes into the issue.
+      `take-case` states the kind of the issue it picked in its first lines.
+    acceptance:
+      - "`npm run check` passes."
+      - "`grep -E '^\\*\\*(Refactoring|Performance|Investigation|Spike)\\.\\*\\*' skills/charter/templates/docs/development.md` prints four lines."
+
+  - id: blast-radius
+    title: Explore lists what the change reaches before the plan
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      Step 1 (Explore) gains: list the callers, consumers and stored data the
+      change reaches, with the command that found them (a search, the type
+      check, a query). The list goes into the PR's `## Scope`. After pstack's
+      `blast-radius`.
+    acceptance:
+      - "`npm run check` passes."
+      - The bench `cp1` prompt is unchanged and the cp1 result does not get worse against the baseline from `bench-baseline`.
+
+  - id: second-model-run
+    title: Run the second-model review once and name the review models
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      VALIDATION.md lists "Second model review" as written, never done. Let
+      `AGENTS.md` name the review models (`charter` asks), after pstack's
+      models per role, and run `cross-examine` with a second vendor's model on
+      one real PR in an adopting project.
+    acceptance:
+      - A review comment whose `**Second model:**` line names a model from another vendor, linked in VALIDATION.md with what it found that the first model did not, or "nothing".
+      - "`npm run check` passes."
+
+  - id: delegate-rules
+    title: Rules for subagents the writer starts
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      Reviewers and challengers have rules; helpers the writer starts (to
+      search, to try a probe, to build one unit) do not. Add to
+      `docs/development.md`: a delegate reads `AGENTS.md` and `docs/lessons.md`,
+      gets one unit with its check, reports commands and results, and never
+      opens a PR, pushes or merges; the writer checks its claims against the
+      code. After pstack's `poteto-agent` and superpowers' subagent-driven development.
+    acceptance:
+      - "`npm run check` passes."
+      - "`grep -n 'delegate' skills/charter/templates/docs/development.md` shows the new section."
+
+  - id: verify-upkeep
+    title: The project's verify skill is checked, not only created
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      `evidence-kit` creates the verify skill; nothing notices when it rots.
+      Have `evidence-kit` add a CI job (or a step in the check command) that
+      runs the harness's launch, doctor and cleanup on every PR, and give the
+      skill a maintain mode for when the app changed. After pstack's
+      `maintain-verification-skill`.
+    acceptance:
+      - "`npm run check` passes."
+      - In an adopting project with a verify skill, the CI job fails when the start command is broken on a scratch branch, and passes on the base branch; both runs are linked in the PR.
+
+  - id: plugin-install
+    title: Install Onus as a plugin, and try npx skills add
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      Add a Claude Code plugin manifest and marketplace file, so
+      `/plugin marketplace add daiyanze/Onus` installs the skills, and a Cursor
+      plugin manifest. VALIDATION.md says `npx skills add` was never tried: try
+      it. Cursor is not in the runtime table; add it only if it finds the skills.
+    acceptance:
+      - In a scratch repository, the plugin install lists all the skills, and `npx skills add daiyanze/Onus` copies them; the commands and output are in the PR.
+      - "`npm run check` passes."
