@@ -26,8 +26,10 @@ like); `CODEOWNERS`; where design decisions are recorded; which skill
 folders exist (`.claude/skills`, `.agents/skills`).
 
 Ask the owner only what the repository cannot tell you. Usually that is:
-the label that marks an issue as the agent's to do (default `agent-ok`), and
-which paths need the owner's approval.
+the label that marks an issue as the agent's to do (default `agent-ok`),
+which paths need the owner's approval, and whether anything outside the
+repository (users, other services, stored data) depends on its formats and
+APIs yet.
 
 ## 2. Copy the four documents
 
@@ -61,6 +63,10 @@ placeholder behind.
 - **Other tools' instruction files.** Leave them as they are and list them
   in the PR, with any place where they contradict `AGENTS.md`, so the owner
   can decide.
+- **Compatibility.** Keep the "No backward compatibility" line, without its
+  `<...>` condition, only when the owner said nothing outside the
+  repository depends on its formats and APIs yet. Otherwise delete the
+  line: old paths are then removed only by a decision the owner makes.
 - **Base branch.** `<base branch>` is the branch you branched from. If it
   is not the default branch, say so in the PR.
 - **Invariants.** Take them from what the project already states (README,

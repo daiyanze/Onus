@@ -79,6 +79,10 @@ before starting a task.
    `docs/lessons.md`, or a check.
 
 - One concern per PR.
+- <Only while nothing outside this repository depends on its formats, APIs
+  or stored data:> No backward compatibility. When a change replaces a
+  format, an API or a mechanism, remove the old one in the same PR: no
+  shims, fallbacks, deprecated aliases or migrations.
 - Record a decision that changes the design where the project keeps
   decisions (`<docs/adr>`).
 - Never put secrets or personal data in logs, issues, PR descriptions or

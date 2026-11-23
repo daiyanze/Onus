@@ -7,10 +7,13 @@ working method. Read `docs/lessons.md` before starting.
 The method is Onus (github.com/daiyanze/Onus). Its sources:
 Karpathy's LLM coding guidelines
 (github.com/multica-ai/andrej-karpathy-skills), Anthropic's Claude Code best
-practices (explore, plan, code, commit; show evidence, not claims), and the
+practices (explore, plan, code, commit; show evidence, not claims), the
 pstack plugin (github.com/cursor/plugins, `pstack`: verify on the real
 surface, playbooks per kind of work, exit conditions for long runs, a rule
-for each mistake and what enforces it).
+for each mistake and what enforces it), and Marcos Hernanz's AGENTS.md
+rules (use what the dependencies already do, prefer maintained libraries,
+follow how mature products solve it, grow from a version that works end to
+end, no compatibility layers before anyone depends on them).
 
 ## Four principles
 
@@ -59,7 +62,13 @@ this section otherwise.>
 
 1. **Explore.** Read the issue, `AGENTS.md`, the recorded decisions it
    touches, `docs/lessons.md` and the code involved. Before choosing an
-   approach, check what the design already decided.
+   approach, check what the design already decided. Before adding a package
+   or writing your own helper, check what the project's dependencies already
+   do: read their docs, do not assume a capability is missing. Otherwise
+   prefer an established, maintained library to code of your own, unless
+   you can say why not. For a new feature or a design choice, look at how
+   mature products solve the same problem and follow the pattern they
+   proved, rather than inventing one.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
@@ -79,7 +88,9 @@ this section otherwise.>
 5. **PR.** Title: `type(scope): subject`. The description has these
    headings, empty ones dropped: `## Why` (the goal, first), `## What
    changed`, `## Scope` (protected paths, deviations from recorded
-   decisions, what is left out), `## Verification` (commands and results,
+   decisions, a dependency added or a helper written where a library could
+   do it and why, the product pattern followed, what is left out),
+   `## Verification` (commands and results,
    and what was not verified locally). Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
@@ -128,8 +139,10 @@ recorded decision (step 2): stop and ask instead of patching around it.
 1. Trace the code the feature touches, then name the shape. Prefer one
    structure (a table, a typed model, a state machine) over conditionals
    spread across files.
-2. Build in small units that each end in a passing check, and commit each
-   before starting the next.
+2. Start from the smallest version that works end to end, then add to it.
+   Build in small units that each end in a passing check, and commit each
+   before starting the next. Never break the working version for a part
+   that is not finished yet.
 3. Verify on the real app for anything a user sees, and add or update that
    feature's file in the verify skill.
 

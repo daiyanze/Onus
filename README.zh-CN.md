@@ -312,6 +312,10 @@ node bench/report.mjs
   `grilling` skill：`brief` 的访谈借鉴了它们的做法：每个问题附上推荐答案，一句"好"
   就能定下；按决定之间的依赖顺序逐个问；问之前先去代码里查。一次只问一个问题是
   `brief` 自己的选择。
+- Marcos Hernanz 于 2026 年 8 月在 X 上分享的 AGENTS.md 规则（转载见
+  [这个 gist](https://gist.github.com/gulbaki/792d7430b3f0295b4bb43454a35ffbca)）：
+  加新包之前先查已有依赖能做什么、优先用有人维护的库、参照成熟产品的做法、从能端到端
+  跑通的版本往上加，以及作为可选规则、在外部还没有依赖时不保留向后兼容。
 - [Agent Skills 规范](https://agentskills.io/specification)：可移植的 skill 格式。
 - 本仓库历史中的早期设计（当时名为 Surgical Dev）：按验收标准逐条给出结论、结论绑定
   到单个 commit、无人值守工作的预算。

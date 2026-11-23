@@ -36,7 +36,7 @@ something. Nobody measured missed defects.
 
 | Part | In Breaker Delta | In this repository's wording |
 | --- | --- | --- |
-| The loop, PR format, lessons rules (`docs/development.md`) | Used on the pull requests above | Reworded to remove project names. Not run since rewording |
+| The loop, PR format, lessons rules (`docs/development.md`) | Used on the pull requests above | Reworded to remove project names. Not run since rewording. The rules on existing dependencies, mature products' patterns and building end to end first, and the opt-in no-backward-compatibility line (with `brief`'s matching split rule and `charter`'s question), are new here and **never run** |
 | `cross-examine` (named `review` there, `pr-review` in this repository at first) | Used 29 times on 23 pull requests | Generalized, and run three times on this repository's pull request #18. All three rounds asked for changes, each for a narrower problem; the last was one sentence in a comment. No round approved, so by the method's own rule the merge was the owner's decision. The places where each round found the skill hard to follow were fixed in that pull request |
 | `cross-examine`: a line per acceptance criterion | Not in use | New here. Used in the three rounds on #18 |
 | `cross-examine`: a verdict covers one commit; later commits need a re-review unless they only fix its notes | Practised without being written down: 20 of the 23 pull requests were merged at a later commit than the reviewed one | New wording. On #18 each round reviewed the commits after the last verdict; the exception for note fixes was not exercised |

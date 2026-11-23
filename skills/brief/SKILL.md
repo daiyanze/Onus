@@ -203,6 +203,10 @@ How to split:
   signatures comes before the issues that fill them in, so those can run in
   parallel. Depend only on what an issue really needs: an issue that can be
   built against the contract does not depend on its implementation.
+- **Working end to end early.** An early issue builds the smallest version
+  that works end to end; later issues add to it, and each leaves it
+  working. No issue takes a working version apart for complexity a later
+  issue might need.
 - **Acceptance criteria are checks.** Each names a test, a command and the
   result it must give, or what the real app shows. "Works well" is not one.
 - **Protected paths are named.** An issue that touches one says so in
