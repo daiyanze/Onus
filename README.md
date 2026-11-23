@@ -37,7 +37,7 @@ Coding agents write a plausible change quickly. The trouble starts after:
 | The reviewer | "This is a bug" | A run that shows it fail. Reading the code finds a bug; it does not prove one |
 | The reviewer | "This breaks a rule" | The rule quoted, and the lines that break it |
 | A document | "This check enforces X" | The check that fails when X breaks, named, and only what its code covers. Where it is cheap, X broken in a scratch copy and the check seen to fail |
-| The owner | "Merge" | The owner's own decision. The agent never merges |
+| The owner | "Merge" | The owner's own decision: each merge, or a grant to one `docket` run, given in that session. Without a grant the agent never merges |
 
 Everything else in the method follows from this table.
 
@@ -71,8 +71,12 @@ Everything else in the method follows from this table.
    the agent states a condition a command can check, works issue after
    issue, keeps a decision log, parks what needs the owner, and never
    relaxes the condition to finish.
-8. **The owner merges.** The agent never merges, never pushes to the base
-   branch, and stops to ask before anything that cannot be undone.
+8. **The owner merges, or grants it.** By default the agent never merges.
+   The owner can grant a long run the right to merge its own PRs: each
+   one only with an approving review of its current head, green CI, the
+   base branch merged in, and no protected path touched. The agent never
+   pushes to the base branch, and stops to ask before anything that cannot
+   be undone.
 
 ## 🚀 Quickstart
 
@@ -192,7 +196,15 @@ Pi loads a project's `.agents/skills` only after you trust the project.
   needs a decision only you can make.
 - **Picks up** where an earlier session stopped, from the log, the open PRs
   and `git log`, without redoing work.
-- **Never** merges, pushes to the base branch, or deploys.
+- **Merges** only if you grant it in the session (`/docket finish milestone
+  2, you may merge`), and only a PR it opened that has an approving review
+  of its current head, green CI, the base branch merged in, and no
+  protected path. It merges that exact commit, never with `--admin`. A
+  failed CI run on the base branch after a merge stops all merging for the
+  run. A new session or a scheduled run needs a new grant. If merging
+  deploys, the grant must say so.
+- **Never** pushes to the base branch, and deploys only through a merge
+  that your grant allowed to deploy.
 
 ### `cross-examine`: independent PR review
 
@@ -321,10 +333,11 @@ exact posting command (`-F body=@file`) and reads the comment back.
 
 ## 🛡️ What it does not do
 
-- It does not merge, deploy or delete. Those stay with the owner.
+- It does not merge unless you grant it for one long run, and it does not
+  deploy or delete. Those stay with the owner.
 - It does not enforce itself with code. The skills are instructions; what
   holds them in place is your check command, your branch rules, and the fact
-  that only you merge. Say in `AGENTS.md` what your branch rules really
+  that only you merge, or grant merging. Say in `AGENTS.md` what your branch rules really
   require.
 - It does not replace your tests or CI. It uses them.
 - It is not proven across models or teams. One project, one model family so
@@ -365,7 +378,10 @@ node bench/report.mjs
   takes its ideas from pstack's `architect`, `interrogate` and
   `figure-it-out`: usage before types, at least two structurally different
   shapes, adversaries that must prove what they find, riskiest work first,
-  and abandoning a shape that keeps needing workarounds.
+  and abandoning a shape that keeps needing workarounds. Merging under a
+  grant in `docket` follows pstack's `autopilot-full`: the operator's go
+  covers only the run's own PRs, green CI on each new head, an independent
+  verdict, and a check against the base branch right before merging.
 - Matt Pocock's [`grill-me`](https://github.com/mattpocock/skills) and the
   `grilling` skill it now hands off to: `brief`'s interview takes from them
   a recommended answer with each question, so a yes settles it, walking the

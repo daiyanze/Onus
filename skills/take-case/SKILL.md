@@ -77,7 +77,8 @@ Follow `docs/development.md` from step 1 (Explore) to step 7 (Learn): branch
 from the base branch, implement, run the check command, push, open a PR with
 `Closes #n`, wait for CI, then start a separate agent with no context from
 this session and have it follow the `cross-examine` skill on the PR. Never
-merge; the owner does.
+merge; the owner does. The one exception is a `docket` run that the owner
+granted merging, and it merges in that skill, not here.
 
 Stop and ask before building if the issue contradicts a recorded decision,
 needs a secret or an account, touches a protected path it does not mention

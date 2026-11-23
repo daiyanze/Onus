@@ -74,7 +74,8 @@ before starting a task.
 4. A separate review agent, with no context from the writing session,
    reviews the PR with the `cross-examine` skill. The session that wrote a PR
    does not review it.
-5. The owner merges.
+5. The owner merges, or grants a `docket` run, in its session, the right to
+   merge its own PRs under that skill's conditions.
 6. A mistake caught by the owner, CI or review becomes a lesson in
    `docs/lessons.md`, or a check.
 
