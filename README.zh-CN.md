@@ -78,6 +78,15 @@ Pull Request 中逐渐成形。哪些部分验证过、哪些没有，写在
 npx skills add daiyanze/Onus
 ```
 
+也可以作为插件安装，`charter` 会替你把 skill 复制进仓库：
+
+- **Claude Code：** `/plugin install onus --marketplace daiyanze/onus`
+  （Claude Code 2.1.275 之前：先 `/plugin marketplace add daiyanze/Onus`，
+  再 `/plugin install onus@onus`）。插件里的 skill 带插件名前缀：`/onus:charter`。
+- **Claude（Cowork）：** 在 Claude 桌面应用里把 `daiyanze/Onus` 添加为插件市场，
+  或者从 [最新 release](https://github.com/daiyanze/Onus/releases) 上传
+  `onus.plugin`。这个文件可以用 `npm run plugin` 自己打包。
+
 **2. 让你的 agent 为仓库立章程。**
 
 ```text

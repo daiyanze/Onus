@@ -9,7 +9,8 @@
     "check": "node skills/charter/templates/scripts/check-agent-files.mjs --skills skills",
     "test:bench": "node --test bench/test/*.test.mjs",
     "bench": "node bench/run.mjs",
-    "bench:report": "node bench/report.mjs"
+    "bench:report": "node bench/report.mjs",
+    "plugin": "rm -f onus.plugin && zip -rq onus.plugin .claude-plugin/plugin.json skills README.md README.zh-CN.md VALIDATION.md -x '*.DS_Store'"
   },
   "devDependencies": {
     "yaml": "^2.0.0"

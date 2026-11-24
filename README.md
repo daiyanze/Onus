@@ -94,11 +94,25 @@ agents at once:
 npx skills add daiyanze/Onus
 ```
 
+Or install it as a plugin, and `charter` copies the skills into the
+repository for you:
+
+- **Claude Code:** `/plugin install onus --marketplace daiyanze/onus`
+  (on Claude Code before 2.1.275: `/plugin marketplace add daiyanze/Onus`,
+  then `/plugin install onus@onus`). Plugin skills carry the plugin's
+  name: `/onus:charter`.
+- **Claude (Cowork):** add `daiyanze/Onus` as a plugin marketplace in the
+  Claude desktop app, or upload `onus.plugin` from the
+  [latest release](https://github.com/daiyanze/Onus/releases). Build that
+  file yourself with `npm run plugin`.
+
 **2. Ask your agent to charter the repository.**
 
 ```text
 /charter
 ```
+
+(`/onus:charter` when Onus came as a plugin.)
 
 It writes `AGENTS.md`, `CLAUDE.md`, `docs/development.md` and
 `docs/lessons.md`, links the skill folders so every runtime finds them, adds

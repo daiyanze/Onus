@@ -11,7 +11,8 @@ adds one dev dependency for the check. The files to copy are in `templates/`
 next to this file.
 
 Needs: a Git repository on GitHub, the `gh` CLI, and a working tree with no
-changes other than the skill folders you were just given. Work on a branch
+changes other than the skill folders you were just given (none, when
+Onus came as a plugin). Work on a branch
 from the base branch: the default branch, unless the project integrates
 work on another one.
 
@@ -110,6 +111,16 @@ Look at what exists, then do the one that fits:
   command leaves a link that leads nowhere.
 - **Only `.agents/skills` exists.** The other way round:
   `mkdir -p .claude && ln -s ../.agents/skills .claude/skills`.
+- **Onus came as a plugin** (this file is not under the repository, and
+  the Onus skills are in neither folder). Copy the six skill folders next to
+  this one (`charter`, `take-case`, `docket`, `cross-examine`,
+  `evidence-kit`, `brief`) into `.claude/skills/`, creating it if needed,
+  then apply the case above that now fits. The repository must hold the
+  skills itself: Pi, Codex, CI's check and every other collaborator read
+  them from there, not from your plugin. Tell the owner that Claude Code
+  now lists each skill twice (`/take-case` from the repository,
+  `/onus:take-case` from the plugin) and that the repository's copy is the
+  one the project changes.
 
 Do not name a skill `run`, `review` or `code-review`: Claude Code ships
 skills with those names.
