@@ -46,10 +46,9 @@ issues:
     depends_on: []
     what: |
       This repository's side ("What happens to a petition here", "Contract"):
-      `.github/ISSUE_TEMPLATE/petition.yml` with the field ids in the contract and
-      `labels: [petition]` and the field ids including `trial`; the label
-      `petition`; and `CONTRIBUTING.md` with the
-      triage outcomes and the proof rule: for a change in behaviour, the old
+      `.github/ISSUE_TEMPLATE/petition.yml` with the contract's field ids
+      (`trial` included) and `labels: [petition]`; the label `petition`; and
+      `CONTRIBUTING.md` with the triage outcomes and the proof rule: for a change in behaviour, the old
       wording as `onus@<ref>` and the new one under the same bench hash, pass
       counts at n >= 3 per cell; for a fix of a command, a missing file or a
       contradiction, a dry run of the step. The PR names the petition it answers.
