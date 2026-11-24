@@ -82,6 +82,11 @@ to fit `charter`, `docket`, `cross-examine` and `brief` (renamed to
 | Root-cause fixing | `docs/development.md` Bug fix steps 2 and 3 |
 | A verify skill run in CI, and fixed when the app changes | `evidence-kit` step 4: "run it in CI … A skill that CI does not exercise drifts"; "fix the file in the same PR" |
 
+Moved out (2026-11-24): `resume-case` is now `resume-claims` in
+`docs/plans/multi-agent.md`, because resuming and claiming change the same
+step of `take-case`, and "the agent's own PRs" needs the agent names that
+plan adds.
+
 ## Constraints, with their sources
 
 - Plain Markdown, no runtime to install (`README.md`, purpose).
@@ -393,9 +398,8 @@ code before it was settled.
 | 12 | Several criteria did not check what `what` asks | Rewritten: placement per skill, a skill listing, a frontmatter check, one choice for this repository's rules |
 
 Not settled, kept as risks: posting identity, versions that do not move,
-plain-words requests. `resume-case` no longer says "the agent's own PRs",
-since the agent posts under the person's account: it resumes an open PR that
-closes an issue with the agent label.
+plain-words requests. "The agent's own PRs" in `resume-case` is settled by
+agent names in `docs/plans/multi-agent.md`, where the issue moved.
 
 ## Still owed
 

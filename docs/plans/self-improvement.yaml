@@ -132,23 +132,6 @@ issues:
       - A dry run against Breaker Delta's `docs/lessons.md` lists each lesson with check present/absent and scope present/absent, and the list is pasted in the PR.
 
   # M2: gaps against pstack and others.
-  - id: resume-case
-    title: take-case resumes the agent's own unfinished pull request first
-    milestone: M2 Gaps
-    depends_on: []
-    what: |
-      `take-case` step 1 treats an issue with an open PR as "in progress" and
-      skips it, so a single-issue session that stopped mid-review is never
-      picked up outside `docket`. Before new candidates, list the agent's own
-      open PRs whose latest review requests changes or whose CI failed, and
-      resume the oldest. A resume reads the PR, the last review and CI, and
-      checks inherited claims, as `docket` step 1 does. "The agent's own" is
-      an open PR that closes an issue with the agent label: the agent posts
-      under the person's account, so authorship cannot tell.
-    acceptance:
-      - "`npm run check` passes."
-      - A dry run in a repository with one open agent PR carrying a request-changes verdict reports that PR as the resume point, not a new issue.
-
   - id: kinds-of-work
     title: Add refactoring, performance, investigation and spike to the kinds of work
     milestone: M2 Gaps
