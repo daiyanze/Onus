@@ -1,0 +1,193 @@
+goal: Anyone using Onus, a person or an agent, can petition a problem with the method to this repository with one skill command, and the gaps found against pstack and other plugins are closed
+record: docs/plans/self-improvement.md
+issues:
+  # M1: self-improvement. Riskiest first: the note format is a one-way door.
+  - id: method-notes
+    title: Every skill's last step records method notes
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      As the record describes ("What counts as a method note", "Signals",
+      "Where notes are written"):
+      - Each of the six skills' last step gains a `### Method notes` subsection
+        (each note, or `none`), after checking the eight signals: `charter` step 8,
+        `cross-examine` step 8, `evidence-kit` step 4, and the Report step of the
+        other three. No line offering `petition` yet: that comes with `petition`.
+      - `cross-examine` step 7 template gains a `**Method notes:**` line.
+      - `docs/development.md` step 7 (Learn) gains the lesson-or-method-note test;
+        the Bug fix kind gains signal 8: name the PR that introduced the bug and
+        the step that should have caught it.
+      - `docket` gains the `method` log phase.
+      Touches `skills/` and the charter templates, which projects copy as agent files.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - "`grep -c '^### Method notes' skills/*/SKILL.md` prints 1 for each of the six files, and `grep -c 'Method notes:' skills/cross-examine/SKILL.md` prints at least 1."
+      - "`grep -rn 'petition' skills/` prints nothing."
+      - One `cross-examine` run on a real PR in an adopting project posts a comment with a `**Method notes:**` line, read back unchanged; its link is added to VALIDATION.md.
+
+  - id: skill-version
+    title: Each skill carries the Onus version in its frontmatter
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      A petition must say which wording it is about, and a copied skill folder
+      has no package.json or git commit. Add `metadata: {onus-version: <x.y.z>}`
+      to every SKILL.md (record, "Contract"), and a check in this repository's
+      `npm run check` that fails when a skill lacks it or it differs from
+      `package.json`'s version. README states that every change to a skill's
+      wording bumps the version.
+    acceptance:
+      - "`npm test` passes, with a test that fails when a skill has no `onus-version` and one that fails when it differs from package.json."
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok` with the new key (unknown frontmatter keys are allowed)."
+
+  - id: petition-intake
+    title: An issue form, a label and a triage rule for petitions
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      This repository's side ("What happens to a petition here", "Contract"):
+      `.github/ISSUE_TEMPLATE/petition.yml` with the contract's field ids
+      (`trial` included) and `labels: [petition]`; the label `petition`; and
+      `CONTRIBUTING.md` with the triage outcomes and the proof rule: for a change in behaviour, the old
+      wording as `onus@<ref>` and the new one under the same bench hash, pass
+      counts at n >= 3 per cell; for a fix of a command, a missing file or a
+      contradiction, a dry run of the step. The PR names the petition it answers.
+      Touches `.github/`.
+    acceptance:
+      - "`node -e \"require('yaml').parse(require('fs').readFileSync('.github/ISSUE_TEMPLATE/petition.yml','utf8'))\"` exits 0 (or the same with `bun`), and the file holds every field id in the record's contract."
+      - The GitHub new-issue page offers the Petition form, and opening `issues/new?template=petition.yml&title=test&skill=take-case` shows those values prefilled; a screenshot is in the PR.
+      - The repository's labels page lists `petition`.
+
+  - id: petition
+    title: Add the petition skill, which drafts a petition locally and hands over a form link
+    milestone: M1 Self-improvement
+    depends_on: [method-notes, skill-version, petition-intake]
+    what: |
+      A seventh skill, `petition`, shape B in the record ("The petition skill"),
+      steps 1 to 6 and 8: intake from the person's words, this session's method
+      notes, `method` rows in `.runs/` and `**Method notes:**` lines on the PRs
+      they name; one question at a time; locate the skill, step and
+      `onus-version`; tell a project lesson apart and offer `docs/lessons.md`;
+      redact; list possible duplicates by title only; write the draft to
+      `.runs/petitions/<date>-<slug>.md` with its status; list and pick up
+      drafts; and, only when the person asks to send one, show every field as
+      text and hand over the prefilled form link. Never submits. An agent may
+      start it on its own (no `disable-model-invocation`); an unattended run
+      stops after the draft. Adds to each skill's `### Method notes` the line
+      offering `petition`, and naming the draft when an agent wrote one.
+      README, README.zh-CN and the runtime table list it.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`, and `grep -c 'disable-model-invocation' skills/petition/SKILL.md` prints 0."
+      - In an adopting project, a person's one-sentence complaint produces a draft in `.runs/petitions/` and no link; `git status` shows nothing to commit; the transcript is linked in the PR.
+      - Asked to send that draft, the skill prints a form link whose fields hold no project code, file contents or private links, and the agent submits nothing.
+      - A complaint that is a project lesson is answered as one, with an offer to add it to `docs/lessons.md`, and no draft is written.
+      - One real petition is submitted to daiyanze/Onus from a project other than this repository, and arrives with the `petition` label.
+
+  - id: petition-trial
+    title: petition tries a suggested wording locally before it is sent
+    milestone: M1 Self-improvement
+    depends_on: [petition]
+    what: |
+      Step 7 of the record's `petition` skill: when a draft suggests a change to
+      a skill's wording and the person asks to try it, edit the project's copy
+      of that skill on a branch `petition/<slug>`, re-run the step or task that
+      went wrong the same way as before, and record in the draft the diff of the
+      skill text, how it was re-run, and the result before and after (`worked`,
+      `did not work`, `could not tell`) with the evidence. Never merge the
+      branch; switch back when done. Skip the trial, and say why, when the
+      skill files live outside the repository. The form's `trial` field carries
+      the result.
+    acceptance:
+      - "In an adopting project, a trial leaves the base branch's skill files unchanged: `git diff <base> -- .claude/skills .agents/skills` is empty after switching back, and the draft holds the diff and a before/after result."
+      - With the skill folder linked to a path outside the repository, the trial is skipped and the draft says why.
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+
+  - id: bench-baseline
+    title: Record a bench baseline for the current version
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      `bench/RESULTS.md` says "No results yet". A first data point for the
+      method, not a prerequisite for petitions (a new scenario changes the bench
+      hash, so petitions re-run the old wording as `onus@<ref>`). Run the bench for the current version
+      and the `none` arm on at least two runtimes, keep the result files, and
+      regenerate RESULTS.md. Note the token cost per trial.
+    acceptance:
+      - "`node bench/report.mjs` regenerates RESULTS.md with rows for at least two runtimes and both arms, and `git diff --exit-code bench/RESULTS.md` is clean after it."
+      - The bench README states the cost per trial measured in this run.
+
+  - id: lessons-refresh
+    title: Audit a project's lessons against its code
+    milestone: M1 Self-improvement
+    depends_on: []
+    what: |
+      `docs/development.md` "Lessons" says to retire, merge and promote, but
+      nothing triggers it. Add a refresh step, run at the end of a `docket`
+      run and when the file grows past a minute's read: each `Check:` line
+      names a check that still exists and still fails on the mistake; each
+      scope path still exists; duplicates merged; retired entries kept.
+      Borrowed from Compound Engineering's learnings audit.
+    acceptance:
+      - "`npm run check` passes."
+      - A dry run against Breaker Delta's `docs/lessons.md` lists each lesson with check present/absent and scope present/absent, and the list is pasted in the PR.
+
+  # M2: gaps against pstack and others.
+  - id: kinds-of-work
+    title: Add refactoring, performance, investigation and spike to the kinds of work
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      `docs/development.md` has three kinds of work. Add four, each with its
+      proof, after pstack's playbooks:
+      - Refactoring: behaviour unchanged, shown by tests that pass before and
+        after with no test edited; callers migrated, then the old path deleted.
+      - Performance: a measurement before and after on the same command,
+        repeated, with the number explained (what dominates it).
+      - Investigation: a question, answered with the commands that show it; no PR.
+      - Spike: a throwaway branch, never merged; what it showed goes into the issue.
+      `take-case` states the kind of the issue it picked in its first lines.
+    acceptance:
+      - "`npm run check` passes."
+      - "`grep -E '^\\*\\*(Refactoring|Performance|Investigation|Spike)\\.\\*\\*' skills/charter/templates/docs/development.md` prints four lines."
+
+  - id: blast-radius
+    title: Explore lists what the change reaches before the plan
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      Step 1 (Explore) gains: list the callers, consumers and stored data the
+      change reaches, with the command that found them (a search, the type
+      check, a query). The list goes into the PR's `## Scope`. After pstack's
+      `blast-radius`.
+    acceptance:
+      - "`npm run check` passes."
+      - "A bench run of `cp1` with arms `onus@<base SHA>` and `onus`, n >= 3 on one runtime, gives `onus` a pass count no lower than `onus@<base SHA>`; the command and RESULTS.md rows are in the PR."
+
+  - id: second-model-run
+    title: Run the second-model review once and name the review models
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      VALIDATION.md lists "Second model review" as written, never done. Let
+      `AGENTS.md` name the review models (`charter` asks), after pstack's
+      models per role, and run `cross-examine` with a second vendor's model on
+      one real PR in an adopting project.
+    acceptance:
+      - A review comment whose `**Second model:**` line names a model from another vendor, linked in VALIDATION.md with what it found that the first model did not, or "nothing".
+      - "`grep -n 'Review models' skills/charter/templates/AGENTS.template.md skills/charter/SKILL.md` prints a line in each."
+      - "`npm run check` passes."
+
+  - id: delegate-rules
+    title: Rules for subagents the writer starts
+    milestone: M2 Gaps
+    depends_on: []
+    what: |
+      Reviewers and challengers have rules; helpers the writer starts (to
+      search, to try a probe, to build one unit) do not. Add to
+      `docs/development.md`: a delegate reads `AGENTS.md` and `docs/lessons.md`,
+      gets one unit with its check, reports commands and results, and never
+      opens a PR, pushes or merges; the writer checks its claims against the
+      code. After pstack's `poteto-agent` and superpowers' subagent-driven development.
+    acceptance:
+      - "`npm run check` passes."
+      - "`grep -n 'delegate' skills/charter/templates/docs/development.md` shows the new section."
