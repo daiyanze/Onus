@@ -1,4 +1,4 @@
-goal: Anyone using Onus, a person or an agent, can appeal a problem with the method to this repository with one skill command, and the gaps found against pstack and other plugins are closed
+goal: Anyone using Onus, a person or an agent, can petition a problem with the method to this repository with one skill command, and the gaps found against pstack and other plugins are closed
 record: docs/plans/self-improvement.md
 issues:
   # M1: self-improvement. Riskiest first: the note format is a one-way door.
@@ -12,7 +12,7 @@ issues:
       - Each of the six skills' last step gains a `### Method notes` subsection
         (each note, or `none`), after checking the eight signals: `charter` step 8,
         `cross-examine` step 8, `evidence-kit` step 4, and the Report step of the
-        other three. No line offering `appeal` yet: that comes with `appeal`.
+        other three. No line offering `petition` yet: that comes with `petition`.
       - `cross-examine` step 7 template gains a `**Method notes:**` line.
       - `docs/development.md` step 7 (Learn) gains the lesson-or-method-note test;
         the Bug fix kind gains signal 8: name the PR that introduced the bug and
@@ -22,7 +22,7 @@ issues:
     acceptance:
       - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
       - "`grep -c '^### Method notes' skills/*/SKILL.md` prints 1 for each of the six files, and `grep -c 'Method notes:' skills/cross-examine/SKILL.md` prints at least 1."
-      - "`grep -rn 'appeal' skills/` prints nothing."
+      - "`grep -rn 'petition' skills/` prints nothing."
       - One `cross-examine` run on a real PR in an adopting project posts a comment with a `**Method notes:**` line, read back unchanged; its link is added to VALIDATION.md.
 
   - id: skill-version
@@ -30,7 +30,7 @@ issues:
     milestone: M1 Self-improvement
     depends_on: []
     what: |
-      An appeal must say which wording it is about, and a copied skill folder
+      A petition must say which wording it is about, and a copied skill folder
       has no package.json or git commit. Add `metadata: {onus-version: <x.y.z>}`
       to every SKILL.md (record, "Contract"), and a check in this repository's
       `npm run check` that fails when a skill lacks it or it differs from
@@ -40,46 +40,68 @@ issues:
       - "`npm test` passes, with a test that fails when a skill has no `onus-version` and one that fails when it differs from package.json."
       - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok` with the new key (unknown frontmatter keys are allowed)."
 
-  - id: appeal-intake
-    title: An issue form, a label and a triage rule for appeals
+  - id: petition-intake
+    title: An issue form, a label and a triage rule for petitions
     milestone: M1 Self-improvement
     depends_on: []
     what: |
-      This repository's side ("What happens to an appeal here", "Contract"):
-      `.github/ISSUE_TEMPLATE/appeal.yml` with the field ids in the contract and
-      `labels: [appeal]`; the label `appeal`; and `CONTRIBUTING.md` with the
+      This repository's side ("What happens to a petition here", "Contract"):
+      `.github/ISSUE_TEMPLATE/petition.yml` with the field ids in the contract and
+      `labels: [petition]` and the field ids including `trial`; the label
+      `petition`; and `CONTRIBUTING.md` with the
       triage outcomes and the proof rule: for a change in behaviour, the old
       wording as `onus@<ref>` and the new one under the same bench hash, pass
       counts at n >= 3 per cell; for a fix of a command, a missing file or a
-      contradiction, a dry run of the step. The PR names the appeal it answers.
+      contradiction, a dry run of the step. The PR names the petition it answers.
       Touches `.github/`.
     acceptance:
-      - "`node -e \"require('yaml').parse(require('fs').readFileSync('.github/ISSUE_TEMPLATE/appeal.yml','utf8'))\"` exits 0 (or the same with `bun`), and the file holds every field id in the record's contract."
-      - The GitHub new-issue page offers the Appeal form, and opening `issues/new?template=appeal.yml&title=test&skill=take-case` shows those values prefilled; a screenshot is in the PR.
-      - The repository's labels page lists `appeal`.
+      - "`node -e \"require('yaml').parse(require('fs').readFileSync('.github/ISSUE_TEMPLATE/petition.yml','utf8'))\"` exits 0 (or the same with `bun`), and the file holds every field id in the record's contract."
+      - The GitHub new-issue page offers the Petition form, and opening `issues/new?template=petition.yml&title=test&skill=take-case` shows those values prefilled; a screenshot is in the PR.
+      - The repository's labels page lists `petition`.
 
-  - id: appeal
-    title: Add the appeal skill to submit a problem with the method to Onus
+  - id: petition
+    title: Add the petition skill, which drafts a petition locally and hands over a form link
     milestone: M1 Self-improvement
-    depends_on: [method-notes, skill-version, appeal-intake]
+    depends_on: [method-notes, skill-version, petition-intake]
     what: |
-      A seventh skill, `appeal`, shape B in the record ("The appeal skill"):
-      intake from the person's words, this session's method notes, `method`
-      rows in `.runs/` and `**Method notes:**` lines on the PRs they name; one
-      question at a time; locate the skill, step and `onus-version`; tell a
-      project lesson apart and offer `docs/lessons.md`; redact; list possible
-      duplicates by title only; show every field as text and hand over the
-      prefilled form link. Never submits. Callable by name only:
-      `disable-model-invocation: true` and `agents/openai.yaml` with
-      `allow_implicit_invocation: false`. Adds the line "Run `appeal` to send
-      these to Onus." to each skill's `### Method notes` when it is not empty.
+      A seventh skill, `petition`, shape B in the record ("The petition skill"),
+      steps 1 to 6 and 8: intake from the person's words, this session's method
+      notes, `method` rows in `.runs/` and `**Method notes:**` lines on the PRs
+      they name; one question at a time; locate the skill, step and
+      `onus-version`; tell a project lesson apart and offer `docs/lessons.md`;
+      redact; list possible duplicates by title only; write the draft to
+      `.runs/petitions/<date>-<slug>.md` with its status; list and pick up
+      drafts; and, only when the person asks to send one, show every field as
+      text and hand over the prefilled form link. Never submits. An agent may
+      start it on its own (no `disable-model-invocation`); an unattended run
+      stops after the draft. Adds to each skill's `### Method notes` the line
+      offering `petition`, and naming the draft when an agent wrote one.
       README, README.zh-CN and the runtime table list it.
     acceptance:
-      - "`ls skills/appeal/SKILL.md skills/appeal/agents/openai.yaml` lists both, and `grep -c 'allow_implicit_invocation: false' skills/appeal/agents/openai.yaml` prints 1."
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`, and `grep -c 'disable-model-invocation' skills/petition/SKILL.md` prints 0."
+      - In an adopting project, a person's one-sentence complaint produces a draft in `.runs/petitions/` and no link; `git status` shows nothing to commit; the transcript is linked in the PR.
+      - Asked to send that draft, the skill prints a form link whose fields hold no project code, file contents or private links, and the agent submits nothing.
+      - A complaint that is a project lesson is answered as one, with an offer to add it to `docs/lessons.md`, and no draft is written.
+      - One real petition is submitted to daiyanze/Onus from a project other than this repository, and arrives with the `petition` label.
+
+  - id: petition-trial
+    title: petition tries a suggested wording locally before it is sent
+    milestone: M1 Self-improvement
+    depends_on: [petition]
+    what: |
+      Step 7 of the record's `petition` skill: when a draft suggests a change to
+      a skill's wording and the person asks to try it, edit the project's copy
+      of that skill on a branch `petition/<slug>`, re-run the step or task that
+      went wrong the same way as before, and record in the draft the diff of the
+      skill text, how it was re-run, and the result before and after (`worked`,
+      `did not work`, `could not tell`) with the evidence. Never merge the
+      branch; switch back when done. Skip the trial, and say why, when the
+      skill files live outside the repository. The form's `trial` field carries
+      the result.
+    acceptance:
+      - "In an adopting project, a trial leaves the base branch's skill files unchanged: `git diff <base> -- .claude/skills .agents/skills` is empty after switching back, and the draft holds the diff and a before/after result."
+      - With the skill folder linked to a path outside the repository, the trial is skipped and the draft says why.
       - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
-      - In an adopting project, a person's one-sentence complaint produces a form link whose fields hold no project code, file contents or private links, and nothing is submitted by the agent; the transcript is linked in the PR.
-      - A complaint that is a project lesson is answered as one, with an offer to add it to `docs/lessons.md`, and no link is produced.
-      - One real appeal is submitted to daiyanze/Onus from a project other than this repository, and arrives with the `appeal` label.
 
   - id: bench-baseline
     title: Record a bench baseline for the current version
@@ -87,8 +109,8 @@ issues:
     depends_on: []
     what: |
       `bench/RESULTS.md` says "No results yet". A first data point for the
-      method, not a prerequisite for appeals (a new scenario changes the bench
-      hash, so appeals re-run the old wording as `onus@<ref>`). Run the bench for the current version
+      method, not a prerequisite for petitions (a new scenario changes the bench
+      hash, so petitions re-run the old wording as `onus@<ref>`). Run the bench for the current version
       and the `none` arm on at least two runtimes, keep the result files, and
       regenerate RESULTS.md. Note the token cost per trial.
     acceptance:
