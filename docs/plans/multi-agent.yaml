@@ -53,9 +53,9 @@ issues:
       entries whole and renumbers only its own new entries above the highest
       number on the base, updating references to them in the same PR; it
       lists the resolution in a PR comment; under a grant this needs a
-      re-review, which does not count toward the three-round budget. README and README.zh-CN get a short
-      "Several agents" section: the worker count, the lock, what the owner
-      still does.
+      re-review, which does not count toward the three-round budget. README
+      and README.zh-CN get a short "Several agents" section: the worker
+      count, the lock, what the owner still does.
     acceptance:
       - "`grep -n 'renumber' skills/charter/templates/docs/development.md` prints the new rule."
       - "In a scratch repository, two PRs in flight each add one lesson; after the first merges, the second's resolution leaves both entries on the base byte for byte as each PR added them (apart from the renumbered heading), shown with `diff` in the PR."
