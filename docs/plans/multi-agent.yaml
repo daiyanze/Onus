@@ -1,0 +1,111 @@
+goal: Several agents, in any mix of runtimes and models, work one repository at the same time under Onus, coordinating only through GitHub
+record: docs/plans/multi-agent.md
+issues:
+  - id: agent-name
+    title: Agents that share a repository have a name, and one working tree each
+    milestone: M1 Several agents
+    depends_on: []
+    what: |
+      The contract first ("Agent name", "One working tree per agent",
+      "Contract" in the record): the name set with `git config --worktree
+      onus.agent <name>` in every working tree once there are several, read with
+      `git config --get onus.agent`; lowercase words joined by "-", not ending in
+      a number; the branch `<name>/<issue>-<slug>`, the PR line `Agent: <name>`,
+      the `.runs/` file name. `take-case` reads the issue number from the part of
+      a branch after the prefix. `docs/development.md` gets a section "Several
+      agents" with the one-working-tree rule, and "Picking work" the stale
+      period (default 7 days). Without a name, nothing changes. Touches the
+      charter templates, which projects copy.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - "`grep -n 'onus.agent' skills/take-case/SKILL.md skills/docket/SKILL.md skills/charter/templates/docs/development.md` prints a line in each."
+      - "In a scratch repository with two worktrees named `writer-a` and `writer-b` by `--worktree`, `git config --get onus.agent` prints each one's own name in each, and a `take-case` run in the first pushes a branch starting `writer-a/` and a PR with the line `Agent: writer-a`; with no name set, a `take-case` run behaves as before this issue (no prefix, no claim); both runs are linked in the PR."
+
+  - id: claim-on-start
+    title: A named agent claims an issue with a draft PR before working on it
+    milestone: M1 Several agents
+    depends_on: [agent-name]
+    what: |
+      "Claim before work" in the record, for named agents only: after choosing,
+      push the empty commit `chore: claim #<n>`, open a draft PR with
+      `Closes #<n>` and the `Agent:` line, then list the open PRs in progress on
+      #n by step 1's own test, with step 1's `--jq` filter and `--limit 300` (the
+      PR list, not search); if another has a lower number, close this one,
+      delete its branch, and pick again. Mark the PR ready when it is ready for
+      review. Step 1's candidate rule is unchanged.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - In a scratch repository with one labelled issue, two named writers started within the same minute end with exactly one open PR for it, and the other writer's report names the PR it yielded to. Run three times; the transcripts are linked in the PR.
+
+  - id: resume-claims
+    title: take-case resumes its own unfinished PRs before new work
+    milestone: M1 Several agents
+    depends_on: [claim-on-start]
+    what: |
+      "Resume before new work" in the record. Moved here from the
+      self-improvement plan's `resume-case`. Before candidates, list open PRs
+      from this repository (not a fork) that close an issue with the agent
+      label and, for a named agent, are on its own prefix (an unnamed agent: all
+      of them); resume the oldest with an unfinished claim, a request-changes
+      verdict, failed CI, or a conflict with the base (`DIRTY`, or `BEHIND`
+      where the base requires PRs to be up to date), checking inherited claims
+      as `docket` step 1 does. Report PRs on other agents' branches, draft or
+      not, with no new commit for the stale period; never take them over.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - In a scratch repository where `writer-a` has an open PR with a request-changes verdict and a labelled issue is free, a `take-case` run as `writer-a` resumes the PR, and the same run as `writer-b` takes the free issue and does not touch the PR.
+      - With no names set, a `take-case` run resumes an open PR that closes an agent-labelled issue and has a request-changes verdict, before any free issue.
+      - A PR from a fork whose branch starts `writer-a/` is not resumed by `writer-a`; a PR on another agent's branch with its last commit 8 days old is listed as stale.
+
+  - id: lessons-conflicts
+    title: Lessons added by parallel PRs are resolved by hand, whole
+    milestone: M1 Several agents
+    depends_on: [resume-claims]
+    what: |
+      "Lessons conflict visibly" in the record, in `docs/development.md`
+      "Several agents" and "Lessons": no merge driver; on a conflict in
+      `docs/lessons.md` the writer merges the base in its own working tree, keeps
+      both entries whole, renumbers only its own new entries above the highest
+      number on the base, updates the PR text that names them, and lists the
+      resolution in a PR comment; under a `docket` grant this needs a re-review,
+      as today. The lessons format does not change.
+    acceptance:
+      - "`grep -n 'renumber' skills/charter/templates/docs/development.md` prints the new rule."
+      - "In a scratch repository, two PRs each add one lesson; after the first merges, the second's writer resolves the conflict, and `docs/lessons.md` on the base after both merges holds both entries byte for byte as each PR added them (apart from the renumbered heading), shown with `diff` in the PR."
+
+  - id: review-queue
+    title: A reviewer agent takes the next PR waiting for review
+    milestone: M1 Several agents
+    depends_on: [agent-name, claim-on-start]
+    what: |
+      "Review by a reviewer agent" in the record: the `AGENTS.md` line
+      `Reviews: started by the writer` (default) or `Reviews: by a reviewer
+      agent`, asked by `charter`. With a reviewer agent: the writer marks the PR
+      ready, waits for CI and stops; `cross-examine` without a PR number takes
+      the oldest open PR from this repository that closes an agent-labelled
+      issue, is not a draft, has CI green on its head, no verdict for that head,
+      and a branch prefix other than the reviewer's name; the comment gets
+      `Reviewer: <name>`; any request-changes verdict on a commit blocks it.
+      "A new agent re-reviews" becomes "a new session" in `docs/development.md`
+      step 6 and `cross-examine` step 8. `docket` does not start reviewers in
+      this mode: it waits for and logs the review comment on the head, and its
+      merge step requires that no review comment on the head asks for changes.
+    acceptance:
+      - "`grep -n 'Reviews:' skills/charter/templates/AGENTS.template.md skills/take-case/SKILL.md skills/cross-examine/SKILL.md skills/docket/SKILL.md` prints a line in each."
+      - "In a scratch repository with three ready PRs, one on `reviewer/`, one on `writer-a/` and one from a fork, a `cross-examine` run as `reviewer` with no PR number reviews the `writer-a/` PR and does not check out the other two; the run is linked in the PR."
+      - "In a `docket` run in this mode, a PR with one approving and one request-changes comment on its head is not merged; the log rows are pasted in the PR."
+
+  - id: several-agents-guide
+    title: A guide to running several agents, proven end to end
+    milestone: M1 Several agents
+    depends_on: [claim-on-start, resume-claims, lessons-conflicts, review-queue]
+    what: |
+      README and README.zh-CN get a section "Several agents": the roles (one
+      planner with `brief`, writers with `take-case`, reviewers with
+      `cross-examine`, the owner merges), the setup commands from the record's
+      examples, a reviewer of another vendor's model, and a separate GitHub
+      account for the agents with the base branch requiring the owner's
+      approval; without one, "the agent never merges" stays a written rule, and
+      the guide says so. Then run it.
+    acceptance:
+      - On a scratch repository with three independent labelled issues, two writers and one reviewer produce three PRs, each claimed once and reviewed by the reviewer, and after the owner merges all three every lesson entry they added is on the base whole; the PR links and transcripts are added to VALIDATION.md.
