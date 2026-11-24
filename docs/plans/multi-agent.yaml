@@ -1,0 +1,61 @@
+goal: Several agents work one repository at the same time under Onus, with nothing for the owner to coordinate beyond a worker count
+record: docs/plans/multi-agent.md
+issues:
+  - id: claim-lock
+    title: Lock an issue with a git ref from choosing it until its PR exists
+    milestone: M1 Several agents
+    depends_on: []
+    what: |
+      "The lock" in the record. First, push a blob to `refs/claims/0` on
+      GitHub, push a second blob with the same empty lease (expect `(stale
+      info)`), list it with `ls-remote`, and delete it with a lease; if any of
+      this is refused, stop and reopen the shape with the owner. Then add
+      `skills/take-case/scripts/claim.mjs` (`take`, `release`, `list`, with the
+      nonce and the outputs `taken <oid>` / `held`), its tests, and the rules
+      in `take-case`: take at the start of step 3 unless the caller passes a
+      lock; check before opening the PR; release after the PR opens or on any
+      other end; step 1 counts locked issues as in progress and releases locks
+      older than 24 hours with no open PR. Add the tests to `npm test` and the
+      bun CI job.
+    acceptance:
+      - The PR shows the four GitHub probe commands on `refs/claims/0` and their output, including the `(stale info)` rejection.
+      - "`npm test` and the bun CI job run `skills/take-case/scripts/claim.test.mjs`, which against a bare repository asserts: 30 concurrent `take` pairs give exactly one `taken` and one `held`; two `take` runs with the same `--run` in the same second still produce different objects; `release` with a stale object ID leaves the new holder's lock; a refusal other than `(stale info)` makes `take` fail rather than print `held`."
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - In a scratch repository on GitHub with two free labelled issues, two `take-case` runs started within the same minute work on different issues, and `git ls-remote origin 'refs/claims/*'` is empty once both PRs are open; the transcripts are linked in the PR.
+
+  - id: docket-workers
+    title: docket runs several writer subagents at once
+    milestone: M1 Several agents
+    depends_on: [claim-lock]
+    what: |
+      "Workers in docket" in the record: a worker count in the goal (default
+      1, today's loop); up to N issues in flight; each slot takes the lock and
+      logs a `lock` row, creates a worktree itself, and starts a writer
+      subagent there for `take-case` step 3 holding that lock, up to a ready
+      PR; a separate review agent per ready PR; every later round on a PR (a
+      fix, a base merge) is a new writer subagent in that PR's worktree;
+      every report checked against GitHub; merges one at a time under a grant;
+      `release` rows for locks released on a park or a stop; one worker where
+      the runtime cannot start subagents, said in the report.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`, and `grep -n \"phase \\`lock\\`\\|phase \\`release\\`\" skills/docket/SKILL.md` prints both phases."
+      - "In a scratch repository with three independent labelled issues, `docket` with three workers has three PRs open at once (the log's `pr` rows and the PRs' creation times show it), each reviewed by an agent that did not write it, a fix round done by a new subagent, and under a grant merges them one at a time; the log is pasted in the PR."
+      - The same goal with no worker count produces a log whose rows follow today's order, one issue in flight at a time.
+
+  - id: concurrent-conflicts
+    title: Resolve conflicts between PRs in flight, lessons included
+    milestone: M1 Several agents
+    depends_on: [docket-workers]
+    what: |
+      "Conflicts between PRs in flight" in the record, in `docs/development.md`
+      and `docket`: the writer of the later PR merges the base in its own
+      worktree, keeps both sides' intent, and for `docs/lessons.md` keeps both
+      entries whole and renumbers only its own new entries above the highest
+      number on the base, updating references to them in the same PR; it
+      lists the resolution in a PR comment; under a grant this needs a
+      re-review, which does not count toward the three-round budget. README
+      and README.zh-CN get a short "Several agents" section: the worker
+      count, the lock, what the owner still does.
+    acceptance:
+      - "`grep -n 'renumber' skills/charter/templates/docs/development.md` prints the new rule."
+      - "In a scratch repository, two PRs in flight each add one lesson; after the first merges, the second's resolution leaves both entries on the base byte for byte as each PR added them (apart from the renumbered heading), shown with `diff` in the PR."
