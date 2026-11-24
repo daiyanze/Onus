@@ -1,0 +1,17 @@
+{
+  "name": "onus",
+  "owner": {
+    "name": "Yanze Dai",
+    "url": "https://github.com/daiyanze"
+  },
+  "metadata": {
+    "description": "The Onus method for coding agents, as one plugin."
+  },
+  "plugins": [
+    {
+      "name": "onus",
+      "source": "./",
+      "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks."
+    }
+  ]
+}
