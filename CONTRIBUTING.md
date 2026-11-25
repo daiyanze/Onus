@@ -3,9 +3,8 @@
 ## Petitions
 
 A petition is a problem with the Onus method itself, found while using it.
-The `petition` skill drafts one in your project and hands you a prefilled
-link to the form (`.github/ISSUE_TEMPLATE/petition.yml`). You read it and
-submit it yourself. You can also open the form by hand.
+Open the Petition form (`.github/ISSUE_TEMPLATE/petition.yml`) from the
+new-issue page, fill it in, and submit it.
 
 ### Triage
 
@@ -42,8 +41,8 @@ A pull request that answers a petition names it.
 
 ### Record
 
-`VALIDATION.md` counts petitions by skill, by how many projects they came
-from, and by model.
+`VALIDATION.md` ("Petitions") counts petitions by skill, by how many
+projects they came from, and by model.
 
 ## Other changes
 

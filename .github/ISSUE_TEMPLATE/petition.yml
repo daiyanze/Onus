@@ -1,5 +1,5 @@
 name: Petition
-description: A problem with the Onus method itself, found while using it in a project. The petition skill fills this form for you.
+description: A problem with the Onus method itself, found while using it in a project.
 title: "[petition] <skill> <step>: <one line>"
 labels: [petition]
 body:
@@ -11,7 +11,7 @@ body:
     id: skill
     attributes:
       label: Skill
-      description: charter, take-case, docket, cross-examine, brief, evidence-kit, or petition. Write "development.md" for the method document.
+      description: charter, take-case, docket, cross-examine, brief or evidence-kit. Write "development.md" for the method document.
     validations:
       required: true
   - type: input
