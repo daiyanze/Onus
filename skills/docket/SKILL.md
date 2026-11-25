@@ -207,6 +207,8 @@ When the condition holds, or no candidate is left:
 
 - The exit condition and whether it holds, checked now, with the command.
 - Each PR: link, CI, review verdict, what was not verified locally.
+- Each Investigation or Spike: the link to its answer in the issue, and a
+  spike branch the owner may now delete.
 - Parked issues and what the owner needs to decide for each.
 - What was merged under a grant, with each merge commit, and what the owner
   can still merge, in dependency order.

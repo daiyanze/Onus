@@ -207,10 +207,12 @@ is explained.
    it does not need the review or the checks.
 2. Write what it showed in the issue: what worked, what did not, the
    numbers, and a link to the branch, then close the issue. The real change
-   is a new issue, built by the default loop, not by cleaning up the spike.
-   The branch stays until that issue is closed; then whoever closes it
-   deletes the branch, after checking that the issue's write-up holds
-   everything the branch showed.
+   is a new issue, built by the default loop, not by cleaning up the spike;
+   it links the spike issue, which names the branch. The branch stays until
+   that issue is closed. Deleting it deletes commits that exist nowhere
+   else, so it is the owner's call: the report of the run that closes the
+   real change names the branch for the owner to delete.
+
 ## Delegates
 
 A writer may start helpers: to search, to try a probe, or to build one unit.
