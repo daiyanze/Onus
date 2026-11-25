@@ -30,8 +30,13 @@ end, no compatibility layers before anyone depends on them).
 
 ## Picking work
 
-Issues labelled `<agent label>` are the agent's to do; any other issue needs
-the owner. A session finds the next one with the `take-case` skill, or takes the
+Issues labelled `<agent label>` are the agent's to do. `<owner label>` is
+the owner's alone, and `<owner-and-agent label>` waits for the owner to do
+a part first (a decision, a secret, an account); an issue with either, or
+with none, is not the agent's. An issue carries at most one of the three.
+When a run parks an issue or stops to ask the owner about it, it changes
+`<agent label>` to `<owner-and-agent label>` and comments what the owner
+has to do; the owner hands it back by changing the label back. A session finds the next one with the `take-case` skill, or takes the
 one the owner names. Nothing starts work by itself: a label marks an issue,
 it does not trigger anything.
 

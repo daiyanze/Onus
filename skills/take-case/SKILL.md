@@ -49,7 +49,9 @@ The project's own reference forms, if it lists them in `docs/development.md`
 forms, look at how this project's issues really write
 their dependencies, and say in the report if they use another form.
 
-Issues without the agent label are not the agent's to start. Report the
+Issues without the agent label are not the agent's to start, and neither
+is an issue that also has the owner label or the owner-and-agent label
+(`docs/development.md`, "Picking work"), whatever else it carries. Report the
 three of them that block the most labelled issues: they are what the owner
 can unblock next.
 
@@ -80,7 +82,10 @@ this session and have it follow the `cross-examine` skill on the PR. Never
 merge; the owner does. The one exception is a `docket` run that the owner
 granted merging, and it merges in that skill, not here.
 
-Stop and ask before building if the issue contradicts a recorded decision,
+When you stop on an issue, change its agent label to the owner-and-agent
+label and comment what the owner has to do, in the words of your report
+(`docs/development.md`, "Picking work"). Stop and ask before building if
+the issue contradicts a recorded decision,
 needs a secret or an account, touches a protected path it does not mention
 (`AGENTS.md`, "Protected paths"), or needs something that cannot be undone
 (a deploy, deleting data, a message to people, a force-push). A merge that a
