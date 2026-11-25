@@ -221,3 +221,14 @@ repeated. Rules for it:
   marked retired with the reason, so the record stays honest.
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
+- **Refresh it**, at the end of every `docket` run and whenever the file
+  grows past a minute's read. For each entry, check against the code:
+  - its `Check:` names a check that still exists (a test, a script, a CI
+    job), and that check still fails on the mistake: run it on the mistake,
+    or say that it was not run;
+  - every path in its `Scope:` still exists;
+  - its id is not used by another entry.
+  Then merge duplicates, retire entries whose check or scope is gone (with
+  the reason), and fix repeated ids by renumbering the later entry. Retired
+  entries stay. Report the list, one line per entry, in the run's report or
+  the PR.
