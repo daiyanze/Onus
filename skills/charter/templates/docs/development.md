@@ -222,13 +222,15 @@ repeated. Rules for it:
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
 - **Refresh it**, at the end of every `docket` run and whenever the file
-  grows past a minute's read. For each entry, check against the code:
-  - its `Check:` names a check that still exists (a test, a script, a CI
-    job), and that check still fails on the mistake: run it on the mistake,
-    or say that it was not run;
-  - every path in its `Scope:` still exists;
-  - its id is not used by another entry.
-  Then merge duplicates, retire entries whose check or scope is gone (with
-  the reason), and fix repeated ids by renumbering the later entry. Retired
-  entries stay. Report the list, one line per entry, in the run's report or
-  the PR.
+  grows past a minute's read. Check each entry against the code: does its
+  `Check:` name a check that still exists, and does that check still fail
+  on the mistake (run it, or say it was not run)? Does every path in its
+  `Scope:` still exist? Does another entry use its id? Each "no" is a
+  finding, not a verdict: read the entry first, since it may already say
+  where things moved. A path that moved gets the new path. A check that is
+  gone leaves the lesson active as a written rule, and the lesson is the
+  next to enforce again. Of two entries with one id, the newer one is
+  renumbered. Merge duplicates. Retire only an entry that is wrong or
+  obsolete, with the reason. Report one line per entry, in the run's report
+  or the PR. A project whose `docs/development.md` predates this rule reads
+  it from the `charter` skill's own `templates/docs/development.md`.
