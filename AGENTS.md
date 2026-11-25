@@ -6,8 +6,8 @@ true. If code and this file disagree, fix one of them in the same PR.
 ## What this is
 
 Onus is a development method for coding agents, shipped as Agent Skills:
-`charter`, `take-case`, `docket`, `cross-examine`, `brief` and
-`evidence-kit` under `skills/`. Projects copy those skills; this repository
+`charter`, `take-case`, `docket`, `cross-examine`, `brief`,
+`evidence-kit` and `petition` under `skills/`. Projects copy those skills; this repository
 is where they are written. Plans for larger changes live in `docs/plans/`.
 
 ## Commands

@@ -4,7 +4,10 @@
 
 A petition is a problem with the Onus method itself, found while using it.
 Open the Petition form (`.github/ISSUE_TEMPLATE/petition.yml`) from the
-new-issue page, fill it in, and submit it.
+new-issue page, fill it in, and submit it. In a project that uses Onus, the
+`petition` skill does the drafting: it writes a local draft, and when you
+ask to send it, shows every field and hands over the form link, prefilled.
+You submit it; the skill never does.
 
 ### Triage
 

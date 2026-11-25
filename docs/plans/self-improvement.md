@@ -197,8 +197,8 @@ the approval of the exact text is the person's own submit.
    in this project only). Ask only what is missing, one question at a time:
    which task, what they expected, what happened. Never ask for code.
 2. **Locate.** Name the skill and step the problem traces to, and the
-   content hash of that skill's SKILL.md (`git hash-object`; see
-   "Contract"). If it is a project lesson, say so and offer to add it
+   content hash of that skill's SKILL.md (`tr -d '\r' < SKILL.md |
+   git hash-object --stdin`; see "Contract"). If it is a project lesson, say so and offer to add it
    to `docs/lessons.md` instead.
 3. **Evidence.** Keep only what bears on the step: the command and its
    output, the rule quoted. Describe the project's code; do not paste it.
@@ -210,8 +210,9 @@ the approval of the exact text is the person's own submit.
    personal memory into a tracked AGENTS.md. Remind the person that the
    petition is public and posted under their account.
 5. **Look for duplicates by title only.** List petition titles
-   (`gh issue list -R daiyanze/Onus --search "[petition] in:title" --state
-   all --json number,title,state`, or the issues page), never their bodies.
+   (`gh issue list -R daiyanze/Onus --label petition --state all --json
+   number,title,state`, or the issues page), never their bodies. The form
+   adds the label, so planning issues titled `[petition…]` are not listed.
    Name the likely duplicates and let the person open them; if one fits,
    they comment there instead.
 6. **Draft locally.** Write the petition to

@@ -47,6 +47,7 @@ something. Nobody measured missed defects.
 | `charter` (named `adopt` in this repository at first) | Done by hand, over several pull requests | New skill. Steps 1 to 5 were dry-run in two scratch repositories by the reviewer of #18; seven unclear steps were fixed. **Never run on a real repository** |
 | `evidence-kit` (named `make-verify-skill` in this repository at first) | One verify skill built by hand (`verify-local`) and exercised in CI | New skill. **Never run** |
 | `brief` | Not in use: designs and issue splits were made in chat with the owner, recorded as decision records and issues by hand | New skill, drawing on pstack's `architect`, `interrogate` and `figure-it-out`. **Never run on a real goal** |
+| `petition` | Not in use: method problems were raised in chat with the owner | New skill, after superpowers' `diagnosing-superpowers`. **Never run.** The prefilled form link has not been opened on GitHub |
 | `check-plan.mjs` (`brief`'s plan check) | Not in use | New. A test for each line under "It fails when", passing on Node and Bun. Each check was removed in turn and a test failed every time |
 | `check-agent-files.mjs` | A Bun and TypeScript version runs in CI as a test | Ported to plain JavaScript for Bun and Node, with a command line. Its tests, including the command line, pass on both here |
 | Claude Code finds the rules and skills | Observed in sessions | Same layout |

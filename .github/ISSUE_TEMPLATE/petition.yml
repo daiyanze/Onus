@@ -11,7 +11,7 @@ body:
     id: skill
     attributes:
       label: Skill
-      description: charter, take-case, docket, cross-examine, brief or evidence-kit. Write "development.md" for the method document.
+      description: charter, take-case, docket, cross-examine, brief, evidence-kit or petition. Write "development.md" for the method document.
     validations:
       required: true
   - type: input

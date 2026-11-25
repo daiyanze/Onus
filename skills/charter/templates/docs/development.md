@@ -323,7 +323,9 @@ its report with a `Method notes` section (`cross-examine`: a line in its
 comment), after checking these signals. Each
 note names the signal, the skill and step, and the evidence (a link to a
 comment or PR, a log row, a command and its output). A note without evidence
-is not written. `none` is a valid section.
+is not written. `none` is a valid section. A note worth sending to Onus
+becomes a petition: the `petition` skill writes a local draft, and the
+owner decides whether to send it.
 
 1. **A budget spent.** Three review rounds without approval, or three failed
    fixes of one check.

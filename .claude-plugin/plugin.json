@@ -1,7 +1,7 @@
 {
   "name": "onus",
   "version": "0.4.0",
-  "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks. Six skills: charter, take-case, docket, cross-examine, evidence-kit, brief.",
+  "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks. Seven skills: charter, take-case, docket, cross-examine, evidence-kit, brief, petition.",
   "author": {
     "name": "Yanze Dai",
     "url": "https://github.com/daiyanze"
