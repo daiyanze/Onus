@@ -4,7 +4,7 @@
 agents: one writer, an independent reviewer that proves what it finds, and
 lessons that turn into checks.
 
-It is plain Markdown: six Agent Skills, four document templates and two
+It is plain Markdown: seven Agent Skills, four document templates and two
 check scripts. There is no runtime and no controller to install. Claude Code,
 Pi and Codex read the same files.
 
@@ -85,7 +85,7 @@ Everything else in the method follows from this table.
 You need a repository on GitHub, the `gh` CLI, and one of the supported
 agents.
 
-**1. Put the skills in your repository.** Copy the six folders under
+**1. Put the skills in your repository.** Copy the seven folders under
 [`skills/`](skills) into `.claude/skills/` in your project. The
 [skills CLI](https://github.com/vercel-labs/skills) can do it for several
 agents at once:
@@ -155,6 +155,7 @@ frontmatter tells Claude Code and Pi not to pick it on their own, and
 | [`cross-examine`](skills/cross-examine/SKILL.md) | PR review | A PR is open and CI is green |
 | [`evidence-kit`](skills/evidence-kit/SKILL.md) | make a verify skill | Once per project with something a user can see |
 | [`brief`](skills/brief/SKILL.md) | design and split into issues | A goal needs more than one pull request |
+| [`petition`](skills/petition/SKILL.md) | report a problem with Onus | A skill, followed as written, got in your way |
 
 How to call one:
 
@@ -302,6 +303,16 @@ launches an isolated instance, checks it is worth driving, drives the real
 routes or commands, saves every answer as evidence, and cleans up only what
 it started. It adds a feature map and a CI step that runs the skill's own
 steps end to end.
+
+### `petition`: report a problem with the method
+
+Turns a complaint, or a report's method notes, into a draft in
+`.runs/petitions/`, which git ignores. It tells a project lesson apart and
+offers `docs/lessons.md` instead, takes out code and private details, and
+lists earlier petitions by title only. When you ask to send a draft, it
+shows every field and gives you a prefilled link to the petition form;
+you read it and press Submit. It never posts anything. An agent may start it
+on its own, because the worst it can do is write a git-ignored file.
 
 ## 🧾 Cases
 

@@ -118,9 +118,9 @@ Look at what exists, then do the one that fits:
 - **Only `.agents/skills` exists.** The other way round:
   `mkdir -p .claude && ln -s ../.agents/skills .claude/skills`.
 - **Onus came as a plugin** (this file is not under the repository, and
-  the Onus skills are in neither folder). Copy the six skill folders next to
+  the Onus skills are in neither folder). Copy the seven skill folders next to
   this one (`charter`, `take-case`, `docket`, `cross-examine`,
-  `evidence-kit`, `brief`) into `.claude/skills/`, creating it if needed,
+  `evidence-kit`, `brief`, `petition`) into `.claude/skills/`, creating it if needed,
   then apply the case above that now fits. The repository must hold the
   skills itself: Pi, Codex, CI's check and every other collaborator read
   them from there, not from your plugin. Tell the owner that Claude Code
@@ -184,3 +184,6 @@ Check the signals in `docs/development.md` ("Method notes") against this
 run, and list each note with its signal, step and evidence, or `none`. A
 project chartered before that section existed does not have it: read it from
 the `charter` skill's own `templates/docs/development.md`.
+
+For a note worth sending to Onus, offer the `petition` skill. You may run
+it yourself: it only writes a local draft. Name the draft here.

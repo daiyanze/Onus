@@ -5,7 +5,7 @@
 **举证责任在 agent 一方。** 一套面向编码 agent 的开发方法：一个写手，一个
 能证明自己发现的独立审查者，以及会变成检查项的教训。
 
-它就是纯 Markdown：六个 Agent Skill、四份文档模板和两个检查脚本。没有运行时，
+它就是纯 Markdown：七个 Agent Skill、四份文档模板和两个检查脚本。没有运行时，
 也没有需要安装的控制器。Claude Code、Pi 和 Codex 读的是同一批文件。
 
 这套方法提炼自一个真实项目
@@ -70,7 +70,7 @@ Pull Request 中逐渐成形。哪些部分验证过、哪些没有，写在
 
 你需要：一个 GitHub 上的仓库、`gh` CLI，以及任意一个受支持的 agent。
 
-**1. 把 skill 放进你的仓库。** 把 [`skills/`](skills) 下的六个文件夹复制到你项目的
+**1. 把 skill 放进你的仓库。** 把 [`skills/`](skills) 下的七个文件夹复制到你项目的
 `.claude/skills/` 中。[skills CLI](https://github.com/vercel-labs/skills)
 可以一次为多个 agent 完成这一步：
 
@@ -128,6 +128,7 @@ skill。`docket` 是例外，只有你点名它才会启动，因为长时间运
 | [`cross-examine`](skills/cross-examine/SKILL.md) | PR 审查 | PR 已打开且 CI 全绿 |
 | [`evidence-kit`](skills/evidence-kit/SKILL.md) | 生成 verify skill | 每个有用户可见界面的项目一次 |
 | [`brief`](skills/brief/SKILL.md) | 设计并拆成 issue | 一个目标需要不止一个 Pull Request |
+| [`petition`](skills/petition/SKILL.md) | 向 Onus 反馈方法问题 | 照着 skill 做却被它卡住了 |
 
 如何调用：
 
@@ -247,6 +248,15 @@ _Review by an independent agent (<model>), at <full head SHA>._
 实例，确认它值得操作，实际走一遍真实的路由或命令，把每次响应都存为证据，并且只清理
 它自己启动的东西。它还会加上一份功能地图，以及一个在 CI 中端到端跑一遍该 skill
 所有步骤的环节。
+
+### `petition`：反馈方法本身的问题
+
+把一句抱怨，或报告里的 method notes，写成 `.runs/petitions/` 下的草稿（git 会忽略
+这个目录）。它会分辨这其实是不是项目自己的 lesson，是的话就建议写进
+`docs/lessons.md`；它会去掉代码和私密信息，只按标题列出已有的 petition。你要求发送
+某份草稿时，它展示每一个字段，并给你一个预填好的 petition 表单链接；由你阅读后点
+Submit。它从不自己发帖。agent 可以自行启动它，因为最坏的结果也只是写了一个被 git
+忽略的文件。
 
 ## 🧾 案例
 

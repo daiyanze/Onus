@@ -222,3 +222,6 @@ the signals in `docs/development.md` ("Method notes"); a project chartered
 before that section existed does not have it: read it from the `charter`
 skill's own `templates/docs/development.md`. Your answer to the agent that
 started you still ends with the verdict and the comment ID (step 7).
+
+For a note worth sending to Onus, offer the `petition` skill to the agent
+that started you; do not run it yourself.

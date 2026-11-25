@@ -197,8 +197,8 @@ the approval of the exact text is the person's own submit.
    in this project only). Ask only what is missing, one question at a time:
    which task, what they expected, what happened. Never ask for code.
 2. **Locate.** Name the skill and step the problem traces to, and the
-   content hash of that skill's SKILL.md (`git hash-object`; see
-   "Contract"). If it is a project lesson, say so and offer to add it
+   content hash of that skill's SKILL.md (`tr -d '\r' < SKILL.md |
+   git hash-object --stdin`; see "Contract"). If it is a project lesson, say so and offer to add it
    to `docs/lessons.md` instead.
 3. **Evidence.** Keep only what bears on the step: the command and its
    output, the rule quoted. Describe the project's code; do not paste it.
