@@ -51,3 +51,26 @@ test("onus-version outside metadata does not count", () => {
 test("unquoted value is read", () => {
   assert.equal(skillVersion("---\nname: a\nmetadata:\n  onus-version: 0.4.0\n---\n"), "0.4.0");
 });
+
+import { execFileSync } from "node:child_process";
+import { cpSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+test("run directly from a path with a space, it still fails on a mismatch", () => {
+  const root = repo({ pkg: "9.9.9" });
+  const dir = join(mkdtempSync(join(tmpdir(), "onus version ")), "scripts");
+  mkdirSync(dir);
+  cpSync(join(dirname(fileURLToPath(import.meta.url)), "check-version.mjs"), join(dir, "check-version.mjs"));
+  let code = 0;
+  try {
+    execFileSync(process.execPath, [join(dir, "check-version.mjs"), root], { stdio: "pipe" });
+  } catch (e) {
+    code = e.status;
+  }
+  assert.equal(code, 1);
+});
+
+test("the one-line form metadata: {onus-version: ...} is read", () => {
+  assert.equal(skillVersion('---\nname: a\nmetadata: {onus-version: "0.4.0"}\n---\n'), "0.4.0");
+});
