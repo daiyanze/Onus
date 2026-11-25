@@ -157,8 +157,10 @@ recorded decision (step 2): stop and ask instead of patching around it.
 
 1. The tests that cover the code pass before the change. If none covers
    it, add them first, in their own commit, against the current code.
-2. They pass after it with no test edited. A test that has to change means
-   behaviour changed: that part is not a refactoring, so split it out.
+2. They pass after it with no assertion edited. Moving a test's call from
+   the old path to the new one, as for any caller (step 3), is not an
+   edit; a test whose expected result has to change means behaviour
+   changed: that part is not a refactoring, so split it out.
 3. Move the callers to the new path, then delete the old one in the same
    PR. Leave no shim, alias or second way.
 
@@ -178,16 +180,17 @@ is explained.
 1. Answer it with the commands that show it, and their output: a query, a
    log, a run, a diff.
 2. Write the answer in the issue, with those commands, and what is still
-   unknown. No PR, unless the answer shows a change is needed: that is a
-   new issue.
+   unknown, then close the issue. No PR. If the answer shows a change is
+   needed, that is a new issue, linked from the answer.
 
 **Spike.** A throwaway to learn whether an approach works.
 
 1. Work on a branch named `spike/<issue>-<slug>`. It is never merged, and
    it does not need the review or the checks.
 2. Write what it showed in the issue: what worked, what did not, the
-   numbers, and a link to the branch. The real change is a new issue,
-   built by the default loop, not by cleaning up the spike.
+   numbers, and a link to the branch, then close the issue. The real change
+   is a new issue, built by the default loop, not by cleaning up the spike.
+   The branch stays until that issue is closed, then it is deleted.
 
 ## Long runs
 

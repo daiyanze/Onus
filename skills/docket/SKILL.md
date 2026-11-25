@@ -35,7 +35,8 @@ line. Derive it from the goal and the issue tracker, for example:
 
 > Every open issue with the agent label in milestone 2 whose "Depends on"
 > references are all closed has an open PR with `Closes #n`, green CI on its
-> head, and an approving review that covers that head.
+> head, and an approving review that covers that head. (An Investigation or
+> a Spike is closed with its answer instead, so it leaves the set.)
 
 A review covers a head when it names that commit, or an earlier one followed
 only by fixes for its non-blocking notes or merges of the base branch that
