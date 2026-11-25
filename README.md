@@ -379,6 +379,14 @@ node bench/run.mjs --runtime claude --arms none,onus,onus@<previous tag> --trial
 node bench/report.mjs
 ```
 
+## Versions
+
+One version number, written in three places that must agree:
+`package.json`, `.claude-plugin/plugin.json`, and every skill's frontmatter
+(`metadata: {onus-version: ...}`). `npm run check` fails when they differ.
+Every change to a skill's wording bumps it, so a project, and a report
+about the method, can say which wording it ran.
+
 ## 🗺️ Next
 
 - Bench results for this version on all three runtimes, then a tag.

@@ -1,6 +1,8 @@
 ---
 name: charter
 description: Adopt the Onus method in the repository you are in (set up, install) - one rules file every agent runtime reads, the method and lessons docs, skill folders wired for Claude Code, Pi and Codex, and a check that keeps it so. Use once per repository, when the owner asks to adopt or install the method.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Charter: adopt the method in this repository

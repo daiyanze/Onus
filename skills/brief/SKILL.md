@@ -1,6 +1,8 @@
 ---
 name: brief
 description: Plan work bigger than one issue (design, architecture, break down into issues) - interview the owner one question at a time while the goal is unclear, ground the goal in the code and the recorded decisions, sketch at least two shapes in code, have an independent agent try to break the chosen one, record the decision, and split it into issues of one pull request each, with acceptance criteria and dependencies that a script checks. Use when the owner asks to design, plan or break down a goal. Never labels issues for the agent.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Brief: from a goal to a plan of issues

@@ -312,6 +312,13 @@ node bench/run.mjs --runtime claude --arms none,onus,onus@<previous tag> --trial
 node bench/report.mjs
 ```
 
+## 版本
+
+版本号只有一个，写在三个必须一致的地方：`package.json`、
+`.claude-plugin/plugin.json`，以及每个 skill 的 frontmatter
+（`metadata: {onus-version: ...}`）。三者不一致时 `npm run check` 会失败。
+每次修改 skill 的措辞都要升版本，这样项目和关于方法的反馈都能说清用的是哪一版。
+
 ## 🗺️ 下一步
 
 - 在全部三个运行时上跑出当前版本的基准结果，然后打 tag。
