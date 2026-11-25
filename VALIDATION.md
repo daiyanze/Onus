@@ -85,6 +85,16 @@ npm run check        # this repository's own skills pass the check
 bun test skills/charter/templates/scripts/   # the same tests on Bun; they pass with and without yaml
 ```
 
+## Petitions
+
+Petitions (`CONTRIBUTING.md`) are the evidence from other projects. Count
+them here by skill, by how many projects they came from, and by model, when
+the owner triages them.
+
+| Skill | Petitions | Projects | Models |
+| --- | --- | --- | --- |
+| (none yet) | 0 | 0 | - |
+
 ## Limits
 
 - One project, one owner, one model family, three days.

@@ -1,6 +1,8 @@
 ---
 name: take-case
 description: Next issue - find the next issue the agent may do (the project's agent label) and do it end to end - branch, implement, check, PR, CI, independent review. Use when the owner asks for the next issue or names an issue to do.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Take a case: the next issue
@@ -95,3 +97,10 @@ decided it.
 The PR link, what was not verified locally, the review verdict, and what
 needs the owner. For an Investigation or a Spike: the link to the answer in
 the issue, and whether the issue is closed.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`. A
+project chartered before that section existed does not have it: read it from
+the `charter` skill's own `templates/docs/development.md`.
