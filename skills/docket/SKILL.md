@@ -2,6 +2,8 @@
 name: docket
 description: Long run - work toward a goal the owner gave, issue after issue, until a stated exit condition holds, keeping a decision log. Only when the owner asks for a long run and names the goal. Merges only when the owner granted it for this run, and only PRs that pass every condition here.
 disable-model-invocation: true
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Docket: a long run toward one goal

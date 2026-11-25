@@ -1,6 +1,8 @@
 ---
 name: evidence-kit
 description: Make this project's verify skill - a scripted way to start the real app, use it the way a user does, and keep the evidence. Use once per project, when the method asks for verification on the real app and the project has no verify skill yet.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Evidence kit: make the project's verify skill
