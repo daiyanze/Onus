@@ -211,7 +211,8 @@ is explained.
    it links the spike issue, which names the branch. The branch stays until
    that issue is closed. Deleting it deletes commits that exist nowhere
    else, so it is the owner's call: the report of the run that closes the
-   real change names the branch for the owner to delete.
+   real change names the branch, and the owner deletes it after checking
+   that the spike issue's write-up holds everything the branch showed.
 
 ## Delegates
 
