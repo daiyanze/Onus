@@ -73,15 +73,18 @@ Among the candidates that count, prefer:
 1. the one that the most open issues name in "Depends on";
 2. then the lowest issue number.
 
-Say in two or three lines which issue you picked, why, and the next two
-candidates, then start. The owner can redirect you at any point.
+Say in two or three lines which issue you picked, why, its kind of work
+(`docs/development.md`, "Kinds of work"), and the next two candidates,
+then start. The owner can redirect you at any point.
 
 ## 3. Do it
 
 Follow `docs/development.md` from step 1 (Explore) to step 7 (Learn): branch
 from the base branch, implement, run the check command, push, open a PR with
 `Closes #n`, wait for CI, then start a separate agent with no context from
-this session and have it follow the `cross-examine` skill on the PR. Never
+this session and have it follow the `cross-examine` skill on the PR. An
+Investigation or a Spike (`docs/development.md`, "Kinds of work") has no PR:
+it ends with its answer in the issue and the issue closed. Never
 merge; the owner does. The one exception is a `docket` run that the owner
 granted merging, and it merges in that skill, not here.
 
@@ -100,7 +103,8 @@ decided it.
 ## 4. Report
 
 The PR link, what was not verified locally, the review verdict, and what
-needs the owner.
+needs the owner. For an Investigation or a Spike: the link to the answer in
+the issue, and whether the issue is closed.
 
 ### Method notes
 
