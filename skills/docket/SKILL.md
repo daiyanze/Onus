@@ -201,6 +201,12 @@ When the condition holds, or no candidate is left:
 - Parked issues and what the owner needs to decide for each.
 - What was merged under a grant, with each merge commit, and what the owner
   can still merge, in dependency order.
+- The lessons refresh (`docs/development.md`, "Lessons", "Refresh it"; a
+  project whose copy predates that rule reads it from the `charter` skill's
+  own `templates/docs/development.md`): one line per entry. Changes it
+  calls for go in one PR of their own, opened after the loop, for the owner
+  to merge: it belongs to none of the goal's issues, so the grant does not
+  cover it.
 - The path of the log.
 
 ### Method notes

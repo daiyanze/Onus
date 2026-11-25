@@ -251,6 +251,18 @@ repeated. Rules for it:
   marked retired with the reason, so the record stays honest.
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
+- **Refresh it**, at the end of every `docket` run and whenever the file
+  grows past a minute's read. Check each entry against the code: does its
+  `Check:` name a check that still exists, and does that check still fail
+  on the mistake (run it, or say it was not run)? Does every path in its
+  `Scope:` still exist? Is its id its own? Each "no" is a finding, not a
+  verdict: read the entry first, since it may already say where things
+  moved. A path that moved gets the new path. A check that is gone leaves
+  the lesson active as a written rule: its `Check:` line says the check is
+  gone and since when, and the lesson is the next to enforce again. Of two
+  entries with one id, the newer one is renumbered. Merge duplicates.
+  Retire only an entry that is wrong or obsolete, with the reason. Report
+  one line per entry, in the run's report or the PR.
 
 ## Method notes
 
