@@ -30,9 +30,11 @@ folders exist (`.claude/skills`, `.agents/skills`).
 
 Ask the owner only what the repository cannot tell you. Usually that is:
 the label that marks an issue as the agent's to do (default `agent-ok`),
-which paths need the owner's approval, and whether anything outside the
+which paths need the owner's approval, whether anything outside the
 repository (users, other services, stored data) depends on its formats and
-APIs yet.
+APIs yet, and the review models: which model writes, and which models
+review, ideally one from another vendor (written as `Review models` in
+`AGENTS.md`; "none named" is a valid answer).
 
 ## 2. Copy the four documents
 
