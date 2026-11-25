@@ -97,7 +97,7 @@ npx skills add daiyanze/Onus
 链接 skill 文件夹让每个运行时都能找到它们，加上检查脚本，然后开一个 Pull Request。
 它不改任何产品代码。在 Node 项目里，它会为检查脚本加一个开发依赖（`yaml`）。
 
-**3. 完成所有者那一份。** Pull Request 里会列出来：创建 agent 标签，保护你的基础分支
+**3. 完成所有者那一份。** Pull Request 里会列出来：创建三个 issue 标签（`owner:agent-ok`、`owner:human`、`owner:human+agent`），保护你的基础分支
 （通常是默认分支），决定哪些是受保护路径，划掉任何你不想要的"建议不变量"。然后合并。
 
 **4. 开始干活。**
@@ -144,7 +144,8 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
 - **读取：** 你的 README、package scripts、CI workflow、已有的 `AGENTS.md` 或
   `CLAUDE.md`、`CODEOWNERS`，以及你自己的 open issue 是怎么写 "Depends on"、
   怎么命名 milestone 的。
-- **询问你：** 只问仓库本身回答不了的问题，通常是 agent 标签和哪些路径需要你批准。
+- **询问你：** 只问仓库本身回答不了的问题，通常是 issue 标签（默认
+  `owner:agent-ok`、`owner:human`、`owner:human+agent`）和哪些路径需要你批准。
 - **写入：** 四份文档、skill 文件夹链接、检查脚本。已有的规则会迁入 `AGENTS.md`，
   一条都不丢。已有的 `docs/development.md` 不会被覆盖：它会停下来问你。
 - **结束于：** 一个由 `cross-examine` 审查过的 Pull Request，列出只有你能做的事。

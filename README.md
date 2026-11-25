@@ -119,9 +119,10 @@ It writes `AGENTS.md`, `CLAUDE.md`, `docs/development.md` and
 the check, and opens a pull request. It changes no product code; on a Node
 project it adds one dev dependency (`yaml`) for the check.
 
-**3. Do the owner's part.** The pull request lists it: create the agent
-label, protect your base branch (usually the default branch), decide the
-protected paths, strike any proposed invariant you do not want. Then merge.
+**3. Do the owner's part.** The pull request lists it: create the three
+issue labels (`owner:agent-ok`, `owner:human`, `owner:human+agent`),
+protect your base branch (usually the default branch), decide the protected
+paths, strike any proposed invariant you do not want. Then merge.
 
 **4. Work.**
 
