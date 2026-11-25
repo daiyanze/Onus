@@ -1,6 +1,8 @@
 ---
 name: evidence-kit
 description: Make this project's verify skill - a scripted way to start the real app, use it the way a user does, and keep the evidence. Use once per project, when the method asks for verification on the real app and the project has no verify skill yet.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Evidence kit: make the project's verify skill
@@ -83,3 +85,10 @@ checked instead.
 Open a PR with the skill, the harness, the CI step and a line in
 `AGENTS.md` ("How to work here") naming the skill. Follow
 `docs/development.md` for the PR and the independent review.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`. A
+project chartered before that section existed does not have it: read it from
+the `charter` skill's own `templates/docs/development.md`.

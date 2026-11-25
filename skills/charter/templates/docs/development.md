@@ -103,7 +103,11 @@ this section otherwise.>
    skill's step 5).
 7. **Learn.** When the owner corrects something, or CI or review catches a
    mistake the writer made, add a lesson (below). Do it in the same PR when
-   the lesson is about that PR.
+   the lesson is about that PR. Then ask whether the mistake was the
+   project's or the method's: would an agent following Onus to the letter
+   in another project hit the same problem? Yes: it is a method note
+   ("Method notes", below), not a lesson. No: a lesson. Unsure: both, and
+   say so.
 
 At any step: stop and ask the owner before anything that cannot be undone (a
 deploy, deleting data, a message to people, a force-push). A merge that a
@@ -138,6 +142,10 @@ recorded decision (step 2): stop and ask instead of patching around it.
    history shows it failing and then passing. Paste both outputs in the PR.
 5. Nothing that "might help" ships. If evidence refutes a hypothesis, revert
    what it motivated.
+6. Find the PR that introduced the bug (`git log -S`, `git blame`). If it
+   was reviewed and approved under this method, name it and the step that
+   should have caught the bug in the PR: that is a method note (signal 8,
+   "Method notes").
 
 **Feature.** The data shape is decided before any logic (step 2 above).
 
@@ -239,3 +247,29 @@ repeated. Rules for it:
   marked retired with the reason, so the record stays honest.
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
+
+## Method notes
+
+A lesson is about this project. A method note is about Onus itself: following
+a skill as written led to a problem, or could not be done. Every skill ends
+its report with a `Method notes` section (`cross-examine`: a line in its
+comment), after checking these signals. Each
+note names the signal, the skill and step, and the evidence (a link to a
+comment or PR, a log row, a command and its output). A note without evidence
+is not written. `none` is a valid section.
+
+1. **A budget spent.** Three review rounds without approval, or three failed
+   fixes of one check.
+2. **A repeat.** A lesson came back although it was written down.
+3. **A step that could not be followed as written:** a command that failed,
+   a step that needed interpreting, two steps that disagree, a file the
+   skill names that does not exist.
+4. **A wrong stop.** The method stopped for something the owner then waved
+   through, or did not stop for something the owner then had to undo. Only
+   when the owner said so.
+5. **A correction the method should have prevented.** The owner corrected
+   work that followed the method. Only when the owner said so.
+6. **A reviewer finding the writer's verify step should have caught.**
+7. **A check that covers less than a document says.**
+8. **An escape.** A bug fixed now was introduced by a PR that was reviewed
+   and approved under this method (Bug fix, step 6).
