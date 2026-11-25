@@ -197,8 +197,8 @@ the approval of the exact text is the person's own submit.
    in this project only). Ask only what is missing, one question at a time:
    which task, what they expected, what happened. Never ask for code.
 2. **Locate.** Name the skill and step the problem traces to, and the
-   version in that skill's frontmatter (`metadata.onus-version`, issue
-   `skill-version`). If it is a project lesson, say so and offer to add it
+   content hash of that skill's SKILL.md (`git hash-object`; see
+   "Contract"). If it is a project lesson, say so and offer to add it
    to `docs/lessons.md` instead.
 3. **Evidence.** Keep only what bears on the step: the command and its
    output, the rule quoted. Describe the project's code; do not paste it.
@@ -249,7 +249,7 @@ when the person asks for them. An unattended run stops after step 6.
 - Title: `[petition] <skill> <step>: <one line>`, for example
   `[petition] cross-examine 7: posting drops "!" before "["`.
 - Form `.github/ISSUE_TEMPLATE/petition.yml`, label `petition`, field ids:
-  `skill`, `step`, `onus-version`, `signal` (1 to 8, or "felt by a
+  `skill`, `step`, `skill-hash`, `signal` (1 to 8, or "felt by a
   person"), `happened`, `expected`, `evidence`, `suggestion` (optional),
   `trial` (what was changed and re-run locally, and the result; or "not
   tried" and why).
@@ -257,8 +257,12 @@ when the person asks for them. An unattended run stops after step 6.
   `status`: `drafted`, `tried: worked | did not work | could not tell`,
   `handed over`, `submitted #<n>`, or `dropped`.
 - Trial branch: `petition/<slug>`, never merged.
-- Each SKILL.md frontmatter: `metadata: {onus-version: <x.y.z>}`, equal to
-  `package.json`'s version; bumped with every change to a skill's wording.
+- The wording a petition is about: the content hash of that SKILL.md
+  (`git hash-object`). Changed 2026-11-25 by the owner from a version in each
+  skill's frontmatter (`metadata: {onus-version: <x.y.z>}`, #32), which had to
+  be bumped by hand in eight places and was not, so it could not say which
+  wording ran. The release version stays in `package.json` and
+  `.claude-plugin/plugin.json`.
 - `### Method notes` subsection in each skill's last step; `**Method
   notes:**` line in the `cross-examine` comment; `method` phase in `.runs/`.
 
@@ -267,7 +271,7 @@ when the person asks for them. An unattended run stops after step 6.
 ```text
 > /petition take-case skipped my half-reviewed PR and started a new issue
   Traces to take-case step 1 ("an open PR already links it ... it is in
-  progress"), onus-version 0.5.0. Signal: felt by a person.
+  progress"), skill hash 2d8a647. Signal: felt by a person.
   Possible duplicates by title: none.
   Draft written: .runs/petitions/2026-12-02-interrupted-pr.md (status: drafted)
   Try the suggested wording locally before sending?

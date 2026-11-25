@@ -22,10 +22,10 @@ body:
     validations:
       required: true
   - type: input
-    id: onus-version
+    id: skill-hash
     attributes:
-      label: Onus version
-      description: The `metadata.onus-version` in that skill's SKILL.md frontmatter.
+      label: Skill hash
+      description: The content hash of that skill's SKILL.md, from `git hash-object path/to/SKILL.md` (it works outside a repository too). It names the exact wording, with no version to keep up to date.
     validations:
       required: true
   - type: input

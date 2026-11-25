@@ -314,10 +314,11 @@ node bench/report.mjs
 
 ## 版本
 
-版本号只有一个，写在三个必须一致的地方：`package.json`、
-`.claude-plugin/plugin.json`，以及每个 skill 的 frontmatter
-（`metadata: {onus-version: ...}`）。三者不一致时 `npm run check` 会失败。
-每次修改 skill 的措辞都要升版本，这样项目和关于方法的反馈都能说清用的是哪一版。
+发布版本号写在两个必须一致的地方：`package.json` 和
+`.claude-plugin/plugin.json`，不一致时 `npm run check` 会失败。skill 本身不带版本号，
+它的措辞由内容哈希标识：`git hash-object skills/<name>/SKILL.md`。哈希随每次修改
+自动变化，不用手动升级，跟着文件走；用 `git log --all --find-object=<hash>` 能找到
+它对应的提交。petition 里填的就是这个哈希。
 
 ## 🗺️ 下一步
 

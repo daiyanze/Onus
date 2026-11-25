@@ -1,37 +1,23 @@
 #!/usr/bin/env node
 /**
- * The Onus version must be the same in every place it is written, so a
- * petition can say which wording it is about (docs/plans/self-improvement.md,
- * "Contract"):
+ * The Onus release version is written in two places that must agree:
  *   - package.json "version"
  *   - .claude-plugin/plugin.json "version"
- *   - every skills/<name>/SKILL.md frontmatter: metadata: { onus-version }
  *
- * Fails when a skill has no onus-version, or any of them differs from
- * package.json. It does not check that the version was bumped: that stays a
- * rule for the owner (README, "Versions").
+ * Skills carry no version of their own. A petition names the wording it is
+ * about by the content hash of that SKILL.md (`git hash-object`), which
+ * changes with every edit and needs no bump; `git log --all
+ * --find-object=<hash>` finds the commit that had it
+ * (docs/plans/self-improvement.md, "Contract").
+ *
+ * Fails when the two versions differ, or when a skill's frontmatter still
+ * carries the retired `onus-version` key.
  *
  *   node scripts/check-version.mjs [root]
  */
 import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-
-export function skillVersion(text) {
-  const fm = /^---\n([\s\S]*?)\n---/.exec(text);
-  if (!fm) return null;
-  // The flow form: metadata: {onus-version: "x.y.z"}
-  const flow = /^metadata:\s*\{([^}]*)\}\s*$/m.exec(fm[1]);
-  if (flow) {
-    const v = /(?:^|,)\s*["']?onus-version["']?\s*:\s*["']?([^"',\s}]+)["']?/.exec(flow[1]);
-    return v ? v[1] : null;
-  }
-  // The block form: metadata:\n  onus-version: "x.y.z"
-  const block = /^metadata:\s*\n((?:[ \t]+.*\n?)*)/m.exec(fm[1] + "\n");
-  if (!block) return null;
-  const v = /^[ \t]+onus-version:\s*["']?([^"'\s]+)["']?\s*$/m.exec(block[1]);
-  return v ? v[1] : null;
-}
 
 export function checkVersions(root) {
   const errors = [];
@@ -42,12 +28,15 @@ export function checkVersions(root) {
     if (plugin !== pkg) errors.push(`.claude-plugin/plugin.json has ${plugin}, package.json has ${pkg}`);
   }
   const skillsDir = join(root, "skills");
-  for (const name of readdirSync(skillsDir).sort()) {
-    const file = join(skillsDir, name, "SKILL.md");
-    if (!existsSync(file)) continue;
-    const v = skillVersion(readFileSync(file, "utf8"));
-    if (v === null) errors.push(`skills/${name}/SKILL.md has no metadata.onus-version`);
-    else if (v !== pkg) errors.push(`skills/${name}/SKILL.md has onus-version ${v}, package.json has ${pkg}`);
+  if (existsSync(skillsDir)) {
+    for (const name of readdirSync(skillsDir).sort()) {
+      const file = join(skillsDir, name, "SKILL.md");
+      if (!existsSync(file)) continue;
+      const fm = /^---\n([\s\S]*?)\n---/.exec(readFileSync(file, "utf8"));
+      if (fm && /onus-version/.test(fm[1])) {
+        errors.push(`skills/${name}/SKILL.md still has onus-version; skills are identified by their content hash`);
+      }
+    }
   }
   return { version: pkg, errors };
 }
