@@ -68,7 +68,10 @@ this section otherwise.>
    prefer an established, maintained library to code of your own, unless
    you can say why not. For a new feature or a design choice, look at how
    mature products solve the same problem and follow the pattern they
-   proved, rather than inventing one.
+   proved, rather than inventing one. Then list what the change reaches:
+   the callers of what it changes, the consumers of what it outputs, and
+   the stored data it reads or writes. Find them with a command (a search,
+   the type check, a query) and keep the command with the list.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
@@ -87,7 +90,8 @@ this section otherwise.>
    it does not show the app does the thing.
 5. **PR.** Title: `type(scope): subject`. The description has these
    headings, empty ones dropped: `## Why` (the goal, first), `## What
-   changed`, `## Scope` (protected paths, deviations from recorded
+   changed`, `## Scope` (what the change reaches, from step 1, with the
+   command that found it; protected paths, deviations from recorded
    decisions, a dependency added or a helper written where a library could
    do it and why, the product pattern followed, what is left out),
    `## Verification` (commands and results,
@@ -201,6 +205,23 @@ is explained.
    The branch stays until that issue is closed; then whoever closes it
    deletes the branch, after checking that the issue's write-up holds
    everything the branch showed.
+## Delegates
+
+A writer may start helpers: to search, to try a probe, or to build one unit.
+Reviewers and challengers have their own rules (`cross-examine`, `brief`).
+A delegate:
+
+1. Reads `AGENTS.md` and `docs/lessons.md` before it starts.
+2. Gets one unit, with the check that ends it (a test, a command and its
+   expected output), and nothing else to do.
+3. Reports what it ran and what came back: commands and their output, the
+   files it changed. A claim without its command is not a result.
+4. Never opens a PR, pushes, merges, or posts anything. Those stay with the
+   writer.
+
+The writer checks every claim a delegate makes against the code before
+building on it, and keeps only the results in its own context, not the
+delegate's whole run.
 
 ## Long runs
 
@@ -272,6 +293,18 @@ repeated. Rules for it:
   marked retired with the reason, so the record stays honest.
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
+- **Refresh it**, at the end of every `docket` run and whenever the file
+  grows past a minute's read. Check each entry against the code: does its
+  `Check:` name a check that still exists, and does that check still fail
+  on the mistake (run it, or say it was not run)? Does every path in its
+  `Scope:` still exist? Is its id its own? Each "no" is a finding, not a
+  verdict: read the entry first, since it may already say where things
+  moved. A path that moved gets the new path. A check that is gone leaves
+  the lesson active as a written rule: its `Check:` line says the check is
+  gone and since when, and the lesson is the next to enforce again. Of two
+  entries with one id, the newer one is renumbered. Merge duplicates.
+  Retire only an entry that is wrong or obsolete, with the reason. Report
+  one line per entry, in the run's report or the PR.
 
 ## Method notes
 
