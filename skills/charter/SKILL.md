@@ -170,3 +170,10 @@ List in the PR what only the owner can do:
 If the project has something a user can see or do, create its verify skill
 with `evidence-kit`. Then the owner can ask for the next issue, or plan a
 goal bigger than one issue with `brief`.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`. A
+project chartered before that section existed does not have it: read it from
+the `charter` skill's own `templates/docs/development.md`.

@@ -157,6 +157,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
+**Method notes:** each place where following this skill or the method as
+written led to a problem in this review, with its signal and evidence
+(`docs/development.md`, "Method notes"), or "none".
 ```
 
 Link code with permalinks on the full head SHA
@@ -210,3 +213,11 @@ A re-review is a smaller run of the same steps:
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed
   or not, with the evidence), then any criterion the new commits affect.
+
+### Method notes
+
+They go in the comment's `**Method notes:**` line (step 7), after checking
+the signals in `docs/development.md` ("Method notes"); a project chartered
+before that section existed does not have it: read it from the `charter`
+skill's own `templates/docs/development.md`. Your answer to the agent that
+started you still ends with the verdict and the comment ID (step 7).

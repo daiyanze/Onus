@@ -91,3 +91,10 @@ decided it.
 
 The PR link, what was not verified locally, the review verdict, and what
 needs the owner.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`. A
+project chartered before that section existed does not have it: read it from
+the `charter` skill's own `templates/docs/development.md`.
