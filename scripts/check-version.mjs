@@ -13,12 +13,20 @@
  *
  *   node scripts/check-version.mjs [root]
  */
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 export function skillVersion(text) {
   const fm = /^---\n([\s\S]*?)\n---/.exec(text);
   if (!fm) return null;
+  // The flow form: metadata: {onus-version: "x.y.z"}
+  const flow = /^metadata:\s*\{([^}]*)\}\s*$/m.exec(fm[1]);
+  if (flow) {
+    const v = /(?:^|,)\s*["']?onus-version["']?\s*:\s*["']?([^"',\s}]+)["']?/.exec(flow[1]);
+    return v ? v[1] : null;
+  }
+  // The block form: metadata:\n  onus-version: "x.y.z"
   const block = /^metadata:\s*\n((?:[ \t]+.*\n?)*)/m.exec(fm[1] + "\n");
   if (!block) return null;
   const v = /^[ \t]+onus-version:\s*["']?([^"'\s]+)["']?\s*$/m.exec(block[1]);
@@ -44,7 +52,8 @@ export function checkVersions(root) {
   return { version: pkg, errors };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare real paths, as the other check scripts do: a URL escapes spaces.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const { version, errors } = checkVersions(process.argv[2] ?? process.cwd());
   if (errors.length) {
     for (const e of errors) console.error(`version: ${e}`);
