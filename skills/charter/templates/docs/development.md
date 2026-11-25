@@ -66,12 +66,12 @@ this section otherwise.>
    or writing your own helper, check what the project's dependencies already
    do: read their docs, do not assume a capability is missing. Otherwise
    prefer an established, maintained library to code of your own, unless
-   you can say why not. Then list what the change reaches: the callers of
-   what it changes, the consumers of what it outputs, and the stored data
-   it reads or writes. Find them with a command (a search, the type check,
-   a query) and keep the command with the list. For a new feature or a
-   design choice, look at how mature products solve the same problem and
-   follow the pattern they proved, rather than inventing one.
+   you can say why not. For a new feature or a design choice, look at how
+   mature products solve the same problem and follow the pattern they
+   proved, rather than inventing one. Then list what the change reaches:
+   the callers of what it changes, the consumers of what it outputs, and
+   the stored data it reads or writes. Find them with a command (a search,
+   the type check, a query) and keep the command with the list.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
