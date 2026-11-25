@@ -104,8 +104,9 @@ what you would need, instead of reporting it as an issue.
 
 When the PR changes product code under the project's protected paths (not
 the agent files), and a model from another vendor is available to this
-session, give that model the same brief for step 4: the diff, the rules,
-and "find what breaks; prove each finding with a run". Validate its
+session (`AGENTS.md`, "Review models", names which one), give that model
+the same brief for step 4: the diff, the rules, and "find what breaks;
+prove each finding with a run". Validate its
 candidates the same way and merge them with yours. If the project names no
 protected paths, or the PR touches no product code under them, it is "not
 needed".

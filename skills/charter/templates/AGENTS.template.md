@@ -64,6 +64,11 @@ changes; the owner must approve them.
 The working method is `docs/development.md`; read it and `docs/lessons.md`
 before starting a task.
 
+Review models: <the model that writes, and the models that review, for
+example "writer: Claude Opus; reviewers: Claude Opus, and GPT-5 through
+Codex as the second model", or "none named">. `cross-examine` uses the
+second one for "Second model".
+
 1. Pick an issue (the `take-case` skill finds the next one labelled
    `<agent label>`; the `docket` skill works through a whole goal). Branch
    from `<base branch>`. Never push to `<base branch>` directly. Stop and

@@ -68,7 +68,10 @@ this section otherwise.>
    prefer an established, maintained library to code of your own, unless
    you can say why not. For a new feature or a design choice, look at how
    mature products solve the same problem and follow the pattern they
-   proved, rather than inventing one.
+   proved, rather than inventing one. Then list what the change reaches:
+   the callers of what it changes, the consumers of what it outputs, and
+   the stored data it reads or writes. Find them with a command (a search,
+   the type check, a query) and keep the command with the list.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
@@ -87,7 +90,8 @@ this section otherwise.>
    it does not show the app does the thing.
 5. **PR.** Title: `type(scope): subject`. The description has these
    headings, empty ones dropped: `## Why` (the goal, first), `## What
-   changed`, `## Scope` (protected paths, deviations from recorded
+   changed`, `## Scope` (what the change reaches, from step 1, with the
+   command that found it; protected paths, deviations from recorded
    decisions, a dependency added or a helper written where a library could
    do it and why, the product pattern followed, what is left out),
    `## Verification` (commands and results,
@@ -158,6 +162,24 @@ recorded decision (step 2): stop and ask instead of patching around it.
    that is not finished yet.
 3. Verify on the real app for anything a user sees, and add or update that
    feature's file in the verify skill.
+
+## Delegates
+
+A writer may start helpers: to search, to try a probe, or to build one unit.
+Reviewers and challengers have their own rules (`cross-examine`, `brief`).
+A delegate:
+
+1. Reads `AGENTS.md` and `docs/lessons.md` before it starts.
+2. Gets one unit, with the check that ends it (a test, a command and its
+   expected output), and nothing else to do.
+3. Reports what it ran and what came back: commands and their output, the
+   files it changed. A claim without its command is not a result.
+4. Never opens a PR, pushes, merges, or posts anything. Those stay with the
+   writer.
+
+The writer checks every claim a delegate makes against the code before
+building on it, and keeps only the results in its own context, not the
+delegate's whole run.
 
 ## Long runs
 
