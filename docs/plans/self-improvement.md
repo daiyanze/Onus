@@ -210,8 +210,9 @@ the approval of the exact text is the person's own submit.
    personal memory into a tracked AGENTS.md. Remind the person that the
    petition is public and posted under their account.
 5. **Look for duplicates by title only.** List petition titles
-   (`gh issue list -R daiyanze/Onus --search "[petition] in:title" --state
-   all --json number,title,state`, or the issues page), never their bodies.
+   (`gh issue list -R daiyanze/Onus --label petition --state all --json
+   number,title,state`, or the issues page), never their bodies. The form
+   adds the label, so planning issues titled `[petition…]` are not listed.
    Name the likely duplicates and let the person open them; if one fits,
    they comment there instead.
 6. **Draft locally.** Write the petition to

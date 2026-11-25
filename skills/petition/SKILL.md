@@ -36,7 +36,9 @@ Gather, in this project only:
   (`gh pr view <n> --comments`).
 
 Then ask only what is still missing, one question at a time: which task,
-what was expected, what happened. Never ask for code. A person's complaint
+what was expected, what happened. An unattended run asks nothing: it
+writes what it has, and says in the draft's `evidence` what it could not
+find. Never ask for code. A person's complaint
 needs no evidence to be heard: gather what you can and say what you could
 not find.
 
@@ -54,7 +56,10 @@ tr -d '\r' < SKILL.md | git hash-object --stdin
 
 It names the exact wording that ran, on any line endings, inside or
 outside a repository. `tr` needs a POSIX shell: on Windows use Git Bash.
-For `development.md`, hash `docs/development.md` the same way.
+For `development.md`, hash the template as installed,
+`templates/docs/development.md` in the `charter` skill's folder: `charter`
+rewrites the project's own `docs/development.md`, so its hash matches no
+Onus commit.
 
 Then apply the test from `docs/development.md` ("Method notes"): *would an
 agent following Onus to the letter in another project hit the same
@@ -78,16 +83,18 @@ The petition quotes Onus text and describes the project in general terms.
 Take out code, file contents, links into a private repository, secrets,
 names of people, and anything a person said about themselves. Read every
 field once more for these before writing the draft. Tell the person that a
-petition is public and is posted under their own account.
+petition is public and is posted under their own account. An unattended
+run puts that reminder in its report, next to the draft's path.
 
 ## 5. Look for duplicates, by title only
 
 ```sh
-gh issue list -R daiyanze/Onus --search "[petition] in:title" --state all \
+gh issue list -R daiyanze/Onus --label petition --state all \
   --json number,title,state
 ```
 
-Without `gh` access, give the person
+The form adds the `petition` label, so the label finds every petition and
+nothing else. Without `gh` access, give the person
 `https://github.com/daiyanze/Onus/issues?q=is%3Aissue+label%3Apetition`.
 Never read the bodies of those issues. Name the titles that look like the
 same problem and let the person open them; if one fits, they comment there
@@ -160,7 +167,7 @@ Only when the person asks to send a draft.
    For example, with Node: `new URLSearchParams({template: "petition.yml",
    title, skill, ...}).toString()`. If the link is longer than 8000
    characters, leave the longest field out of it, write that field to
-   `.runs/petitions/<slug>-<field>.txt`, and tell the person to paste it
+   `.runs/petitions/<date>-<slug>-<field>.txt`, and tell the person to paste it
    into the form.
 3. Give the link. The person opens it, reads it and presses Submit; the
    form adds the `petition` label. Never submit it yourself, by `gh` or
