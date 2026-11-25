@@ -170,7 +170,8 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 - **Reads:** your README, package scripts, CI workflows, any existing
   `AGENTS.md` or `CLAUDE.md`, `CODEOWNERS`, and how your own open issues
   write "Depends on" and name milestones.
-- **Asks you:** only what the repository cannot say, usually the agent label
+- **Asks you:** only what the repository cannot say, usually the issue labels
+  (defaults `owner:agent-ok`, `owner:human`, `owner:human+agent`)
   and which paths need your approval.
 - **Writes:** the four documents, the skill-folder link, the check script.
   Existing rules move into `AGENTS.md`; nothing is dropped. An existing
@@ -198,7 +199,7 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 ### `docket`: a long run toward one goal
 
 ```text
-/docket every open agent-ok issue in milestone 2
+/docket every open owner:agent-ok issue in milestone 2
 ```
 
 - **Starts** by writing the exit condition as something a command can
@@ -378,6 +379,14 @@ what the agent reports. Results: [`bench/RESULTS.md`](bench/RESULTS.md).
 node bench/run.mjs --runtime claude --arms none,onus,onus@<previous tag> --trials 3
 node bench/report.mjs
 ```
+
+## Versions
+
+One version number, written in three places that must agree:
+`package.json`, `.claude-plugin/plugin.json`, and every skill's frontmatter
+(`metadata: {onus-version: ...}`). `npm run check` fails when they differ.
+Every change to a skill's wording bumps it, so a project, and a report
+about the method, can say which wording it ran.
 
 ## 🗺️ Next
 

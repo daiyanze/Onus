@@ -31,7 +31,8 @@ end, no compatibility layers before anyone depends on them).
 ## Picking work
 
 Issues labelled `<agent label>` are the agent's to do. `<owner label>` is
-the owner's alone, and `<owner-and-agent label>` waits for the owner to do
+the owner's alone, and `<owner-and-agent label>` (default
+`owner:human+agent`) waits for the owner to do
 a part first (a decision, a secret, an account); an issue with either, or
 with none, is not the agent's. An issue carries at most one of the three.
 When a run parks an issue or stops to ask the owner about it, it changes
@@ -73,7 +74,10 @@ this section otherwise.>
    prefer an established, maintained library to code of your own, unless
    you can say why not. For a new feature or a design choice, look at how
    mature products solve the same problem and follow the pattern they
-   proved, rather than inventing one.
+   proved, rather than inventing one. Then list what the change reaches:
+   the callers of what it changes, the consumers of what it outputs, and
+   the stored data it reads or writes. Find them with a command (a search,
+   the type check, a query) and keep the command with the list.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
@@ -92,7 +96,8 @@ this section otherwise.>
    it does not show the app does the thing.
 5. **PR.** Title: `type(scope): subject`. The description has these
    headings, empty ones dropped: `## Why` (the goal, first), `## What
-   changed`, `## Scope` (protected paths, deviations from recorded
+   changed`, `## Scope` (what the change reaches, from step 1, with the
+   command that found it; protected paths, deviations from recorded
    decisions, a dependency added or a helper written where a library could
    do it and why, the product pattern followed, what is left out),
    `## Verification` (commands and results,
@@ -108,7 +113,11 @@ this section otherwise.>
    skill's step 5).
 7. **Learn.** When the owner corrects something, or CI or review catches a
    mistake the writer made, add a lesson (below). Do it in the same PR when
-   the lesson is about that PR.
+   the lesson is about that PR. Then ask whether the mistake was the
+   project's or the method's: would an agent following Onus to the letter
+   in another project hit the same problem? Yes: it is a method note
+   ("Method notes", below), not a lesson. No: a lesson. Unsure: both, and
+   say so.
 
 At any step: stop and ask the owner before anything that cannot be undone (a
 deploy, deleting data, a message to people, a force-push). A merge that a
@@ -143,6 +152,10 @@ recorded decision (step 2): stop and ask instead of patching around it.
    history shows it failing and then passing. Paste both outputs in the PR.
 5. Nothing that "might help" ships. If evidence refutes a hypothesis, revert
    what it motivated.
+6. Find the PR that introduced the bug (`git log -S`, `git blame`). If it
+   was reviewed and approved under this method, name it and the step that
+   should have caught the bug in the PR: that is a method note (signal 8,
+   "Method notes").
 
 **Feature.** The data shape is decided before any logic (step 2 above).
 
@@ -155,6 +168,24 @@ recorded decision (step 2): stop and ask instead of patching around it.
    that is not finished yet.
 3. Verify on the real app for anything a user sees, and add or update that
    feature's file in the verify skill.
+
+## Delegates
+
+A writer may start helpers: to search, to try a probe, or to build one unit.
+Reviewers and challengers have their own rules (`cross-examine`, `brief`).
+A delegate:
+
+1. Reads `AGENTS.md` and `docs/lessons.md` before it starts.
+2. Gets one unit, with the check that ends it (a test, a command and its
+   expected output), and nothing else to do.
+3. Reports what it ran and what came back: commands and their output, the
+   files it changed. A claim without its command is not a result.
+4. Never opens a PR, pushes, merges, or posts anything. Those stay with the
+   writer.
+
+The writer checks every claim a delegate makes against the code before
+building on it, and keeps only the results in its own context, not the
+delegate's whole run.
 
 ## Long runs
 
@@ -226,3 +257,29 @@ repeated. Rules for it:
   marked retired with the reason, so the record stays honest.
 - **Keep it short.** Merge duplicates. If the file grows past what an agent
   reads in a minute, promote the durable rules to `AGENTS.md` or a check.
+
+## Method notes
+
+A lesson is about this project. A method note is about Onus itself: following
+a skill as written led to a problem, or could not be done. Every skill ends
+its report with a `Method notes` section (`cross-examine`: a line in its
+comment), after checking these signals. Each
+note names the signal, the skill and step, and the evidence (a link to a
+comment or PR, a log row, a command and its output). A note without evidence
+is not written. `none` is a valid section.
+
+1. **A budget spent.** Three review rounds without approval, or three failed
+   fixes of one check.
+2. **A repeat.** A lesson came back although it was written down.
+3. **A step that could not be followed as written:** a command that failed,
+   a step that needed interpreting, two steps that disagree, a file the
+   skill names that does not exist.
+4. **A wrong stop.** The method stopped for something the owner then waved
+   through, or did not stop for something the owner then had to undo. Only
+   when the owner said so.
+5. **A correction the method should have prevented.** The owner corrected
+   work that followed the method. Only when the owner said so.
+6. **A reviewer finding the writer's verify step should have caught.**
+7. **A check that covers less than a document says.**
+8. **An escape.** A bug fixed now was introduced by a PR that was reviewed
+   and approved under this method (Bug fix, step 6).

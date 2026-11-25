@@ -166,7 +166,7 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
 ### `docket`：朝一个目标长时间运行
 
 ```text
-/docket every open agent-ok issue in milestone 2
+/docket every open owner:agent-ok issue in milestone 2
 ```
 
 - **开始时** 把退出条件写成一个能用命令检查的东西，并用一行告诉你。例如：milestone 2
@@ -311,6 +311,13 @@ CODEOWNERS 和分支保护来保证，并且有一项依赖检查让 Web 应用�
 node bench/run.mjs --runtime claude --arms none,onus,onus@<previous tag> --trials 3
 node bench/report.mjs
 ```
+
+## 版本
+
+版本号只有一个，写在三个必须一致的地方：`package.json`、
+`.claude-plugin/plugin.json`，以及每个 skill 的 frontmatter
+（`metadata: {onus-version: ...}`）。三者不一致时 `npm run check` 会失败。
+每次修改 skill 的措辞都要升版本，这样项目和关于方法的反馈都能说清用的是哪一版。
 
 ## 🗺️ 下一步
 

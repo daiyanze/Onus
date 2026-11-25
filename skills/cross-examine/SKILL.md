@@ -1,6 +1,8 @@
 ---
 name: cross-examine
 description: PR review - review a pull request as an independent agent with no context from the session that wrote it - read the diff first, run it, find issues in three passes, prove each one, post one comment. Never for the session that wrote the PR.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Cross-examine: independent PR review
@@ -102,8 +104,9 @@ what you would need, instead of reporting it as an issue.
 
 When the PR changes product code under the project's protected paths (not
 the agent files), and a model from another vendor is available to this
-session, give that model the same brief for step 4: the diff, the rules,
-and "find what breaks; prove each finding with a run". Validate its
+session (`AGENTS.md`, "Review models", names which one), give that model
+the same brief for step 4: the diff, the rules, and "find what breaks;
+prove each finding with a run". Validate its
 candidates the same way and merge them with yours. If the project names no
 protected paths, or the PR touches no product code under them, it is "not
 needed".
@@ -157,6 +160,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
+**Method notes:** each place where following this skill or the method as
+written led to a problem in this review, with its signal and evidence
+(`docs/development.md`, "Method notes"), or "none".
 ```
 
 Link code with permalinks on the full head SHA
@@ -210,3 +216,11 @@ A re-review is a smaller run of the same steps:
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed
   or not, with the evidence), then any criterion the new commits affect.
+
+### Method notes
+
+They go in the comment's `**Method notes:**` line (step 7), after checking
+the signals in `docs/development.md` ("Method notes"); a project chartered
+before that section existed does not have it: read it from the `charter`
+skill's own `templates/docs/development.md`. Your answer to the agent that
+started you still ends with the verdict and the comment ID (step 7).

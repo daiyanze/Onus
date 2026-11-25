@@ -1,6 +1,8 @@
 ---
 name: charter
 description: Adopt the Onus method in the repository you are in (set up, install) - one rules file every agent runtime reads, the method and lessons docs, skill folders wired for Claude Code, Pi and Codex, and a check that keeps it so. Use once per repository, when the owner asks to adopt or install the method.
+metadata:
+  onus-version: "0.4.0"
 ---
 
 # Charter: adopt the method in this repository
@@ -29,11 +31,13 @@ folders exist (`.claude/skills`, `.agents/skills`).
 Ask the owner only what the repository cannot tell you. Usually that is:
 the labels that say who an issue belongs to (defaults: `owner:agent-ok`, the
 agent may do it; `owner:human`, only the owner; `owner:human+agent`, the
-owner does a part first, a decision, a secret or an account, then the
-agent), and only whether the project uses other names,
-which paths need the owner's approval, and whether anything outside the
+owner does a part first, such as a decision, a secret or an account, then
+the agent; ask only whether the project uses other names), which paths
+need the owner's approval, whether anything outside the
 repository (users, other services, stored data) depends on its formats and
-APIs yet.
+APIs yet, and the review models: which model writes, and which models
+review, ideally one from another vendor (written as `Review models` in
+`AGENTS.md`; "none named" is a valid answer).
 
 ## 2. Copy the four documents
 
@@ -175,3 +179,10 @@ List in the PR what only the owner can do:
 If the project has something a user can see or do, create its verify skill
 with `evidence-kit`. Then the owner can ask for the next issue, or plan a
 goal bigger than one issue with `brief`.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`. A
+project chartered before that section existed does not have it: read it from
+the `charter` skill's own `templates/docs/development.md`.
