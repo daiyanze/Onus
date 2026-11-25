@@ -67,7 +67,7 @@ issues:
       steps 1 to 6 and 8: intake from the person's words, this session's method
       notes, `method` rows in `.runs/` and `**Method notes:**` lines on the PRs
       they name; one question at a time; locate the skill, step and
-      `onus-version`; tell a project lesson apart and offer `docs/lessons.md`;
+      content hash of that SKILL.md (`git hash-object`); tell a project lesson apart and offer `docs/lessons.md`;
       redact; list possible duplicates by title only; write the draft to
       `.runs/petitions/<date>-<slug>.md` with its status; list and pick up
       drafts; and, only when the person asks to send one, show every field as

@@ -382,11 +382,14 @@ node bench/report.mjs
 
 ## Versions
 
-One version number, written in three places that must agree:
-`package.json`, `.claude-plugin/plugin.json`, and every skill's frontmatter
-(`metadata: {onus-version: ...}`). `npm run check` fails when they differ.
-Every change to a skill's wording bumps it, so a project, and a report
-about the method, can say which wording it ran.
+The release version is written in two places that must agree:
+`package.json` and `.claude-plugin/plugin.json`. `npm run check` fails when
+they differ. Skills carry no version of their own. A skill's wording is
+named by its content hash, `tr -d '\r' < SKILL.md | git hash-object
+--stdin`, run in the skill's folder. Stripping `\r` gives the committed hash
+on any line endings. The hash changes with every edit, needs no bump, and
+travels with the file; `git log --all --find-object=<hash>` finds the
+commit that had it. A petition cites that hash.
 
 ## 🗺️ Next
 

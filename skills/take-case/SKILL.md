@@ -1,8 +1,6 @@
 ---
 name: take-case
 description: Next issue - find the next issue the agent may do (the project's agent label) and do it end to end - branch, implement, check, PR, CI, independent review. Use when the owner asks for the next issue or names an issue to do.
-metadata:
-  onus-version: "0.4.0"
 ---
 
 # Take a case: the next issue

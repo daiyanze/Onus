@@ -1,8 +1,6 @@
 ---
 name: cross-examine
 description: PR review - review a pull request as an independent agent with no context from the session that wrote it - read the diff first, run it, find issues in three passes, prove each one, post one comment. Never for the session that wrote the PR.
-metadata:
-  onus-version: "0.4.0"
 ---
 
 # Cross-examine: independent PR review
