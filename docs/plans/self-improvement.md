@@ -257,8 +257,8 @@ when the person asks for them. An unattended run stops after step 6.
   `status`: `drafted`, `tried: worked | did not work | could not tell`,
   `handed over`, `submitted #<n>`, or `dropped`.
 - Trial branch: `petition/<slug>`, never merged.
-- The wording a petition is about: the content hash of that SKILL.md
-  (`git hash-object`). Changed 2026-11-25 by the owner from a version in each
+- The wording a petition is about: the content hash of that SKILL.md,
+  `tr -d '\r' < SKILL.md | git hash-object --stdin`. Changed 2026-11-25 by the owner from a version in each
   skill's frontmatter (`metadata: {onus-version: <x.y.z>}`, #32), which had to
   be bumped by hand in eight places and was not, so it could not say which
   wording ran. The release version stays in `package.json` and
@@ -363,10 +363,11 @@ Projects call the skill by name and petitions are found by title.
 - **Identity.** A petition is posted under the person's own account, which
   can name their employer or project even when the text is generic. The
   skill says so before handing over the link.
-- **Versions that do not move.** If the version is not bumped with every
-  wording change, a petition cannot say which wording it is about. The
-  `skill-version` check makes the six equal to `package.json`, not current;
-  bumping stays a rule for the owner.
+- **A hash that matches no commit.** A checkout with CRLF line endings
+  (Windows, `core.autocrlf=true`) hashes differently outside a repository.
+  The command strips `\r` first, so it gives the committed hash on any
+  checkout. A skill the person edited by hand also matches no commit, and
+  that is what the petition should say.
 - **Plain-words requests.** With `disable-model-invocation`, a person who
   says "send this to Onus" without the command may get nothing. The offer
   line names the command.

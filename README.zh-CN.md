@@ -316,7 +316,8 @@ node bench/report.mjs
 
 发布版本号写在两个必须一致的地方：`package.json` 和
 `.claude-plugin/plugin.json`，不一致时 `npm run check` 会失败。skill 本身不带版本号，
-它的措辞由内容哈希标识：`git hash-object skills/<name>/SKILL.md`。哈希随每次修改
+它的措辞由内容哈希标识：在 skill 文件夹里运行 `tr -d '\r' < SKILL.md | git hash-object --stdin`
+（先去掉 `\r`，任何换行格式下都得到提交时的哈希）。哈希随每次修改
 自动变化，不用手动升级，跟着文件走；用 `git log --all --find-object=<hash>` 能找到
 它对应的提交。petition 里填的就是这个哈希。
 

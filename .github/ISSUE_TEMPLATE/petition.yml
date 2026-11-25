@@ -25,7 +25,7 @@ body:
     id: skill-hash
     attributes:
       label: Skill hash
-      description: The content hash of that skill's SKILL.md, from `git hash-object path/to/SKILL.md` (it works outside a repository too). It names the exact wording, with no version to keep up to date.
+      description: "The content hash of that skill's SKILL.md: `tr -d '\r' < SKILL.md | git hash-object --stdin`, run in the skill's folder. It works outside a repository and on any line endings, and names the exact wording, with no version to keep up to date."
     validations:
       required: true
   - type: input
