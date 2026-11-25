@@ -1,0 +1,70 @@
+name: Petition
+description: A problem with the Onus method itself, found while using it in a project. The petition skill fills this form for you.
+title: "[petition] <skill> <step>: <one line>"
+labels: [petition]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A petition is about the method, not about your project: an agent following Onus to the letter in another project would hit the same problem. Describe your project in general terms only. Do not paste its code, file contents, secrets or private links. This issue is public and posted under your account. Triage and the proof a change needs are in CONTRIBUTING.md.
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: charter, take-case, docket, cross-examine, brief, evidence-kit, or petition. Write "development.md" for the method document.
+    validations:
+      required: true
+  - type: input
+    id: step
+    attributes:
+      label: Step
+      description: The step number or heading the problem traces to.
+    validations:
+      required: true
+  - type: input
+    id: onus-version
+    attributes:
+      label: Onus version
+      description: The `metadata.onus-version` in that skill's SKILL.md frontmatter.
+    validations:
+      required: true
+  - type: input
+    id: signal
+    attributes:
+      label: Signal
+      description: 1 to 8 from docs/development.md "Method notes", or "felt by a person".
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: The command and its output, the rule quoted, or a public link. Described, not pasted, when it is private.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested change
+      description: Optional. The wording you would change, and to what.
+    validations:
+      required: false
+  - type: textarea
+    id: trial
+    attributes:
+      label: Local trial
+      description: What was changed in your copy of the skill, how the step was re-run, and the result before and after. Or "not tried" and why.
+    validations:
+      required: true
