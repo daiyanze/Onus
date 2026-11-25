@@ -5,7 +5,8 @@
  *   - .claude-plugin/plugin.json "version"
  *
  * Skills carry no version of their own. A petition names the wording it is
- * about by the content hash of that SKILL.md (`tr -d '\r' < SKILL.md | git hash-object --stdin`), which
+ * about by the content hash of that SKILL.md
+ * (`tr -d '\r' < SKILL.md | git hash-object --stdin`), which
  * changes with every edit and needs no bump; `git log --all
  * --find-object=<hash>` finds the commit that had it
  * (docs/plans/self-improvement.md, "Contract").

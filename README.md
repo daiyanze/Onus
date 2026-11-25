@@ -385,8 +385,8 @@ node bench/report.mjs
 The release version is written in two places that must agree:
 `package.json` and `.claude-plugin/plugin.json`. `npm run check` fails when
 they differ. Skills carry no version of their own. A skill's wording is
-named by its content hash, `tr -d '\r' < SKILL.md | git hash-object --stdin`, run in the
-skill's folder (stripping `\r` gives the committed hash on any line
+named by its content hash,
+`tr -d '\r' < SKILL.md | git hash-object --stdin`, run in the skill's folder (stripping `\r` gives the committed hash on any line
 endings): it
 changes with every edit, needs no bump, and travels with the file, and `git
 log --all --find-object=<hash>` finds the commit that had it. A petition

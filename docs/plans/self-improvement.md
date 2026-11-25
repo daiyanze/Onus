@@ -258,7 +258,8 @@ when the person asks for them. An unattended run stops after step 6.
   `handed over`, `submitted #<n>`, or `dropped`.
 - Trial branch: `petition/<slug>`, never merged.
 - The wording a petition is about: the content hash of that SKILL.md,
-  `tr -d '\r' < SKILL.md | git hash-object --stdin`. Changed 2026-11-25 by the owner from a version in each
+  `tr -d '\r' < SKILL.md | git hash-object --stdin`. Changed 2026-11-25 by
+  the owner from a version in each
   skill's frontmatter (`metadata: {onus-version: <x.y.z>}`, #32), which had to
   be bumped by hand in eight places and was not, so it could not say which
   wording ran. The release version stays in `package.json` and
