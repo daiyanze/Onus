@@ -157,6 +157,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
+**Method notes:** each place where following this skill or the method as
+written led to a problem in this review, with its signal and evidence
+(`docs/development.md`, "Method notes"), or "none".
 ```
 
 Link code with permalinks on the full head SHA
@@ -210,3 +213,8 @@ A re-review is a smaller run of the same steps:
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed
   or not, with the evidence), then any criterion the new commits affect.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`.

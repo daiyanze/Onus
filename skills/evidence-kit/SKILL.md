@@ -83,3 +83,8 @@ checked instead.
 Open a PR with the skill, the harness, the CI step and a line in
 `AGENTS.md` ("How to work here") naming the skill. Follow
 `docs/development.md` for the PR and the independent review.
+
+### Method notes
+
+Check the signals in `docs/development.md` ("Method notes") against this
+run, and list each note with its signal, step and evidence, or `none`.
