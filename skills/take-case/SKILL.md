@@ -68,8 +68,9 @@ Among the candidates that count, prefer:
 1. the one that the most open issues name in "Depends on";
 2. then the lowest issue number.
 
-Say in two or three lines which issue you picked, why, and the next two
-candidates, then start. The owner can redirect you at any point.
+Say in two or three lines which issue you picked, why, its kind of work
+(`docs/development.md`, "Kinds of work"), and the next two candidates,
+then start. The owner can redirect you at any point.
 
 ## 3. Do it
 
