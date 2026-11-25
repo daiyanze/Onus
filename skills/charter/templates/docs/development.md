@@ -163,6 +163,24 @@ recorded decision (step 2): stop and ask instead of patching around it.
 3. Verify on the real app for anything a user sees, and add or update that
    feature's file in the verify skill.
 
+## Delegates
+
+A writer may start helpers: to search, to try a probe, or to build one unit.
+Reviewers and challengers have their own rules (`cross-examine`, `brief`).
+A delegate:
+
+1. Reads `AGENTS.md` and `docs/lessons.md` before it starts.
+2. Gets one unit, with the check that ends it (a test, a command and its
+   expected output), and nothing else to do.
+3. Reports what it ran and what came back: commands and their output, the
+   files it changed. A claim without its command is not a result.
+4. Never opens a PR, pushes, merges, or posts anything. Those stay with the
+   writer.
+
+The writer checks every claim a delegate makes against the code before
+building on it, and keeps only the results in its own context, not the
+delegate's whole run.
+
 ## Long runs
 
 When the owner gives a goal rather than an issue ("finish milestone 2",
