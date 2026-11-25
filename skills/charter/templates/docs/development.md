@@ -190,7 +190,9 @@ is explained.
 2. Write what it showed in the issue: what worked, what did not, the
    numbers, and a link to the branch, then close the issue. The real change
    is a new issue, built by the default loop, not by cleaning up the spike.
-   The branch stays until that issue is closed, then it is deleted.
+   The branch stays until that issue is closed; then whoever closes it
+   deletes the branch, after checking that the issue's write-up holds
+   everything the branch showed.
 
 ## Long runs
 

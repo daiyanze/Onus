@@ -48,7 +48,8 @@ Issues that wait on the owner (no agent label, an unmerged dependency, a
 parked question) are outside the condition, and the final report lists them.
 Never change the condition during the run except to add issues the owner
 names. With a grant to merge (step 3), the condition can ask for more: every
-such issue closed by a merged PR.
+such issue closed by a merged PR, or, for an Investigation or a Spike
+(`docs/development.md`, "Kinds of work"), closed with its answer.
 
 ## 3. Merging: only with the owner's grant
 
@@ -86,7 +87,10 @@ Until the condition holds:
    step 6.
 2. Do the issue with step 3 of the `take-case` skill, which follows
    `docs/development.md`. Each issue gets its own branch from the base branch
-   and its own PR. Log a row with phase `pr` and the PR number.
+   and its own PR. Log a row with phase `pr` and the PR number. An
+   Investigation or a Spike has no PR: log a row with phase `answer` and the
+   link to the comment that holds the answer, and the issue is done when it
+   is closed.
 3. While CI and the review agent run, start the next candidate; come back
    to fix blocking review items, then start a new review agent. Log a row
    with phase `review`, the verdict and the review comment's ID, which the

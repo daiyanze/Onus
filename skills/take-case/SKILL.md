@@ -93,4 +93,5 @@ decided it.
 ## 4. Report
 
 The PR link, what was not verified locally, the review verdict, and what
-needs the owner.
+needs the owner. For an Investigation or a Spike: the link to the answer in
+the issue, and whether the issue is closed.
