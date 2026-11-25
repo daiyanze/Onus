@@ -238,9 +238,9 @@ repeated. Rules for it:
   moved. A path that moved gets the new path. A check that is gone leaves
   the lesson active as a written rule: its `Check:` line says the check is
   gone and since when, and the lesson is the next to enforce again. Of two
-  entries with one id, the newer one is renumbered. Merge duplicates. Retire only an entry that is wrong or
-  obsolete, with the reason. Report one line per entry, in the run's report
-  or the PR.
+  entries with one id, the newer one is renumbered. Merge duplicates.
+  Retire only an entry that is wrong or obsolete, with the reason. Report
+  one line per entry, in the run's report or the PR.
 
 ## Method notes
 
