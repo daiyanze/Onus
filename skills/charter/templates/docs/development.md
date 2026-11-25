@@ -234,7 +234,8 @@ repeated. Rules for it:
 
 A lesson is about this project. A method note is about Onus itself: following
 a skill as written led to a problem, or could not be done. Every skill ends
-its report with a `Method notes` section, after checking these signals. Each
+its report with a `Method notes` section (`cross-examine`: a line in its
+comment), after checking these signals. Each
 note names the signal, the skill and step, and the evidence (a link to a
 comment or PR, a log row, a command and its output). A note without evidence
 is not written. `none` is a valid section.
@@ -254,4 +255,3 @@ is not written. `none` is a valid section.
 7. **A check that covers less than a document says.**
 8. **An escape.** A bug fixed now was introduced by a PR that was reviewed
    and approved under this method (Bug fix, step 6).
-

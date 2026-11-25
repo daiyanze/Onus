@@ -216,5 +216,8 @@ A re-review is a smaller run of the same steps:
 
 ### Method notes
 
-Check the signals in `docs/development.md` ("Method notes") against this
-run, and list each note with its signal, step and evidence, or `none`.
+They go in the comment's `**Method notes:**` line (step 7), after checking
+the signals in `docs/development.md` ("Method notes"); a project chartered
+before that section existed does not have it: read it from the `charter`
+skill's own `templates/docs/development.md`. Your answer to the agent that
+started you still ends with the verdict and the comment ID (step 7).
