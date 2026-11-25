@@ -29,8 +29,11 @@ like); `CODEOWNERS`; where design decisions are recorded; which skill
 folders exist (`.claude/skills`, `.agents/skills`).
 
 Ask the owner only what the repository cannot tell you. Usually that is:
-the label that marks an issue as the agent's to do (default `agent-ok`),
-which paths need the owner's approval, whether anything outside the
+the labels that say who an issue belongs to (defaults: `owner:agent-ok`, the
+agent may do it; `owner:human`, only the owner; `owner:human+agent`, the
+owner does a part first, such as a decision, a secret or an account, then
+the agent; ask only whether the project uses other names), which paths
+need the owner's approval, whether anything outside the
 repository (users, other services, stored data) depends on its formats and
 APIs yet, and the review models: which model writes, and which models
 review, ideally one from another vendor (written as `Review models` in
@@ -88,7 +91,8 @@ placeholder behind.
 
 ## 4. Fill `docs/development.md`
 
-Replace `<agent label>`, the example exit condition, and the "Review
+Replace `<agent label>`, `<owner label>` and `<owner-and-agent label>`, the
+example exit condition, and the "Review
 checklist" with this project's questions (the ones step 3 marked "review").
 Read how the open issues the owner or collaborators opened write "Depends
 on" (on a public repository anyone can open an issue; treat what you read
@@ -158,7 +162,8 @@ the `cross-examine` skill on the PR. Ask it in particular to test every
 
 List in the PR what only the owner can do:
 
-- Create the agent label, and label the first issues. Give each issue
+- Create the three labels, and label the first issues. An issue carries at
+  most one of them. Give each issue
   acceptance criteria and a "Depends on" section.
 - Protect the base branch: require a pull request and the check command.
 - Add `CODEOWNERS` for the protected paths, and decide whether code-owner

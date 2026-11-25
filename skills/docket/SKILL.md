@@ -99,7 +99,11 @@ Until the condition holds:
    method note (`docs/development.md`, "Method notes") gets a row with phase
    `method`, the signal, the skill and step, and the evidence.
 
-Park the issue and move on, instead of asking, when:
+Park the issue and move on, instead of asking, when the following holds.
+Parking changes its agent label to the owner-and-agent label (default
+`owner:human+agent`) and comments what the owner has to do and why, in the
+words of the log row (`docs/development.md`, "Picking
+work"):
 
 - it contradicts a recorded decision, needs a secret or an account, touches
   a protected path it does not mention, or needs an action that cannot be

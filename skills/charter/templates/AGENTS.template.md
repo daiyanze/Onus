@@ -70,7 +70,8 @@ Codex as the second model", or "none named">. `cross-examine` uses the
 second one for "Second model".
 
 1. Pick an issue (the `take-case` skill finds the next one labelled
-   `<agent label>`; the `docket` skill works through a whole goal). Branch
+   `<agent label>`; `<owner label>` and `<owner-and-agent label>` wait for
+   the owner; the `docket` skill works through a whole goal). Branch
    from `<base branch>`. Never push to `<base branch>` directly. Stop and
    ask before anything that cannot be undone, except a merge that a
    `docket` grant allows to deploy.
