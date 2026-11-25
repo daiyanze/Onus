@@ -166,7 +166,7 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
 ### `docket`：朝一个目标长时间运行
 
 ```text
-/docket every open agent-ok issue in milestone 2
+/docket every open owner:agent-ok issue in milestone 2
 ```
 
 - **开始时** 把退出条件写成一个能用命令检查的东西，并用一行告诉你。例如：milestone 2
