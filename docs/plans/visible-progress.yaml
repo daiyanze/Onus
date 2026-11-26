@@ -1,0 +1,244 @@
+goal: At the end of each stage the owner sees evidence of the right kind of what it produced and decides from one page (M1, committed, on one shared account); the owner-facing measures follow once the agent has its own identity (Measured); M2 and M3 after go or stop
+record: docs/plans/visible-progress.md
+issues:
+  # M1 Seen: committed. Works in any project, verify skill or not.
+  - id: agent-identity
+    title: "Investigation: a separate GitHub identity for the agent"
+    milestone: M1 Seen
+    depends_on: []
+    what: |
+      Design 1. Compare a machine account and a GitHub App for the agent:
+      cost, setup steps, which actions notify the owner, how reactions and
+      merges can then be attributed, which of `docket`'s grant conditions
+      branch rules could then enforce, and what `charter` would set up. The
+      answer goes in the issue; the owner decides. No PR.
+    acceptance:
+      - The issue holds a comment comparing both on cost, setup, notification behaviour, attribution, and enforceable grant conditions, each claim with its source, and ends with a recommendation and its risk.
+
+  - id: exhibit-scaffold
+    title: Stub the exhibit skill and run its tests in npm test and CI
+    milestone: M1 Seen
+    depends_on: []
+    what: |
+      Challenge round 1 findings 1 and 2, round 2 findings 7 and 8. Add
+      `skills/exhibit/SKILL.md` with valid frontmatter,
+      `disable-model-invocation: true`, and a description and body that say
+      the skill is not usable yet (so `check-agent-files` passes while the
+      scripts land and no adopter invokes it); add
+      `skills/exhibit/scripts/*.test.mjs` to `npm test` in `package.json` and
+      `skills/exhibit/scripts/` to both bun jobs in `.github/workflows/check.yml`
+      and to the offline command in `AGENTS.md`. Touches protected paths:
+      the owner merges.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`."
+      - "`grep -n 'skills/exhibit/scripts' package.json .github/workflows/check.yml` prints one line in `package.json` and two in `check.yml`, and `grep -n 'disable-model-invocation: true' skills/exhibit/SKILL.md` prints one line."
+
+  - id: exhibit-images
+    title: Attach pictures to a comment through an orphan branch, with a secret check
+    milestone: M1 Seen
+    depends_on: [exhibit-scaffold]
+    what: |
+      Design 2 and 6. Probe on a private scratch repository the owner
+      provides: push a PNG to orphan
+      branch `onus-exhibits` with `[skip ci]`, link it as
+      `blob/onus-exhibits/<path>?raw=true` in an issue comment, check it
+      renders and no workflow ran, against a control push without `[skip ci]`
+      that does start the scratch repository's push workflow. If it does
+      not render, record that and
+      keep Mermaid and text as the only path. Then
+      `skills/exhibit/scripts/attach.mjs <goal-slug> <file...>`: git
+      plumbing, working tree untouched, prints URLs; refuses a trace on a
+      public repository, and refuses any file matching the project's secret
+      names or common token patterns, unpacking archives first. The PR lists
+      the adopting project's workflow triggers other than push and
+      pull_request, which `[skip ci]` does not cover.
+    acceptance:
+      - The PR shows the probe's commands and result, rendered or refused, the Actions page with no run for the `[skip ci]` push, and a run for the control push.
+      - "`skills/exhibit/scripts/attach.test.mjs`, against a bare repository, asserts: files land under `<goal-slug>/`; the working tree and `HEAD` are unchanged; a second call adds; the message contains `[skip ci]`; a trace is refused when the remote is public; a file holding a token pattern is refused; a zip holding a deflated token pattern is refused; a push refused as non-fast-forward is fetched and retried once."
+
+  - id: exhibit-progress
+    title: progress.mjs derives states, health, decisions waiting and promises
+    milestone: M1 Seen
+    depends_on: [exhibit-scaffold, numbered-criteria]
+    what: |
+      Design 3, on sketch A without `trackRecord` and `agentLogin`: from
+      `gh` JSON, storing nothing, plus two inputs from the live run, whether
+      it holds a grant and its open `take` rows (or `refs/claims/*` when
+      present; `in flight: unknown` when neither), with `health` taking
+      those inputs; reviews only as comments starting with `cross-examine`
+      step 7's header (and, in a live run, with logged IDs); ready as an
+      approving review naming the head, checks passed and the PR's
+      `## Exhibit` passing `check-exhibit.mjs --section`; finished units including a check
+      run on a new head; per-issue states; health by the record's rules;
+      decisions waiting from parked issues and ready PRs the owner must
+      merge (all without a grant, protected ones with); promises by
+      `AC<k>`, the latest answer per criterion across the PR's reviews,
+      `met (kind not judged)` only when the newest review names the head,
+      else `met at <sha>; later commits not reviewed`, and `answered` for a
+      closed Investigation or Spike; the bottom line; a Mermaid graph that
+      collapses past 30 nodes, and a body kept under 60,000 characters.
+      Nothing about the owner is counted. Measure the node count where
+      GitHub stops rendering and record it. Header comment lists every rule,
+      each with a test.
+    acceptance:
+      - "`bun test skills/exhibit/scripts/` covers, from recorded `gh` fixtures: every state; each health rule; a pushed fix counted as a finished unit; a stall from a `take` row with no PR; `in flight: unknown` with no rows; a criterion met in round 1 and not restated in a re-review naming the head shown `met`; a review of an earlier head shown as not covering later commits; a closed Investigation shown `answered`; a body over 60,000 characters falling back to a link; a writer's reply quoting a review not counted as one; a ready PR under a grant not counted as waiting unless it touches a protected path; a PR whose `## Exhibit` fails not counted as ready; with a fixed `now`, two runs given the same inputs writing the same body."
+      - The graph for a scratch goal of 40 issues, posted in an issue comment, renders on GitHub, and the PR records the node count at which an uncollapsed graph stopped rendering; links in the PR.
+
+  - id: numbered-criteria
+    title: cross-examine numbers acceptance criteria as AC<k>
+    milestone: M1 Seen
+    depends_on: []
+    what: |
+      Round 3 findings 5 and 6. `cross-examine` step 7 writes each criterion
+      line as `- AC<k> <criterion>: met | not met | cannot tell - the
+      evidence`, `<k>` its position in the issue's acceptance list; step 8's
+      re-review keeps the numbers of the lines it restates. The PR says what
+      an adopting project will notice.
+    acceptance:
+      - "`grep -n 'AC<k>' skills/cross-examine/SKILL.md` prints the rule in steps 7 and 8."
+      - One `cross-examine` run on a real PR posts numbered criterion lines, read back unchanged; link in the PR.
+
+  - id: exhibit-check
+    title: check-exhibit.mjs fails an exhibit without proof of the right kind
+    milestone: M1 Seen
+    depends_on: [exhibit-scaffold]
+    what: |
+      Design 4 and 5: unknown or misordered headings; a malformed bottom
+      line; a claim line with no evidence link; a claim whose only evidence
+      is an image or a video unless marked `Look-only:`; a number with no
+      command; a performance number with no run count; a missing picture; a
+      Needs you item without pick or risk; a bare percentage in the track
+      record; a Promised vs shown line over eight words of criterion; more
+      than 300 words outside Needs you, Promised vs shown, links and
+      pictures. A `--section` mode checks a PR's `## Exhibit` alone, with
+      its own headings and no bottom line, by the same evidence rules.
+    acceptance:
+      - "`bun test skills/exhibit/scripts/` has one failing fixture per rule and one passing exhibit; each failing fixture exits 1 naming the line, a fixture with 20 Needs you items still passes the length rule, a `Look-only:` claim with only a screenshot passes, an exhibit citing every M1 criterion of this plan passes the length rule, a bottom line with `· not pinned` or `· in flight: unknown` passes, and `--section` passes a PR description whose `## Exhibit` is well formed and fails one whose only evidence is a screenshot."
+
+  - id: exhibit-skill
+    title: Add the exhibit skill
+    milestone: M1 Seen
+    depends_on: [exhibit-images, exhibit-progress, exhibit-check, numbered-criteria]
+    what: |
+      Design 4 to 6 and 7 (in a session): the evidence table, the headings,
+      plain words; gather, build, attach, check, save to `.runs/exhibits/`,
+      print, post to a progress issue when one exists; never post a page
+      that fails the check; the safety rules for pictures and traces;
+      `### Method notes`. README and README.zh-CN list the eighth skill;
+      `.claude-plugin/plugin.json` names it and `AGENTS.md` lists it
+      (protected: owner merges). `docs/development.md` step 5 gains
+      `## Exhibit` for a change a user can see; a project chartered earlier
+      reads that rule from the `charter` skill's own template. The stub's
+      `disable-model-invocation` is removed.
+    acceptance:
+      - "`bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills` prints `agent files ok`, and `grep -n '## Exhibit' skills/charter/templates/docs/development.md` prints the heading."
+      - In an adopting project, `/exhibit` on a goal with open PRs prints an exhibit that `check-exhibit.mjs` passes, opening with the derived bottom line, whose user-visible claims each cite a stored state or response before any picture; pasted in the PR.
+
+  - id: docket-exhibits
+    title: docket keeps a pinned progress issue and posts exhibits by the record's triggers
+    milestone: M1 Seen
+    depends_on: [exhibit-skill]
+    what: |
+      Design 2, 7 and 8: open or find `Progress: <goal>` (`onus:exhibit`);
+      try to pin it and log a failed pin; on a public repository ask before
+      the loop about the issue and the pictures, and unattended do neither;
+      the body is `progress.mjs` output that any run rewrites, narrative in
+      comments; a duplicate opened at the same time is closed toward the
+      lower number; `docket` logs a `take` row when work on an issue starts
+      and passes open ones, and whether it holds a grant, to `progress.mjs`;
+      only a run with `take` rows or claim refs rewrites the body, others
+      comment; `docket` step 5 gains "the PR's `## Exhibit` passes
+      `check-exhibit.mjs --section`" before a merge under a grant; a pickup asks again on a
+      public repository; only the run's parent posts, and it runs `check-exhibit.mjs` on each
+      worker's `## Exhibit` with `--section`; triggers: milestone done, run end (unless the
+      last milestone exhibit has nothing new since), health worse, stall,
+      agent's call; never two with nothing new; log phase `exhibit`;
+      the run never acts on reactions or replies; in M1 the agent never reacts, so 👎/😕 from write-permission
+      accounts count as a person's signal, and replies are not read. Step 6
+      links the last exhibit, lists the exhibits posted and each `Needs you`
+      item with the channel it was answered through, and asks the owner for
+      the two go-or-stop counts.
+    acceptance:
+      - "`grep -n 'phase `exhibit`' skills/docket/SKILL.md` prints the phase."
+      - "In a scratch repository, a run over two milestones posts at least one exhibit per milestone and one when an issue is parked on the remaining path, none asked for, each matching an `exhibit` row in the log, none with nothing new since the one before; a session `/exhibit` during the run comments without rewriting the body; links in the PR."
+      - "`grep -n 'phase `take`' skills/docket/SKILL.md` prints the phase."
+
+  # M2 Witnessed: built only if the owner decides so after M1.
+  - id: demo-scripts
+    title: evidence-kit makes demos scripts that assert the main evidence
+    milestone: M2 Witnessed
+    depends_on: [docket-exhibits]
+    what: |
+      Design 9, demos and flakes: harness command `demo`; each demo asserts
+      the main evidence of the record's table and records pictures alongside;
+      a demo that only navigates and screenshots fails its lint; CI runs
+      every demo, video kept only as an artifact (the CI change is under
+      `.github/`, so `evidence-kit` opens it as a PR for the owner); one
+      fresh run on failure, a second flake of the same demo is a lesson.
+    acceptance:
+      - "`grep -n 'demos/' skills/evidence-kit/SKILL.md` prints the rule; `check-agent-files` prints `agent files ok`."
+      - In an adopting project, a scratch commit that breaks a demoed feature makes the CI demo step fail on its assertion, not on a screenshot; a demo with no assertion fails the lint; runs linked.
+
+  - id: promised-demos
+    title: brief names the demo for each user-visible criterion; demos exist before the PR
+    milestone: M2 Witnessed
+    depends_on: [demo-scripts]
+    what: |
+      Design 9, promised before: `brief` writes an `Exhibit:` line per
+      milestone and names the demo for each user-visible criterion;
+      `take-case` requires the named demo before opening the PR.
+    acceptance:
+      - "`grep -n 'Exhibit:' skills/brief/SKILL.md` and `grep -n 'demos/' skills/take-case/SKILL.md` print the rules."
+
+  - id: witnessed-exhibit
+    title: The reviewer judges whether each demo proves its criterion
+    milestone: M2 Witnessed
+    depends_on: [promised-demos]
+    what: |
+      Design 9, witness: `cross-examine` reads CI's demo runs on the PR's head and answers per
+      criterion whether the demo proves it with evidence of the right kind
+      and whether its output matches the section, with a fixed kind token on
+      each criterion line (`met [state]`, `met [look-only]`, ...) that
+      `progress.mjs` reads; re-runs only to check a
+      doubt; blocks an unexplained change that weakens an existing demo;
+      keeps a found problem as a finding.
+    acceptance:
+      - "`grep -n '## Exhibit' skills/cross-examine/SKILL.md` prints the witness rule."
+      - "In an adopting project: a matching PR gets each criterion answered met with its demo; a PR whose demo screenshots without asserting the saved state gets a blocking finding; a PR that drops an assertion from an existing demo without saying why gets a blocking finding; links in the PR."
+
+  # M3 Kept: built only if the owner decides so after M2.
+  - id: accepted-outputs
+    title: The owner accepts outputs by merging them; later changes are shown again
+    milestone: M3 Kept
+    depends_on: [witnessed-exhibit]
+    what: |
+      Design 10: at a milestone's end, a PR writing its witnessed demo
+      outputs, scrubbed, to `demos/approved/`; `charter` adds that path to
+      the protected paths; the harness compares later runs with it; a
+      difference goes under `## Changed since you accepted` with before,
+      after and the PR, without failing CI; the owner rejects in a session
+      and the run opens a bug issue, while a 👎 only lists the item; the track record gains the changed-without-
+      intended-PR count; `docket` step 5.2 names `demos/approved/` beside
+      `.github/`; the skill refuses to open the PR unless the base
+      `AGENTS.md` lists the path, and tells the owner to add it.
+    acceptance:
+      - "A test asserts the comparison ignores scrubbed fields and reports a real change with both files."
+      - In a scratch repository, merge an accepted-outputs PR, change the screen and the stored data in a later PR, and the next exhibit lists it under `## Changed since you accepted`; a `docket` grant does not merge a PR touching `demos/approved/` even when `AGENTS.md` omits it; links in the PR.
+
+  # Measured: built once the owner has settled agent-identity with an account or an App.
+  - id: owner-measures
+    title: Track record and time to decision, attributed by the agent's own account
+    milestone: Measured
+    depends_on: [agent-identity, docket-exhibits]
+    # Built only once the owner has chosen an identity in agent-identity; closing that issue without one does not unlock this.
+    what: |
+      Design 11: grant merges are merges whose `merged_by` is the agent's
+      account; owner answers are by write-permission accounts other than
+      the agent's; the track record in counts, with reverts found by
+      GitHub's revert format; time to decision from GitHub, plus answers
+      given in a session logged with phase `answer-session` and printed
+      apart; `## Track record` in the exhibit. Built only after the owner
+      chose an identity in `agent-identity`.
+    acceptance:
+      - "`bun test skills/exhibit/scripts/` derives each count from fixtures with separate owner and agent logins, including a rebase merge by the agent counted as a grant merge, an owner merge not counted, and a reply from a read-only account not counted as an owner answer; `check-exhibit.mjs` fails a bare percentage."
+      - In a scratch repository with the agent on its own account, one `docket` run's exhibit shows grant merges and time to decision matching the run's merges and the owner's answers; link in the PR.
