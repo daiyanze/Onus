@@ -1,9 +1,11 @@
 # Plan: the owner sees what each stage produced, and trusts it for the right reasons
 
-Status: **draft for review**, revision 9, 2026-11-26. Revisions 1 to 3
+Status: **draft for review**, revision 10, 2026-11-27. Revisions 1 to 3
 surveyed agent products, research on supervising agents, status practice
 and visual review; revision 4 corrected a self-review of revision 3;
-revisions 5 to 8 settle independent challenge rounds 1 to 4; revision 7 applies the owner's decision after round 3; revision 9 answers the PR review ("Decision for the owner").
+revisions 5 to 8 settle independent challenge rounds 1 to 4; revision 7
+applies the owner's decision after round 3 ("Decision for the owner");
+revisions 9 and 10 answer the PR review.
 The plan itself is `docs/plans/visible-progress.yaml`; it passes
 `check-plan.mjs`. Sketches: `sketch/visible-progress-a` and `-b` (local,
 not pushed).
@@ -620,7 +622,7 @@ contract.
 // skills/exhibit/scripts/progress.mjs
 /** @typedef {'waiting'|'figuring-out'|'built'|'back-uphill'|'ready'|'done'|'parked'} State */
 /** @typedef {'on-track'|'at-risk'|'off-track'} Health */
-/** @typedef {{repo: string, goal: string, issues: number[]}} Goal */
+/** @typedef {{repo: string, goal: string, issues: number[], progressIssue: number | null}} Goal */
 /** @typedef {{issue: number, since: string}} TakeRow   // an open `take` row; ISO 8601 */
 /**
  * What only the live run knows (section 3). From a session `/exhibit` or a
@@ -631,12 +633,13 @@ contract.
 /**
  * @typedef {{issue: number, ac: number, text: string,
  *   status: 'met (kind not judged)' | 'met at sha' | 'not met' | 'cannot tell' | 'answered' | 'not shown',
- *   sha: string | null, review: string | null}} Promise   // review: comment URL
+ *   sha: string | null, review: string | null}} Criterion   // review: comment URL
  */
+/** pinned: read from the repository's pinned issues for goal.progressIssue (false when null). */
 /** @typedef {{health: Health, waiting: number, done: number, total: number, pinned: boolean, inFlight: 'known' | 'unknown'}} Summary */
 /** @typedef {(args: string[]) => Promise<any>} Gh   // runs `gh api ...`; injected so tests use fixtures */
 
-/** @returns {Promise<{issues: IssueState[], promises: Promise[], summary: Summary}>} */
+/** @returns {Promise<{issues: IssueState[], criteria: Criterion[], summary: Summary}>} */
 export async function derive(goal, run, gh) {}
 /** "🟡 At risk · 2 decisions need you · 5/9 done · updated <ts>[ · not pinned][ · in flight: unknown]" */
 export function bottomLine(summary, updatedAt) {}
@@ -666,12 +669,14 @@ Command lines, which `docket` and the skill call:
 
 ```sh
 bun skills/exhibit/scripts/progress.mjs --repo <o>/<r> --goal <slug> --issues 31,32,33 \
-  --run .runs/exhibits/<run>.inputs.json [--body | --json]
+  [--progress-issue 70] --run .runs/exhibits/<run>.inputs.json [--body | --json]
 #   <run>.inputs.json: {"grant": false, "take": [{"issue": 31, "since": "..."}], "reviewIds": [123]}
 #   omitted --run: grant false, take null, reviewIds null
 bun skills/exhibit/scripts/check-exhibit.mjs [--section] <file.md>
 #   prints `exhibit ok` and exits 0, or one `<line>: <rule>: <message>` per problem and exits 1
-bun skills/exhibit/scripts/attach.mjs <goal-slug> <file>...
+bun skills/exhibit/scripts/attach.mjs [--public] <goal-slug> <file>...
+#   --public: the repository is public (traces refused); attach.mjs also checks
+#   the remote's visibility with `gh api repos/<o>/<r>` and refuses if they differ
 #   prints `<file>\t<url>` per file; exits 1 with the reason on a refusal
 ```
 
@@ -682,10 +687,13 @@ bun skills/exhibit/scripts/attach.mjs <goal-slug> <file>...
   start    goal=M1  progress issue #70 (pinned)
   take     #64 agent-identity ... take #65 exhibit-scaffold
   ...
-  exhibit  milestone M1 done → #70 comment
-           🟢 On track · 1 decision needs you · 8/8 done · updated 2026-12-03 18:02
+  exhibit  three units finished unshown → #70 comment
+           🟢 On track · 1 decision needs you · 7/8 done · updated 2026-12-03 18:02
            Needs you: merge #71 (exhibit-skill, protected)? pick: yes · risk: low,
              wording only; evidence: review at <sha> AC1–AC3 met (kind not judged)
+  ...
+  exhibit  milestone M1 done → #70 comment (after the owner merged #71)
+           🟢 On track · 0 decisions need you · 8/8 done · updated 2026-12-04 09:15
 ```
 
 ```text
