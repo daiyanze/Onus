@@ -1,9 +1,9 @@
 # Plan: the owner sees what each stage produced, and trusts it for the right reasons
 
-Status: **draft for review**, revision 8, 2026-11-26. Revisions 1 to 3
+Status: **draft for review**, revision 9, 2026-11-26. Revisions 1 to 3
 surveyed agent products, research on supervising agents, status practice
 and visual review; revision 4 corrected a self-review of revision 3;
-revisions 5 to 8 settle independent challenge rounds 1 to 4; revision 7 applies the owner's decision after round 3 ("Decision for the owner").
+revisions 5 to 8 settle independent challenge rounds 1 to 4; revision 7 applies the owner's decision after round 3; revision 9 answers the PR review ("Decision for the owner").
 The plan itself is `docs/plans/visible-progress.yaml`; it passes
 `check-plan.mjs`. Sketches: `sketch/visible-progress-a` and `-b` (local,
 not pushed).
@@ -468,8 +468,9 @@ are the agent's own statements: declared, not derived. A was kept.
 
 **Round 2 (2026-11-26).** A new agent with no context. Verdict: holds with
 fixes; eight findings, all settled in revision 6. It confirmed the scaffold
-does not break CI (`node --test` with an unmatched glob and `bun test` on a
-missing directory both exit 0). Findings 6 and 7 were checked before
+does not break CI (`node --test` with an unmatched glob exits 0, and `bun
+test` given a missing directory together with existing ones, as CI runs it,
+exits 0; alone on a missing directory it exits 1). Findings 6 and 7 were checked before
 settling (`cross-examine` step 7 prints `at <full head SHA>`;
 `.claude-plugin/marketplace.json` has `"source": "./"`).
 
@@ -551,8 +552,8 @@ findings, each a rule change, all settled in revision 8.
 | 9 | Any comment from the account could read as a review | Only comments starting with the step 7 header; logged IDs in a live run |
 | 10 | The `[skip ci]` criterion could not fail | A control push without it must show a run |
 
-Its risks are added under Risks. No further round is owed by `brief`; the
-owner decides whether to label the M1 issues.
+Its risks are added under Risks. Revision 8's settlements were not
+challenged again; the PR review checks them.
 
 ## Out of scope
 
@@ -577,15 +578,25 @@ owner decides whether to label the M1 issues.
   tested:** an image committed to a branch of the same repository renders
   in a comment via `blob/<branch>/<path>?raw=true`, also on a private
   repository. `exhibit-images` tests it first.
-- GitHub renders Mermaid in comments, with a size limit.
-- `[skip ci]` in the head commit message skips push-triggered workflows.
-- Actions done with the agent's own account notify that account of
-  nothing; a self-mention does not notify either.
-- Reactions are readable with `gh api .../comments/<id>/reactions`, with
-  their author; the author's permission with
-  `.../collaborators/<login>/permission`.
-- A Playwright trace records network traffic and DOM snapshots.
-- `check-plan.mjs` and `.claude-plugin/` are protected; adding
+- GitHub renders Mermaid in issue and PR comments (GitHub Docs, "Creating
+  diagrams"). **Assumed:** a size limit exists; GitHub documents none, and
+  `exhibit-progress` measures it.
+- `[skip ci]` in the head commit message skips workflows triggered by push
+  and pull_request (GitHub Docs, "Skipping workflow runs").
+- **Assumed, not tested:** GitHub does not notify an account of its own
+  actions, a self-mention included (GitHub Docs, "About notifications",
+  describes notifications for others' activity only). `agent-identity`
+  confirms it.
+- Reactions are listed with their author by `GET
+  /repos/{owner}/{repo}/issues/comments/{id}/reactions`, and an account's
+  permission by `GET /repos/{owner}/{repo}/collaborators/{user}/permission`
+  (GitHub REST docs, "Reactions" and "Collaborators").
+- A Playwright trace holds network requests and DOM snapshots (Playwright
+  docs, "Trace viewer").
+- GitHub pins at most three issues per repository (GitHub Docs, "Pinning an
+  issue to your repository").
+- `check-plan.mjs`, `.claude-plugin/`, `package.json`, `.github/` and
+  `AGENTS.md` are protected (`AGENTS.md`, "Protected paths"); adding
   `demos/approved/` to an adopting project's protected paths is a change
   to its `AGENTS.md`.
 
@@ -598,6 +609,93 @@ owner decides whether to label the M1 issues.
 - **C: catch-up in the chat** (pstack ketchup): lost when the chat ends.
 - **D: declared health in a tracker** (Linear): the author's opinion.
 - **E: a local dashboard from `.runs/`**: on one machine.
+
+## The contract: types and signatures
+
+What the M1 issues build against. Sketch A (`sketch/visible-progress-a`,
+local) was the first draft of this; the record, not the sketch, is the
+contract.
+
+```js
+// skills/exhibit/scripts/progress.mjs
+/** @typedef {'waiting'|'figuring-out'|'built'|'back-uphill'|'ready'|'done'|'parked'} State */
+/** @typedef {'on-track'|'at-risk'|'off-track'} Health */
+/** @typedef {{repo: string, goal: string, issues: number[]}} Goal */
+/** @typedef {{issue: number, since: string}} TakeRow   // an open `take` row; ISO 8601 */
+/**
+ * What only the live run knows (section 3). From a session `/exhibit` or a
+ * pickup with no rows: { grant: false, take: null, reviewIds: null }.
+ * @typedef {{grant: boolean, take: TakeRow[] | null, reviewIds: number[] | null, now: Date}} RunInputs
+ */
+/** @typedef {{number: number, state: State, rounds: number, pr: number | null, ready: boolean}} IssueState */
+/**
+ * @typedef {{issue: number, ac: number, text: string,
+ *   status: 'met (kind not judged)' | 'met at sha' | 'not met' | 'cannot tell' | 'answered' | 'not shown',
+ *   sha: string | null, review: string | null}} Promise   // review: comment URL
+ */
+/** @typedef {{health: Health, waiting: number, done: number, total: number, pinned: boolean, inFlight: 'known' | 'unknown'}} Summary */
+/** @typedef {(args: string[]) => Promise<any>} Gh   // runs `gh api ...`; injected so tests use fixtures */
+
+/** @returns {Promise<{issues: IssueState[], promises: Promise[], summary: Summary}>} */
+export async function derive(goal, run, gh) {}
+/** "🟡 At risk · 2 decisions need you · 5/9 done · updated <ts>[ · not pinned][ · in flight: unknown]" */
+export function bottomLine(summary, updatedAt) {}
+/** Mermaid source; collapses past 30 nodes (section 3). */
+export function graph(issues, dependsOn) {}
+/** The progress issue body: bottom line, graph, promised vs shown, link; under 60,000 characters. */
+export function body(derived, latestExhibitUrl) {}
+```
+
+```js
+// skills/exhibit/scripts/check-exhibit.mjs
+/** @typedef {{line: number, rule: string, message: string}} Problem */
+/** mode 'page': a whole exhibit; 'section': a PR's `## Exhibit` only. exists: does a linked picture exist. */
+export function checkExhibit(markdown, { mode, exists }) {}   // returns Problem[]; empty means it may be posted
+```
+
+`derive` imports `checkExhibit` and runs it with `mode: 'section'` on each
+PR's `## Exhibit` to decide `ready`.
+
+```js
+// skills/exhibit/scripts/attach.mjs
+/** Commits files under <goalSlug>/ on onus-exhibits and pushes; one URL per file. Throws with the reason on refusal. */
+export async function attach(goalSlug, files, { public: isPublic }) {}   // returns {file, url}[]
+```
+
+Command lines, which `docket` and the skill call:
+
+```sh
+bun skills/exhibit/scripts/progress.mjs --repo <o>/<r> --goal <slug> --issues 31,32,33 \
+  --run .runs/exhibits/<run>.inputs.json [--body | --json]
+#   <run>.inputs.json: {"grant": false, "take": [{"issue": 31, "since": "..."}], "reviewIds": [123]}
+#   omitted --run: grant false, take null, reviewIds null
+bun skills/exhibit/scripts/check-exhibit.mjs [--section] <file.md>
+#   prints `exhibit ok` and exits 0, or one `<line>: <rule>: <message>` per problem and exits 1
+bun skills/exhibit/scripts/attach.mjs <goal-slug> <file>...
+#   prints `<file>\t<url>` per file; exits 1 with the reason on a refusal
+```
+
+## Examples of use
+
+```text
+/docket M1 of docs/plans/visible-progress
+  start    goal=M1  progress issue #70 (pinned)
+  take     #64 agent-identity ... take #65 exhibit-scaffold
+  ...
+  exhibit  milestone M1 done → #70 comment
+           🟢 On track · 1 decision needs you · 8/8 done · updated 2026-12-03 18:02
+           Needs you: merge #71 (exhibit-skill, protected)? pick: yes · risk: low,
+             wording only; evidence: review at <sha> AC1–AC3 met (kind not judged)
+```
+
+```text
+/exhibit PR 52
+  ## Show
+  - Saving a draft stores it: `GET /api/drafts/9` returns the draft (run 2026-12-03-1412) ·
+    screenshot draft-saved.png
+  ## Not shown
+  - The retry backoff (internal); its test `drafts.retry.test.ts` passes.
+```
 
 ## Contract (one-way doors)
 
@@ -681,7 +779,6 @@ trace viewer.
 
 ## Still owed
 
-- The owner labels the M1 issues the agent may do (below).
 - The owner labels the M1 issues the agent may do. `agent-identity` is the
   owner's decision; `exhibit-scaffold` touches `package.json`, `.github/`
   and `AGENTS.md`, and `exhibit-skill` touches `.claude-plugin/` and

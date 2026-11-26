@@ -59,9 +59,10 @@ issues:
   - id: exhibit-progress
     title: progress.mjs derives states, health, decisions waiting and promises
     milestone: M1 Seen
-    depends_on: [exhibit-scaffold, numbered-criteria]
+    depends_on: [exhibit-scaffold, numbered-criteria, exhibit-check]
     what: |
-      Design 3, on sketch A without `trackRecord` and `agentLogin`: from
+      Design 3, built to "The contract: types and signatures" in the record
+      (`derive`, `bottomLine`, `graph`, `body`, and the command line): from
       `gh` JSON, storing nothing, plus two inputs from the live run, whether
       it holds a grant and its open `take` rows (or `refs/claims/*` when
       present; `in flight: unknown` when neither), with `health` taking
@@ -126,7 +127,8 @@ issues:
       that fails the check; the safety rules for pictures and traces;
       `### Method notes`. README and README.zh-CN list the eighth skill;
       `.claude-plugin/plugin.json` names it and `AGENTS.md` lists it
-      (protected: owner merges). `docs/development.md` step 5 gains
+      (protected: owner merges); `skills/charter/SKILL.md`'s list of skill
+      folders to copy gains `exhibit`. `docs/development.md` step 5 gains
       `## Exhibit` for a change a user can see; a project chartered earlier
       reads that rule from the `charter` skill's own template. The stub's
       `disable-model-invocation` is removed.
