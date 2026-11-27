@@ -5,7 +5,7 @@
   "description": "A development method for coding agents: one writer, an independent reviewer that proves what it finds, and lessons that turn into checks. Agent Skills for Claude Code, Pi and Codex.",
   "type": "module",
   "scripts": {
-    "test": "node --test skills/charter/templates/scripts/*.test.mjs skills/brief/scripts/*.test.mjs scripts/*.test.mjs",
+    "test": "node --test skills/charter/templates/scripts/*.test.mjs skills/brief/scripts/*.test.mjs skills/exhibit/scripts/*.test.mjs scripts/*.test.mjs",
     "check": "node skills/charter/templates/scripts/check-agent-files.mjs --skills skills && node scripts/check-version.mjs",
     "test:bench": "node --test bench/test/*.test.mjs",
     "bench": "node bench/run.mjs",

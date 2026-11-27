@@ -21,7 +21,7 @@ npm run test:bench                # the bench harness with a fake runtime
 
 Without network, the same checks run with Bun and no install:
 `bun skills/charter/templates/scripts/check-agent-files.mjs --skills skills`
-and `bun test skills/charter/templates/scripts/ skills/brief/scripts/`.
+and `bun test skills/charter/templates/scripts/ skills/brief/scripts/ skills/exhibit/scripts/`.
 
 ## Protected paths
 
