@@ -21,18 +21,21 @@
  * whatever markdown would make of anything else, it fails. Every line is
  * one of:
  * - blank;
- * - a heading at the start of the line: `## <name>` (in `--section`, inside
- *   `## Exhibit`: `### <name>`);
+ * - a heading at the start of the line: `## ` and text (in `--section`,
+ *   inside `## Exhibit`: `### ` and text);
  * - a list line at the start of the line: `- `, `* `, `+ ` or `1. ` and text;
- * - a continuation: two or more spaces and text, right after a list line or
- *   another continuation, with no blank line between;
+ * - a continuation: exactly two spaces and text, right after a list line or
+ *   another continuation, with no blank line between (so no nested lists);
  * - a paragraph line: text at the start of the line;
  * - in `## Progress` only, a fenced block (below).
- * "Text" here never starts with `#`, `>`, `|`, `<` (other than an
- * `<https://...>` autolink or an `<img ...>` tag), a tab, or a fence, and a
- * line is never only `-`, `=`, `*` or `_` characters (a setext heading or a
- * rule). No line holds an HTML comment, or, outside `code` spans, an HTML
- * tag other than `<img>` (GitHub would hide an unknown tag such as `<k>`).
+ * "Text" never starts with a space or tab, `#` and a space (a heading;
+ * `#69` is fine), `>`, `|`, `<`, a fence
+ * (three backticks or tildes), a list marker (`-`, `*`, `+` or `1.` / `1)`
+ * and a space), or a link reference definition (`[x]:`), and is never only
+ * `-`, `=`, `*` or `_` characters (a setext heading or a rule). Outside
+ * `code` spans, a line holds no HTML at all but a whole `<img
+ * src="https://...">` tag on that line and `<https://...>` links; an HTML
+ * comment fails too. A link with empty text, `[](url)`, is not evidence.
  *
  * Words used below:
  * - a fenced code block is allowed in one place only: in `## Progress`
@@ -191,8 +194,8 @@ function links(text) {
       found.push({ target, picture: true });
       return " ";
     })
-    .replace(MD_LINK, (_, bang, _label, target) => {
-      found.push({ target, picture: bang === "!" || isPicture(target) });
+    .replace(MD_LINK, (_, bang, label, target) => {
+      if (bang === "!" || label.trim() !== "") found.push({ target, picture: bang === "!" || isPicture(target) });
       return " ";
     });
   for (const url of rest.match(BARE_URL) ?? []) found.push({ target: url, picture: isPicture(url) });
@@ -205,11 +208,14 @@ function words(line) {
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
-const LIST_LINE = /^([-*+]|\d+\.) \S/;
-const CONTINUATION = /^ {2,}\S/;
-const BAD_START = /^([#>|\t]|<(?!https?:\/\/|img\b))/i;
+const LIST_LINE = /^([-*+]|\d+\.) (.*)$/;
+const CONTINUATION = /^ {2}(\S.*)$/;
+/** What text may not start with: anything markdown would turn into a structure. */
+const BAD_CONTENT = /^(\s|#{1,6}(\s|$)|[>|<]|`{3}|~{3}|[-*+](\s|$)|\d+[.)](\s|$)|\[[^\]]*\]:)/;
 const RULE_LINE = /^\s*([-=*_])(\s*\1)*\s*$/;
-const TAG = /<\/?([a-z][a-z0-9-]*)(?![a-z0-9-]*:)\b[^>]*>/gi; // not an <https://...> autolink
+const AUTOLINK = /<https?:\/\/[^\s<>]+>/gi;
+const IMG_WITH_SRC = /<img\s[^<>]*\bsrc\s*=\s*["']?https?:\/\/[^<>]*>/gi;
+const contentOk = (content) => content !== "" && !BAD_CONTENT.test(content) && !RULE_LINE.test(content);
 
 /**
  * The format: each line from..to (0-based) is one of the allowed shapes.
@@ -227,10 +233,14 @@ function formatProblems(lines, from, to, heading, fenced, problems) {
     if (text.includes("<!--")) {
       problems.push({ line: i + 1, rule: "markup", message: "no HTML comments in an exhibit" });
     }
-    for (const m of text.replace(/(`+)[^`]*?\1/g, " ").matchAll(TAG)) {
-      if (m[1].toLowerCase() !== "img") {
-        problems.push({ line: i + 1, rule: "markup", message: `no HTML tags but <img> in an exhibit: <${m[1]}>` });
-      }
+    const outside = text.replace(/(`+)[^`]*?\1/g, " ").replace(AUTOLINK, " ").replace(IMG_WITH_SRC, " ");
+    const tag = outside.match(/<\/?[a-z][a-z0-9-]*/i);
+    if (tag) {
+      problems.push({
+        line: i + 1,
+        rule: "markup",
+        message: `no HTML but a whole <img src="https://..."> on one line, or an <https://...> link: ${tag[0]}`,
+      });
     }
     if (text.trim() === "") {
       afterItem = false;
@@ -238,23 +248,25 @@ function formatProblems(lines, from, to, heading, fenced, problems) {
     }
     if (FENCE_LIKE.test(text)) continue; // reported as `fence`
     let ok;
+    const item = text.match(LIST_LINE);
+    const more = text.match(CONTINUATION);
     if (text.startsWith(heading)) {
-      ok = true;
+      ok = contentOk(text.slice(heading.length));
       afterItem = false;
-    } else if (LIST_LINE.test(text)) {
-      ok = !RULE_LINE.test(text);
+    } else if (item) {
+      ok = contentOk(item[2]);
       afterItem = true;
-    } else if (CONTINUATION.test(text)) {
-      ok = afterItem && !BAD_START.test(text.trim()) && !RULE_LINE.test(text);
+    } else if (more) {
+      ok = afterItem && contentOk(more[1]);
     } else {
-      ok = /^\S/.test(text) && !BAD_START.test(text) && !RULE_LINE.test(text);
+      ok = contentOk(text);
       afterItem = false;
     }
     if (!ok) {
       problems.push({
         line: i + 1,
         rule: "format",
-        message: `not an exhibit line: use a \`${heading.trim()}\` heading, a list line, a two-space continuation right after it, or a paragraph at the line's start`,
+        message: `not an exhibit line: use a \`${heading.trim()}\` heading, a list line, a continuation of exactly two spaces right after it, or a paragraph at the line's start, none starting with markdown or HTML structure`,
       });
     }
   }

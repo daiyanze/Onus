@@ -348,3 +348,37 @@ test("format: in --section, the same shapes with ### headings", () => {
   assert.ok(rules(pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)\n\n ### Not shown"), { mode: "section" }).includes("format"));
   assert.ok(rules(pr("### Show\n\n- Saving works [run](https://example.com/run/1) <!-- x -->"), { mode: "section" }).includes("markup"));
 });
+
+// Found in the review of the whitelist (PR #79, round 5): shapes the first whitelist allowed
+// that markdown still turned into structure.
+
+const failsOn = (rule, text, opts) => assert.ok(rules(text, opts).includes(rule), `${rule} missing for ${JSON.stringify(text)}: ${JSON.stringify(checkExhibit(text, opts))}`);
+
+test("format: no nested list, fence or indented code inside an item", () => {
+  failsOn("format", page({ Show: `- Saving works ![s](https://example.com/s.png)\n  - ${F}\n    [run](https://example.com/run/1)` }));
+  failsOn("format", page({ Show: "- Saving works ![s](https://example.com/s.png)\n  -     [run](https://example.com/run/1)" }));
+  failsOn("format", page({ Show: "- Saving works [run](https://example.com/run/1)\n  - Deleting works ![s](https://example.com/s.png)" }));
+  failsOn("format", page({ Show: "-     [run](https://example.com/run/1) saving works" }));
+  failsOn("format", page({ Show: "- Saving works [run](https://example.com/run/1)\n    four spaces" }));
+});
+
+test("format and markup: an <img> at a line's start opens an HTML block", () => {
+  const block = '<img src="https://example.com/s.png" alt="s">\n[run](https://example.com/run/1)';
+  failsOn("format", page({ Show: block }));
+  failsOn("format", page({ Show: `- Saving works\n  ${block.replace("\n", "\n  ")}` }));
+  failsOn("format", pr(`### Show\n\n${block}`), { mode: "section" });
+});
+
+test("markup: a tag split over lines, or an <img> without an https src", () => {
+  failsOn("markup", page({ Show: '- Saving works <span\n  title="https://example.com/run/1">here</span>' }));
+  failsOn("markup", page({ Show: '- Saving works <img title="https://example.com/run/1">' }));
+});
+
+test("format: a link reference definition; claim-no-evidence: a link with empty text", () => {
+  failsOn("format", page({ Show: "- Saving works [run][1]\n\n[1]: https://example.com/run/1" }));
+  failsWith("claim-no-evidence", page({ Show: "- Saving works [](https://example.com/run/1)" }));
+});
+
+test("format: #69 and a list marker without a space are text, not structure", () => {
+  assert.deepEqual(rules(page({ Show: "-dash at the start [run](https://example.com/run/1)\n\n#69 is an issue [run](https://example.com/run/2)" })), []);
+});
