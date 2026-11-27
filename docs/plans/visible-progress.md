@@ -271,13 +271,19 @@ a `docs/development.md` without the `## Exhibit` heading; its writers read
 the rule from the `charter` skill's own `templates/docs/development.md`, as
 `docket` step 6 already does for the lessons refresh.
 
-**The format is a whitelist** (the owner's decision, 2026-11-27, after three
-re-reviews of PR #79 each found markdown structure that hid a claim from a
-hand-made parser): every line of an exhibit is one of a few shapes (a
-heading, a list line, a two-space continuation right after it, a paragraph
-line, or a fence inside `## Progress`), with no HTML comments and no tag but
-`<img>`; anything else fails. The exhibit skill writes in that format; the
-script's header comment is where the shapes are defined.
+**The format is read as GitHub renders it** (the owner's decisions,
+2026-11-27). After three re-reviews of PR #79 each found markdown structure
+that hid a claim from a hand-made parser, the owner chose a strict
+whitelist of line shapes; after two more found structure the line rules
+still let through (a table dropping its extra cells, URLs inside a
+picture's attributes), the owner chose a markdown parser instead. The check
+reads the page with `markdown-it`, the way GitHub renders it, and accepts
+only `##` headings, paragraphs, one-level lists whose items hold only text,
+and a fence inside `## Progress`; no HTML but a plain `<img>` with an https
+source. Links and pictures come from the parsed page, so text GitHub shows
+inside a picture is never evidence. The exhibit skill writes in that
+format; the script's header comment is where it is defined. Without
+`markdown-it` installed the check does not run (exit 2) rather than guess.
 
 The skill never posts a page that fails it.
 

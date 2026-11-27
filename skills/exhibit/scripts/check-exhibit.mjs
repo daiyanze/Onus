@@ -8,55 +8,38 @@
  * With it, the file is a PR description and only its `## Exhibit` section is
  * checked. Prints `exhibit ok` and exits 0, or one `<line>: <rule>: <message>`
  * per problem and exits 1. Exits 2 when it cannot run (no file, an unreadable
- * file, an unknown option). A relative picture path is read from the file's
- * folder.
+ * file, an unknown option, markdown-it not installed). A relative picture
+ * path is read from the file's folder.
  *
  * This comment is the one place that says what the check covers. Other
  * documents point here instead of repeating it. Every line under "It fails
  * when" has a test in check-exhibit.test.mjs. Record:
  * docs/plans/visible-progress.md, Design 4 and 5.
  *
- * The format. An exhibit is written by the exhibit skill, not by hand, so
- * the check accepts a short list of line shapes instead of parsing markdown:
- * whatever markdown would make of anything else, it fails. Every line is
- * one of:
- * - blank;
- * - a heading at the start of the line: `## ` and text (in `--section`,
- *   inside `## Exhibit`: `### ` and text);
- * - a list line at the start of the line: `- `, `* `, `+ ` or `1. ` and text;
- * - a continuation: exactly two spaces and text, right after a list line or
- *   another continuation, with no blank line between (so no nested lists);
- * - a paragraph line: text at the start of the line;
- * - in `## Progress` only, a fenced block (below).
- * "Text" never starts with a space or tab, `#` and a space (a heading;
- * `#69` is fine), `>`, `|`, `<`, a fence
- * (three backticks or tildes), a list marker (`-`, `*`, `+` or `1.` / `1)`
- * and a space), or a link reference definition (`[x]:`), and is never only
- * `-`, `=`, `*` or `_` characters (a setext heading or a rule). Outside
- * `code` spans, a line holds no HTML at all but a whole `<img
- * src="https://...">` tag on that line and `<https://...>` links; an HTML
- * comment fails too. A link with empty text, `[](url)`, is not evidence.
+ * The format. An exhibit is written by the exhibit skill, not by hand. The
+ * check reads it with markdown-it, as GitHub renders it (CommonMark and
+ * GFM tables), and accepts only these blocks:
+ * - an ATX heading: `## ` (in `--section`, inside `## Exhibit`: `### `);
+ * - a paragraph;
+ * - a list one level deep whose items hold only paragraphs;
+ * - in `## Progress` only, a fenced code block (the graph).
+ * Inline, the only HTML is an `<img>` whose attributes are double-quoted,
+ * among src, alt, title, width and height, with an https src. Footnotes and
+ * `$...$` (GitHub renders math) are refused too. Without markdown-it the
+ * check does not run: it exits 2 and says so.
  *
  * Words used below:
- * - a fenced code block is allowed in one place only: in `## Progress`
- *   (the graph), opening and closing at the start of a line (three or more
- *   backticks with no backtick after them, or tildes; closed by a line of the
- *   same character, at least as long, and nothing else), both inside that
- *   section. Its lines are never headings, claims or counted words. Nothing
- *   else is treated as code: rather than follow every markdown rule for
- *   where a fence ends, the check refuses fences anywhere else, so a claim
- *   cannot hide in one;
- * - text inside a `code` span or an HTML comment is not a link: GitHub does
- *   not render it as one;
- * - an item is a list line (`- `, `* `, `+ ` or `1. `) with the lines that
- *   follow it up to a blank line or the next list line; a paragraph (lines
- *   up to a blank line) that is not an item is one too;
- * - a link is `[text](target)`, `<https://...>` or an http(s) URL, also in
- *   parentheses; a picture is `![text](target)`, an HTML `<img src=...>`, or
- *   a link whose target ends in .png, .jpg, .jpeg, .gif, .webp, .svg, .mp4,
- *   .webm or .mov, or is on github.com/user-attachments/ or
+ * - a link is what GitHub renders as one: `[text](target)`, a reference
+ *   link, `<https://...>`, or a bare http(s) URL at a line's start or after
+ *   a space, `*`, `_`, `~` or `(`. Its text must hold a letter or a digit,
+ *   or a picture. Nothing inside a picture (alt text, title, attributes)
+ *   and nothing in a `code` span is a link;
+ * - a picture is `![text](target)`, an allowed `<img>`, or a link whose
+ *   target ends in .png, .jpg, .jpeg, .gif, .webp, .svg, .mp4, .webm or
+ *   .mov, or is on github.com/user-attachments/ or
  *   private-user-images.githubusercontent.com (what GitHub inserts for a
  *   pasted image);
+ * - an item is a list item, or a paragraph that is not in a list;
  * - a claim is an item of `Promised vs shown`, `Show`, `Changed since you
  *   accepted`, `Numbers` or `Not shown`; in `--section`, an item of `Show`,
  *   `Numbers` or `Not shown`, or anywhere in `## Exhibit` before its first
@@ -67,12 +50,13 @@
  *   Promised vs shown, Show, Changed since you accepted, Numbers, Track
  *   record, Progress, Not shown; or comes out of that order, or twice; or
  *   any text comes before the first `## ` heading (rule `heading`);
- * - a line that starts a code fence (three backticks or tildes, at any
- *   indentation) is not part of an allowed fence in `## Progress`, or is a
- *   fence-like line inside one other than its opening and closing lines
+ * - a fenced code block is outside `## Progress`, or inside a list item
  *   (rule `fence`);
- * - a line is none of the shapes above (rule `format`), or holds an HTML
- *   comment or a tag other than `<img>` (rule `markup`);
+ * - a block is none of those above: a quote, a table, an HTML block,
+ *   indented code, a rule, another heading level or a setext heading, a
+ *   nested list; or the page has a footnote or `$...$` (rule `format`);
+ * - inline HTML is not an allowed `<img>`, comments included (rule
+ *   `markup`);
  * - there is no `## Bottom line`, or its first non-empty line is not
  *   `<🟢 On track|🟡 At risk|🔴 Off track> · <n> decision(s) need(s) you ·
  *   <done>/<total> done · updated <YYYY-MM-DD HH:MM>`, optionally followed by
@@ -85,7 +69,7 @@
  * - a `Track record` line holds a percentage and no `<n>/<m>` count (rule
  *   `track-percent`);
  * - the page runs past 300 words, not counting `Needs you` and `Promised vs
- *   shown`, headings, links, pictures and code blocks (rule `length`).
+ *   shown`, headings, link text, pictures and code blocks (rule `length`).
  *
  * It fails when (both modes):
  * - a claim item has no link (rule `claim-no-evidence`);
@@ -101,10 +85,9 @@
  *
  * It fails when (`--section`):
  * - there is no `## Exhibit` heading (rule `section-missing`);
- * - a line in it starts a code fence, at any indentation (rule `fence`);
- * - a line in it is none of the shapes above, with `### ` headings (rule
- *   `format`), or holds an HTML comment or a tag other than `<img>` (rule
- *   `markup`);
+ * - a fenced code block is in it (rule `fence`);
+ * - a block in it is none of those above, with `### ` headings (rule
+ *   `format`), or its inline HTML is not an allowed `<img>` (rule `markup`);
  * - a `### ` heading inside it is not Show, Numbers or Not shown, or comes
  *   out of that order, or twice (rule `heading`).
  *
@@ -114,12 +97,22 @@
  * - whether a number is true, or the command produces it;
  * - whether the bottom line's counts match GitHub: progress.mjs writes them;
  * - whether a Needs you item's pick or risk is sound;
- * - an http(s) picture's existence, without the `exists` option.
+ * - an http(s) picture's existence, without the `exists` option;
+ * - links GitHub adds that markdown-it does not (`#123` references, `www.`
+ *   links): the check reads them as text, so it is stricter there, not looser.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+/** markdown-it reads the page the way GitHub renders it; without it the check cannot run. */
+let MarkdownIt = null;
+try {
+  ({ default: MarkdownIt } = await import("markdown-it"));
+} catch {
+  MarkdownIt = null;
+}
+export const PARSER_MISSING = "the markdown-it package is not installed; run `npm install` (the check needs it to read markdown as GitHub renders it)";
 
 export const PAGE_HEADINGS = [
   "Bottom line",
@@ -140,183 +133,196 @@ const MAX_CRITERION_WORDS = 8;
 
 const BOTTOM_LINE =
   /^(🟢 On track|🟡 At risk|🔴 Off track) · \d+ decisions? needs? you · \d+\/\d+ done · updated \d{4}-\d{2}-\d{2} \d{2}:\d{2}( · not pinned)?( · in flight: unknown)?$/u;
-const ITEM = /^(\s*)([-*+]|\d+\.)\s+/;
-const MD_LINK = /(!?)\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
-const IMG_TAG = /<img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)[^>]*>/gi;
-const BARE_URL = /\bhttps?:\/\/[^\s)>\]"']+/g;
 const PICTURE_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)(\?[^\s]*)?$/i;
 const PICTURE_HOST = /^https?:\/\/(github\.com\/user-attachments\/|private-user-images\.githubusercontent\.com\/)/i;
-const FENCE_OPEN = /^(`{3,}|~{3,})(.*)$/;
-
-const FENCE_LIKE = /^\s*(`{3,}|~{3,})/;
-
-/**
- * Lines of allowed fences between from and to (0-based, end exclusive): a
- * fence at the start of a line that also closes before `to`.
- */
-function allowedFences(lines, from, to) {
-  const fenced = new Array(lines.length).fill(false);
-  for (let i = from; i < to; i++) {
-    const open = lines[i].match(FENCE_OPEN);
-    if (!open || (open[1][0] === "`" && open[2].includes("`"))) continue;
-    const char = open[1][0];
-    const close = new RegExp(`^\\${char}{${open[1].length},}\\s*$`);
-    let j = i + 1;
-    while (j < to && !close.test(lines[j])) j++;
-    if (j === to) continue;
-    for (let k = i; k <= j; k++) fenced[k] = true;
-    i = j;
-  }
-  return fenced;
-}
-
-/** A `fence` problem for each fence-like line from..to that is not allowed. */
-function strayFences(lines, from, to, fenced, problems) {
-  for (let i = from; i < to; i++) {
-    const inner = fenced[i] && fenced[i - 1] && fenced[i + 1];
-    if ((!fenced[i] || inner) && FENCE_LIKE.test(lines[i])) {
-      problems.push({ line: i + 1, rule: "fence", message: "code fences are allowed only in `## Progress`, at the start of a line; put a command in a `code` span" });
-    }
-  }
-}
-
-const HIDDEN = (text) => text.replace(/<!--[\s\S]*?-->/g, " ").replace(/(`+)[\s\S]*?\1/g, " ");
-const isPicture = (target) => PICTURE_EXT.test(target) || PICTURE_HOST.test(target);
+/** The one HTML allowed: an <img> with double-quoted attributes from this list and an https src. */
+const IMG_OK = /^<img(?: (?:src|alt|title|width|height)="[^"<>]*")+ ?\/?>$/;
+const IMG_SRC = /\bsrc="(https:\/\/[^"\s<>]+)"/;
 const PERF =
   /(\d(\.\d+)?\s?(ms|µs|us|ns|s|sec|secs|seconds|min|req\/s|rps|ops\/s|qps|kb|mb|gb|kib|mib|gib)\b)|\b(faster|slower|latency|throughput)\b/i;
 const RUNS = /\b\d+\s+runs?\b|\bruns?:\s*\d+|\bn\s*=\s*\d+/i;
+const MATH = /\$[^$]*\$/;
 
-/** Links in a text: {target, picture}. */
-function links(text) {
-  const found = [];
-  const rest = HIDDEN(text)
-    .replace(IMG_TAG, (_, target) => {
-      found.push({ target, picture: true });
-      return " ";
-    })
-    .replace(MD_LINK, (_, bang, label, target) => {
-      if (bang === "!" || label.trim() !== "") found.push({ target, picture: bang === "!" || isPicture(target) });
-      return " ";
-    });
-  for (const url of rest.match(BARE_URL) ?? []) found.push({ target: url, picture: isPicture(url) });
-  return found;
-}
+const isPicture = (target) => PICTURE_EXT.test(target) || PICTURE_HOST.test(target);
+const countWords = (text) => text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+const lineOf = (token, fallback = 1) => (token.map ? token.map[0] + 1 : fallback);
 
-/** Words of a line, without links, pictures and markdown punctuation. */
-function words(line) {
-  const text = line.replace(/<!--[\s\S]*?-->/g, " ").replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
-  return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-}
-
-const LIST_LINE = /^([-*+]|\d+\.) (.*)$/;
-const CONTINUATION = /^ {2}(\S.*)$/;
-/** What text may not start with: anything markdown would turn into a structure. */
-const BAD_CONTENT = /^(\s|#{1,6}(\s|$)|[>|<]|`{3}|~{3}|[-*+](\s|$)|\d+[.)](\s|$)|\[[^\]]*\]:)/;
-const RULE_LINE = /^\s*([-=*_])(\s*\1)*\s*$/;
-const AUTOLINK = /<https?:\/\/[^\s<>]+>/gi;
-const IMG_WITH_SRC = /<img\s[^<>]*\bsrc\s*=\s*["']?https?:\/\/[^<>]*>/gi;
-const contentOk = (content) => content !== "" && !BAD_CONTENT.test(content) && !RULE_LINE.test(content);
-
-/**
- * The format: each line from..to (0-based) is one of the allowed shapes.
- * `heading` is the heading mark allowed here ("## " or "### "); fenced lines
- * are an allowed fence and are skipped.
- */
-function formatProblems(lines, from, to, heading, fenced, problems) {
-  let afterItem = false;
-  for (let i = from; i < to; i++) {
-    const text = lines[i];
-    if (fenced[i]) {
-      afterItem = false;
-      continue;
-    }
-    if (text.includes("<!--")) {
-      problems.push({ line: i + 1, rule: "markup", message: "no HTML comments in an exhibit" });
-    }
-    const outside = text.replace(/(`+)[^`]*?\1/g, " ").replace(AUTOLINK, " ").replace(IMG_WITH_SRC, " ");
-    const tag = outside.match(/<\/?[a-z][a-z0-9-]*/i);
-    if (tag) {
-      problems.push({
-        line: i + 1,
-        rule: "markup",
-        message: `no HTML but a whole <img src="https://..."> on one line, or an <https://...> link: ${tag[0]}`,
-      });
-    }
-    if (text.trim() === "") {
-      afterItem = false;
-      continue;
-    }
-    if (FENCE_LIKE.test(text)) continue; // reported as `fence`
-    let ok;
-    const item = text.match(LIST_LINE);
-    const more = text.match(CONTINUATION);
-    if (text.startsWith(heading)) {
-      ok = contentOk(text.slice(heading.length));
-      afterItem = false;
-    } else if (item) {
-      ok = contentOk(item[2]);
-      afterItem = true;
-    } else if (more) {
-      ok = afterItem && contentOk(more[1]);
-    } else {
-      ok = contentOk(text);
-      afterItem = false;
-    }
-    if (!ok) {
-      problems.push({
-        line: i + 1,
-        rule: "format",
-        message: `not an exhibit line: use a \`${heading.trim()}\` heading, a list line, a continuation of exactly two spaces right after it, or a paragraph at the line's start, none starting with markdown or HTML structure`,
-      });
-    }
-  }
+function parser() {
+  if (!MarkdownIt) throw new Error(PARSER_MISSING);
+  const md = new MarkdownIt({ html: true, linkify: true });
+  md.linkify.set({ fuzzyLink: false, fuzzyEmail: false });
+  return md;
 }
 
 /**
- * Splits lines from..to into sections by headings of one level, outside
- * fenced code. `before` holds the lines before the first such heading.
- * @returns {{before: Section, found: Section[]}} where Section is
- *   {name: string | null, line: number, body: {text: string, line: number, fenced: boolean}[]}
+ * What one inline token renders: its links and pictures, its text outside
+ * links (`plain`), all its text (`all`), whether it holds a `code` span,
+ * and its problems (HTML other than a sound <img>, math).
  */
-function sections(lines, level, from = 0, to = lines.length, isFenced = []) {
-  const mark = "#".repeat(level) + " ";
-  const out = [];
-  const before = { name: null, line: from + 1, body: [] };
-  let current = before;
-  for (let i = from; i < to; i++) {
-    const text = lines[i];
-    const fenced = Boolean(isFenced[i]);
-    if (!fenced && text.startsWith(mark)) {
-      current = { name: text.slice(mark.length).trim(), line: i + 1, body: [] };
-      out.push(current);
-    } else {
-      current.body.push({ text, line: i + 1, fenced });
-    }
+function readInline(inline) {
+  const out = { links: [], plain: "", all: "", code: false, problems: [] };
+  const line = lineOf(inline);
+  const withoutCode = inline.content.replace(/(`+)[\s\S]*?\1/g, " ");
+  if (MATH.test(withoutCode) || withoutCode.includes("$$")) {
+    out.problems.push({ line, rule: "format", message: "no `$...$`: GitHub renders it as math" });
   }
-  return { before, found: out };
-}
-
-/** Claim units of a section body: each list line, or paragraph, with the lines after it up to a blank or the next list line. */
-function items(body) {
-  const out = [];
-  let current = null;
-  for (const { text, line, fenced } of body) {
-    if (fenced || text.trim() === "") {
-      current = null;
-      continue;
+  let link = null;
+  let prev = null;
+  for (const c of inline.children ?? []) {
+    const add = (text) => {
+      out.all += text;
+      if (link) link.label += text;
+      else out.plain += text;
+    };
+    if (c.type === "link_open") {
+      // GitHub links a bare URL only at a line's start or after a space, `*`, `_`, `~` or `(`.
+      const after = /(^|[\s*_~(])$/.test(prev?.type === "text" ? prev.content : prev ? " " : "");
+      link = { target: c.attrGet("href") ?? "", label: "", image: false, dropped: c.markup === "linkify" && !after };
+    } else if (c.type === "link_close") {
+      if (link && !link.dropped && (/[\p{L}\p{N}]/u.test(link.label) || link.image)) out.links.push({ target: link.target, picture: isPicture(link.target) });
+      link = null;
+    } else if (c.type === "image") {
+      // The alt text is not rendered as text, and nothing inside it is a link.
+      out.links.push({ target: c.attrGet("src") ?? "", picture: true });
+      if (link) link.image = true;
+      out.all += " ";
+    } else if (c.type === "text") {
+      add(c.content);
+    } else if (c.type === "code_inline") {
+      out.code = true;
+      add(c.content);
+    } else if (c.type === "softbreak" || c.type === "hardbreak") {
+      add("\n");
+    } else if (c.type === "html_inline") {
+      const src = IMG_OK.test(c.content) && c.content.match(IMG_SRC);
+      if (src) {
+        out.links.push({ target: src[1], picture: true });
+        if (link) link.image = true;
+      } else {
+        out.problems.push({
+          line,
+          rule: "markup",
+          message: `no HTML but <img src="https://..."> with double-quoted src, alt, title, width or height: ${c.content.slice(0, 40)}`,
+        });
+      }
+      add(" ");
     }
-    const m = text.match(ITEM);
-    if ((m && m[1].length === 0) || !current) {
-      current = { line, text };
-      out.push(current);
-    } else {
-      current.text += "\n" + text;
-    }
+    prev = c;
   }
   return out;
 }
 
-const hasText = (body) => body.some((b) => !b.fenced && b.text.trim() !== "");
+/** Joins what several inline tokens render (an item's paragraphs). */
+function merge(reads) {
+  return {
+    links: reads.flatMap((r) => r.links),
+    plain: reads.map((r) => r.plain).join(" "),
+    all: reads.map((r) => r.all).join(" "),
+    code: reads.some((r) => r.code),
+    problems: reads.flatMap((r) => r.problems),
+  };
+}
+
+/** Index of the token that closes the one at `i`. */
+function closing(tokens, i) {
+  const t = tokens[i];
+  if (t.nesting !== 1) return i;
+  const type = t.type.replace(/_open$/, "_close");
+  let j = i + 1;
+  while (j < tokens.length && !(tokens[j].type === type && tokens[j].level === t.level)) j++;
+  return j;
+}
+
+/**
+ * The page's top-level blocks, as GitHub renders them. Only these are
+ * exhibit blocks: an ATX heading, a paragraph, a one-level list whose items
+ * hold only paragraphs, and a fenced code block. Anything else is a `bad`
+ * block with its rule.
+ * Block: {type: 'heading'|'paragraph'|'item'|'fence'|'bad', line, level?, atx?, read?, rule?, message?}
+ */
+function blocks(md, text) {
+  const env = {};
+  const tokens = md.parse(text, env);
+  const out = [];
+  const bad = (token, rule, message) => out.push({ type: "bad", line: lineOf(token), rule, message });
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.type === "heading_open") {
+      const inline = tokens[i + 1];
+      out.push({ type: "heading", line: lineOf(t), level: Number(t.tag.slice(1)), atx: t.markup.startsWith("#"), name: inline.content.trim(), read: readInline(inline) });
+      i = closing(tokens, i);
+    } else if (t.type === "paragraph_open") {
+      out.push({ type: "paragraph", line: lineOf(t), read: readInline(tokens[i + 1]) });
+      i = closing(tokens, i);
+    } else if (t.type === "bullet_list_open" || t.type === "ordered_list_open") {
+      const end = closing(tokens, i);
+      let item = null;
+      for (let j = i + 1; j < end; j++) {
+        const c = tokens[j];
+        if (c.type === "list_item_open" && c.level === t.level + 1) {
+          item = { type: "item", line: lineOf(c), reads: [] };
+          out.push(item);
+        } else if (c.level === t.level + 2 && c.nesting !== -1) {
+          if (c.type === "paragraph_open") {
+            item.reads.push(readInline(tokens[j + 1]));
+          } else {
+            bad(c, c.type === "fence" ? "fence" : "format", "a list item holds only text: no nested list, code, quote, table or HTML in it");
+          }
+          j = closing(tokens, j);
+        }
+      }
+      for (const b of out) if (b.type === "item" && b.reads) (b.read = merge(b.reads)), delete b.reads;
+      i = end;
+    } else if (t.type === "fence") {
+      out.push({ type: "fence", line: lineOf(t) });
+    } else if (t.type === "html_block") {
+      bad(t, t.content.trimStart().startsWith("<!--") ? "markup" : "format", "no HTML block: a line may not start with HTML");
+    } else if (t.type === "code_block") {
+      bad(t, "format", "no indented code: put a command in a `code` span");
+    } else {
+      bad(t, "format", `not an exhibit block (${t.type.replace(/_open$/, "")}): use a heading, a paragraph, a one-level list, or the graph's fence in Progress`);
+      i = closing(tokens, i);
+    }
+  }
+  const footnote = Object.keys(env.references ?? {}).find((k) => k.startsWith("^"));
+  if (footnote) {
+    const at = text.split("\n").findIndex((l) => /^\s{0,3}\[\^/.test(l));
+    out.push({ type: "bad", line: at + 1, rule: "format", message: "no footnotes: GitHub moves them to the page's end" });
+  }
+  return out.sort((a, b) => a.line - b.line);
+}
+
+/** Splits blocks into sections by ATX headings of `level`. */
+function sections(list, level) {
+  const before = { name: null, line: 1, body: [] };
+  const found = [];
+  let current = before;
+  for (const b of list) {
+    if (b.type === "heading" && b.atx && b.level === level) {
+      current = { name: b.name, line: b.line, body: [] };
+      found.push(current);
+    } else {
+      current.body.push(b);
+    }
+  }
+  return { before, found };
+}
+
+/** Problems of a block list's shape: bad blocks, other headings, inline problems. */
+function shapeProblems(list, level, fenceOk, problems) {
+  for (const b of list) {
+    if (b.type === "bad") problems.push({ line: b.line, rule: b.rule, message: b.message });
+    if (b.type === "heading" && !(b.atx && b.level === level)) {
+      problems.push({ line: b.line, rule: "format", message: `the only heading here is \`${"#".repeat(level)} \`` });
+    }
+    if (b.type === "fence" && !fenceOk(b)) {
+      problems.push({ line: b.line, rule: "fence", message: "code fences are allowed only in `## Progress`; put a command in a `code` span" });
+    }
+    if (b.read) problems.push(...b.read.problems);
+  }
+}
+
+const units = (body) => body.filter((b) => b.type === "item" || b.type === "paragraph");
 
 function checkHeadings(found, allowed, problems) {
   let last = -1;
@@ -340,31 +346,39 @@ function checkHeadings(found, allowed, problems) {
 function checkClaims(found, claimNames, exists, problems) {
   for (const s of found) {
     if (!claimNames.includes(s.name)) continue;
-    for (const item of items(s.body)) {
-      const ls = links(item.text);
-      if (ls.length === 0) {
-        problems.push({ line: item.line, rule: "claim-no-evidence", message: "a claim needs a link to its evidence" });
-      } else if (ls.every((l) => l.picture) && !item.text.includes("Look-only:")) {
+    for (const unit of units(s.body)) {
+      const { links, all, plain, code } = unit.read;
+      if (links.length === 0) {
+        problems.push({ line: unit.line, rule: "claim-no-evidence", message: "a claim needs a link to its evidence" });
+      } else if (links.every((l) => l.picture) && !all.includes("Look-only:")) {
         problems.push({
-          line: item.line,
+          line: unit.line,
           rule: "claim-image-only",
           message: "a picture alone proves nothing: link the state it changed, or mark the claim `Look-only:`",
         });
       }
-      for (const l of ls) {
-        if (l.picture && !/^https?:\/\//.test(l.target) && !exists(l.target)) {
-          problems.push({ line: item.line, rule: "picture-missing", message: `picture not found: ${l.target}` });
+      for (const l of links) {
+        if (l.picture && !/^https?:\/\//.test(l.target) && !exists(safeDecode(l.target))) {
+          problems.push({ line: unit.line, rule: "picture-missing", message: `picture not found: ${l.target}` });
         }
       }
-      if (s.name === "Numbers" && /\d/.test(item.text.replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " "))) {
-        if (!/`[^`]+`/.test(item.text)) {
-          problems.push({ line: item.line, rule: "number-no-command", message: "a number needs the command that produced it, in `code`" });
+      if (s.name === "Numbers" && /\d/.test(plain)) {
+        if (!code) {
+          problems.push({ line: unit.line, rule: "number-no-command", message: "a number needs the command that produced it, in `code`" });
         }
-        if (PERF.test(item.text) && !RUNS.test(item.text)) {
-          problems.push({ line: item.line, rule: "number-no-runs", message: "a performance number needs its run count (`5 runs`, `n=5`)" });
+        if (PERF.test(all) && !RUNS.test(all)) {
+          problems.push({ line: unit.line, rule: "number-no-runs", message: "a performance number needs its run count (`5 runs`, `n=5`)" });
         }
       }
     }
+  }
+}
+
+function safeDecode(target) {
+  try {
+    return decodeURI(target);
+  } catch {
+    return target;
   }
 }
 
@@ -374,45 +388,38 @@ function checkClaims(found, claimNames, exists, problems) {
  * @returns {{line: number, rule: string, message: string}[]}
  */
 export function checkExhibit(markdown, { mode = "page", exists = () => true } = {}) {
-  const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
+  const md = parser();
+  const all = blocks(md, markdown.replace(/\r\n?/g, "\n"));
   const problems = [];
 
   if (mode === "section") {
-    const exhibit = sections(lines, 2).found.find((s) => s.name === "Exhibit");
-    if (!exhibit) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
-    const end = exhibit.body.length ? exhibit.body[exhibit.body.length - 1].line : exhibit.line;
-    strayFences(lines, exhibit.line, end, [], problems);
-    formatProblems(lines, exhibit.line, end, "### ", [], problems);
-    const { before, found: sub } = sections(lines, 3, exhibit.line, end);
-    checkHeadings(sub, SECTION_HEADINGS, problems);
-    checkClaims([{ ...before, name: "Show" }, ...sub], SECTION_HEADINGS, exists, problems);
+    const start = all.findIndex((b) => b.type === "heading" && b.atx && b.level === 2 && b.name === "Exhibit");
+    if (start === -1) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
+    let end = start + 1;
+    while (end < all.length && !(all[end].type === "heading" && all[end].level <= 2)) end++;
+    const inside = all.slice(start + 1, end);
+    shapeProblems(inside, 3, () => false, problems);
+    const { before, found } = sections(inside, 3);
+    checkHeadings(found, SECTION_HEADINGS, problems);
+    checkClaims([{ ...before, name: "Show" }, ...found], SECTION_HEADINGS, exists, problems);
     return problems.sort((a, b) => a.line - b.line);
   }
 
-  // Fences are allowed only inside Progress; find its lines before splitting the page.
-  const progressAt = lines.findIndex((t) => t === "## Progress" || t === "## Progress ");
-  let fenced = [];
-  if (progressAt !== -1) {
-    let end = progressAt + 1;
-    const isPageHeading = (t) => t.startsWith("## ") && PAGE_HEADINGS.includes(t.slice(3).trim());
-    while (end < lines.length && !isPageHeading(lines[end])) end++;
-    fenced = allowedFences(lines, progressAt + 1, end);
-  }
-  strayFences(lines, 0, lines.length, fenced, problems);
-  formatProblems(lines, 0, lines.length, "## ", fenced, problems);
-  const { before, found } = sections(lines, 2, 0, lines.length, fenced);
+  const { before, found } = sections(all, 2);
+  const inProgress = new Set(found.filter((s) => s.name === "Progress").flatMap((s) => s.body));
+  shapeProblems(all, 2, (b) => inProgress.has(b), problems);
   checkHeadings(found, PAGE_HEADINGS, problems);
-  if (hasText(before.body)) {
-    const first = before.body.find((b) => !b.fenced && b.text.trim() !== "");
-    problems.push({ line: first.line, rule: "heading", message: "text before the first heading; an exhibit starts with `## Bottom line`" });
+  if (before.body.length > 0) {
+    problems.push({ line: before.body[0].line, rule: "heading", message: "text before the first heading; an exhibit starts with `## Bottom line`" });
   }
 
   const bottom = found.find((s) => s.name === "Bottom line");
   if (!bottom) {
     problems.push({ line: 1, rule: "bottom-line", message: "no `## Bottom line`" });
   } else {
-    const first = bottom.body.find((b) => !b.fenced && b.text.trim() !== "");
-    if (!first || !BOTTOM_LINE.test(first.text.trim())) {
+    const first = bottom.body[0];
+    const text = first?.type === "paragraph" ? first.read.all.split("\n")[0].trim() : "";
+    if (!BOTTOM_LINE.test(text)) {
       problems.push({
         line: first ? first.line : bottom.line,
         rule: "bottom-line",
@@ -422,28 +429,27 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   }
 
   for (const s of found.filter((s) => s.name === "Needs you")) {
-    for (const item of items(s.body)) {
-      if (!/\bpick:/i.test(item.text)) problems.push({ line: item.line, rule: "needs-you-pick", message: "a decision needs the agent's `pick:`" });
-      if (!/\brisk:/i.test(item.text)) problems.push({ line: item.line, rule: "needs-you-risk", message: "a decision needs its `risk:`, even when low" });
+    for (const unit of units(s.body)) {
+      if (!/\bpick:/i.test(unit.read.all)) problems.push({ line: unit.line, rule: "needs-you-pick", message: "a decision needs the agent's `pick:`" });
+      if (!/\brisk:/i.test(unit.read.all)) problems.push({ line: unit.line, rule: "needs-you-risk", message: "a decision needs its `risk:`, even when low" });
     }
   }
 
   for (const s of found.filter((s) => s.name === "Promised vs shown")) {
-    for (const item of items(s.body)) {
-      const first = item.text.split("\n")[0].replace(ITEM, "");
-      const m = first.match(/^#\d+ AC\d+\s+([^:]*):/);
+    for (const unit of units(s.body)) {
+      const m = unit.read.all.trimStart().split("\n")[0].match(/^#\d+ AC\d+\s+([^:]*):/);
       if (!m) {
-        problems.push({ line: item.line, rule: "promise-format", message: "expected `#<issue> AC<k> <criterion, up to eight words>: <status>`" });
-      } else if (words(m[1]) > MAX_CRITERION_WORDS) {
-        problems.push({ line: item.line, rule: "promise-long", message: `cite the criterion in at most ${MAX_CRITERION_WORDS} words` });
+        problems.push({ line: unit.line, rule: "promise-format", message: "expected `#<issue> AC<k> <criterion, up to eight words>: <status>`" });
+      } else if (countWords(m[1]) > MAX_CRITERION_WORDS) {
+        problems.push({ line: unit.line, rule: "promise-long", message: `cite the criterion in at most ${MAX_CRITERION_WORDS} words` });
       }
     }
   }
 
   for (const s of found.filter((s) => s.name === "Track record")) {
-    for (const b of s.body) {
-      if (/\d(\.\d+)?\s?%/.test(b.text) && !/\d+\s*\/\s*\d+/.test(b.text)) {
-        problems.push({ line: b.line, rule: "track-percent", message: "give counts (`3/4`), never a bare percentage" });
+    for (const unit of units(s.body)) {
+      if (/\d(\.\d+)?\s?%/.test(unit.read.all) && !/\d+\s*\/\s*\d+/.test(unit.read.all)) {
+        problems.push({ line: unit.line, rule: "track-percent", message: "give counts (`3/4`), never a bare percentage" });
       }
     }
   }
@@ -453,7 +459,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   let count = 0;
   for (const s of found) {
     if (LENGTH_EXEMPT.includes(s.name)) continue;
-    for (const b of s.body) if (!b.fenced) count += words(b.text);
+    for (const unit of units(s.body)) count += countWords(unit.read.plain);
   }
   if (count > MAX_WORDS) {
     problems.push({ line: 1, rule: "length", message: `${count} words outside Needs you and Promised vs shown; at most ${MAX_WORDS}` });

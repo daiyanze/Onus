@@ -6,9 +6,13 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test as nodeTest } from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkExhibit } from "./check-exhibit.mjs";
+import { checkExhibit, PARSER_MISSING } from "./check-exhibit.mjs";
+
+// The check reads markdown with markdown-it; without it only the exit-2 test runs.
+const hasParser = await import("markdown-it").then(() => true, () => false);
+const test = hasParser ? nodeTest : (name, fn) => nodeTest.skip(name, fn);
 
 const script = fileURLToPath(new URL("./check-exhibit.mjs", import.meta.url));
 const planFile = fileURLToPath(new URL("../../../docs/plans/visible-progress.yaml", import.meta.url));
@@ -252,20 +256,6 @@ const P1 = "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you 
 const P2 = "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n    ```\n\n- Deleting works ![s](https://example.com/s.png)\n\n- Listing works [run](https://example.com/run/2)\n  ```\n  out https://example.com/run/2\n  ```\n\n## Progress\n\nA graph: ![g](https://example.com/g.png)\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n";
 const S2 = "Closes #1\n\n## Exhibit\n\n### Show\n\n- Saving works [run](https://example.com/run/1)\n  ```\n  GET /x\n\n- Deleting works ![s](https://example.com/s.png)\n\n- Listing works\n  ```\n  out https://example.com/run/2\n  ```\n\n## Scope\n\nx\n";
 
-test("fence: a fence anywhere but Progress fails, whatever markdown would make of it", () => {
-  // Inputs from the re-reviews of PR #79, where a hand-made fence rule let a claim hide.
-  for (const show of [
-    `${F}v2${F} is live, see below\n\n- Saving works ![s](https://example.com/s.png)`,
-    `${F}\n~~~\n- Saving works ![s](https://example.com/s.png)`,
-    `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)`,
-  ]) {
-    const found = rules(page({ Show: show }));
-    assert.ok(found.includes("fence") && found.includes("claim-image-only"), JSON.stringify(found));
-  }
-  for (const text of [P1, P2]) assert.ok(rules(text).includes("fence"), JSON.stringify(checkExhibit(text)));
-  const once = checkExhibit(page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n\n${F}\nGET /x\n${F}` }));
-  assert.ok(once.some((p) => p.rule === "fence"), JSON.stringify(once)); // its lines are checked as text too
-});
 
 test("fence: in --section, any fence in the Exhibit fails; fences elsewhere in the PR do not", () => {
   assert.ok(rules(S2, { mode: "section" }).includes("fence"), JSON.stringify(checkExhibit(S2, { mode: "section" })));
@@ -274,16 +264,6 @@ test("fence: in --section, any fence in the Exhibit fails; fences elsewhere in t
   assert.deepEqual(rules(`## Why\n\n${F}\nfine outside the Exhibit\n${F}\n\n## Exhibit\n\n### Show\n\n- Saving stores it [run](https://example.com/run/1)\n`, { mode: "section" }), []);
 });
 
-test("fence: Progress's own fence opens at the line start, closes properly, inside Progress", () => {
-  assert.deepEqual(rules(page({ Progress: `${F}text\n- not a claim, no link\n## not a heading\n${F}` })), []);
-  assert.ok(rules(page({ Progress: `  ${F}mermaid\ngraph LR\n  ${F}` })).includes("fence"));
-  // A backtick in the info string: not an opener, so the fence never opens.
-  assert.ok(rules(page({ Progress: `${F}a${F}\ngraph LR\n${F}` })).includes("fence"));
-  // A shorter line does not close a longer fence.
-  assert.ok(rules(page({ Progress: `${F}\`\ngraph LR\n${F}` })).includes("fence"));
-  // A fence opened in Progress that closes only after the next page heading.
-  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR`, "Not shown": `- Backoff [CI](https://example.com/ci)\n${F}` })).includes("fence"));
-});
 
 test("claim-no-evidence: a URL in a code span or an HTML comment is not a link", () => {
   failsWith("claim-no-evidence", page({ Show: "- Saving stores the draft: `curl -s http://localhost:3000/api/drafts/9` returns it" }));
@@ -301,8 +281,7 @@ test("pictures: titles in single quotes or parentheses, and <url> targets", () =
   failsWith("claim-image-only", page({ Show: "- Deleting works [shot](<https://example.com/s.png>)" }));
 });
 
-// The strict format (owner's choice after the re-reviews of PR #79): inputs from those reviews,
-// each of which the earlier versions let through, now fail.
+// Inputs from the re-reviews of PR #79, each of which an earlier, line-based version let through.
 
 const probes79d = {"A": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!--\n ## Progress\n--> <span title=\"https://example.com/run/1\"></span>\n\n```\n  ```\n- Deleting works ![s](https://example.com/s.png)\n```\n```\n  ```\n```\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "B": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!-- [x](https://example.com/run/1)\n## Track record\n-->\n\n- Deleting works ![s](https://example.com/s.png)\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "C": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n## Progress\n\nA graph: ![g](https://example.com/g.png)\n\n ## Not shown\n\n- Deleting works ![s](https://example.com/s.png)\n", "D": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Deleting works ![s](https://example.com/s.png) <span title=\"https://example.com/run/1\"></span>\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "L": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n## Progress\n\n```\n  ```\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word\n```\n```\n  ```\n```\n"};
 const probes79dSection = {"E2": "Closes #1\n\n## Exhibit\n\n### Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!-- [x](https://example.com/run/1)\n## Scope\n-->\n\n- Deleting works ![s](https://example.com/s.png)\n\n## Scope\n\nx\n"};
@@ -316,17 +295,7 @@ test("format: the re-review probes fail", () => {
   }
 });
 
-test("format: a line with leading spaces that is not a continuation", () => {
-  assert.ok(rules(page({ Show: "- Saving stores it [run](https://example.com/run/1)\n\n ## Not shown" })).includes("format"));
-  assert.ok(rules(page({ Show: "   - Saving stores it [run](https://example.com/run/1)" })).includes("format"));
-  assert.ok(rules(page({ Show: "- Saving stores it [run](https://example.com/run/1)\n\n    indented code" })).includes("format"));
-});
 
-test("format: block quotes, tables, other headings, rules and setext underlines", () => {
-  for (const bad of ["> Saving stores it [run](https://example.com/run/1)", "| a | b |", "### Saving", "Saving stores it [run](https://example.com/run/1)\n---", "***"]) {
-    assert.ok(rules(page({ Show: bad })).includes("format"), bad);
-  }
-});
 
 test("format: two-space continuations right after a list line pass", () => {
   assert.deepEqual(rules(page({ Show: "- Saving stores it\n  `GET /api/drafts/9` returns it ([run](https://example.com/run/1))\n  ![s](https://example.com/s.png)" })), []);
@@ -339,46 +308,102 @@ test("markup: HTML comments and tags other than <img>", () => {
   assert.deepEqual(rules(page({ Show: "- Saving stores it, `GET /x<k>` ([run](https://example.com/run/1))" })), []);
 });
 
-test("fence: inside Progress's fence, a fence-like line other than its ends fails", () => {
-  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR\n   ${F}\n${F}` })).includes("fence"));
-  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR\n  ~~~\n${F}` })).includes("fence"));
+
+
+
+
+
+
+
+test("format: #69 and a list marker without a space are text, not structure", () => {
+  assert.deepEqual(rules(page({ Show: "-dash at the start [run](https://example.com/run/1)\n\n#69 is an issue [run](https://example.com/run/2)" })), []);
 });
 
-test("format: in --section, the same shapes with ### headings", () => {
-  assert.ok(rules(pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)\n\n ### Not shown"), { mode: "section" }).includes("format"));
-  assert.ok(rules(pr("### Show\n\n- Saving works [run](https://example.com/run/1) <!-- x -->"), { mode: "section" }).includes("markup"));
-});
-
-// Found in the review of the whitelist (PR #79, round 5): shapes the first whitelist allowed
-// that markdown still turned into structure.
+// Since the review of the whitelist (PR #79, round 6) the check reads the page with a markdown
+// parser, as GitHub renders it, and accepts only headings, paragraphs, one-level lists and
+// Progress's fence. Each probe below is from a review; `failsOn` asserts the rule is among those found.
 
 const failsOn = (rule, text, opts) => assert.ok(rules(text, opts).includes(rule), `${rule} missing for ${JSON.stringify(text)}: ${JSON.stringify(checkExhibit(text, opts))}`);
+const IMG = "![s](https://example.com/s.png)";
 
-test("format: no nested list, fence or indented code inside an item", () => {
-  failsOn("format", page({ Show: `- Saving works ![s](https://example.com/s.png)\n  - ${F}\n    [run](https://example.com/run/1)` }));
-  failsOn("format", page({ Show: "- Saving works ![s](https://example.com/s.png)\n  -     [run](https://example.com/run/1)" }));
-  failsOn("format", page({ Show: "- Saving works [run](https://example.com/run/1)\n  - Deleting works ![s](https://example.com/s.png)" }));
+test("fence: a fence outside Progress fails, in an item too", () => {
+  failsOn("fence", page({ Show: `${F}\n~~~\n- Saving works ${IMG}` }));
+  failsOn("fence", page({ Show: `- Saving works ${IMG}\n\n${F}\n[run](https://example.com/run/1)\n${F}` }));
+  failsOn("fence", page({ Show: `- Saving works ${IMG}\n  ${F}\n  [run](https://example.com/run/1)\n  ${F}` }));
+  for (const text of [P1, P2]) failsOn("fence", text);
+});
+
+test("fence: inside Progress's fence nothing is a heading or a claim", () => {
+  assert.deepEqual(rules(page({ Progress: `${F}text\n- not a claim, no link\n## not a heading\n   ${F} not a close\n${F}` })), []);
+});
+
+test("format: a quote, a table, an HTML block, a rule, indented code, other headings", () => {
+  for (const bad of [
+    "> Saving stores it [run](https://example.com/run/1)",
+    `Deleting works ${IMG} | x\n--- | ---\ny | z | [run](https://example.com/run/1)`, // the extra cell is dropped
+    '<img src="https://example.com/s.png" alt="s">\n[run](https://example.com/run/1)', // an HTML block: the link is not rendered
+    "- Saving stores it [run](https://example.com/run/1)\n\n***",
+    "Saving stores it [run](https://example.com/run/1)\n\n    indented code",
+    "- Saving stores it [run](https://example.com/run/1)\n\n        indented code, in the item",
+    "### Saving",
+    "Saving stores it [run](https://example.com/run/1)\n---",
+  ]) {
+    failsOn("format", page({ Show: bad }));
+  }
+  failsOn("format", pr(`### Show\n\nDeleting works ${IMG} | x\n--- | ---\ny | z | [run](https://example.com/run/1)`), { mode: "section" });
+});
+
+test("format: an item holds only text: no nested list, code or HTML block in it", () => {
+  failsOn("format", page({ Show: `- Saving works ${IMG}\n  - [run](https://example.com/run/1)` }));
   failsOn("format", page({ Show: "-     [run](https://example.com/run/1) saving works" }));
-  failsOn("format", page({ Show: "- Saving works [run](https://example.com/run/1)\n    four spaces" }));
+  failsOn("format", page({ Show: `- Saving works ${IMG}\n\n  <div>\n  [run](https://example.com/run/1)\n  </div>` }));
 });
 
-test("format and markup: an <img> at a line's start opens an HTML block", () => {
-  const block = '<img src="https://example.com/s.png" alt="s">\n[run](https://example.com/run/1)';
-  failsOn("format", page({ Show: block }));
-  failsOn("format", page({ Show: `- Saving works\n  ${block.replace("\n", "\n  ")}` }));
-  failsOn("format", pr(`### Show\n\n${block}`), { mode: "section" });
+test("format: footnotes and math", () => {
+  failsOn("format", page({ Show: `- Saving works ${IMG} [^1]\n\n[^1]: https://example.com/run/1` }));
+  failsOn("format", page({ Show: `- Saving works ${IMG} $[run](https://example.com/run/1)$` }));
 });
 
-test("markup: a tag split over lines, or an <img> without an https src", () => {
+test("links: a URL inside a picture's alt text, title or tag is not evidence", () => {
+  failsWith("claim-image-only", page({ Show: "- Deleting works ![a \\] [run](https://example.com/run/1)](https://example.com/s.png)" }));
+  failsWith("claim-image-only", page({ Show: '- Deleting works ![s](https://example.com/s.png "a \\" https://example.com/run/1")' }));
+  failsOn("markup", page({ Show: '- Deleting works <img src="https://example.com/s.png" alt="a>b https://example.com/run/1">' }));
+});
+
+test("links: a bare URL counts only where GitHub links it", () => {
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} x=https://example.com/run/1` }));
+  assert.deepEqual(rules(page({ Show: "- Saving works (https://example.com/run/1)" })), []);
+});
+
+test("markup: an <img> needs an https src and double-quoted known attributes", () => {
+  failsOn("markup", page({ Show: '- Look-only: the header <img src="h.png">' }));
+  failsOn("markup", page({ Show: '- Look-only: the header <img src="http://example.com/h.png">' }));
+  failsOn("markup", page({ Show: "- Look-only: the header <img src='https://example.com/h.png'>" }));
+  failsOn("markup", page({ Show: '- Look-only: the header <img src="https://example.com/h.png" onerror="x">' }));
   failsOn("markup", page({ Show: '- Saving works <span\n  title="https://example.com/run/1">here</span>' }));
   failsOn("markup", page({ Show: '- Saving works <img title="https://example.com/run/1">' }));
 });
 
-test("format: a link reference definition; claim-no-evidence: a link with empty text", () => {
-  failsOn("format", page({ Show: "- Saving works [run][1]\n\n[1]: https://example.com/run/1" }));
+test("claim-no-evidence: a link with no visible text", () => {
   failsWith("claim-no-evidence", page({ Show: "- Saving works [](https://example.com/run/1)" }));
+  failsWith("claim-no-evidence", page({ Show: "- Saving works [\u200b](https://example.com/run/1)" }));
+  failsWith("claim-no-evidence", page({ Show: "- Saving works [&nbsp;](https://example.com/run/1)" }));
 });
 
-test("format: #69 and a list marker without a space are text, not structure", () => {
-  assert.deepEqual(rules(page({ Show: "-dash at the start [run](https://example.com/run/1)\n\n#69 is an issue [run](https://example.com/run/2)" })), []);
+test("what GitHub renders as plain text or a plain link passes", () => {
+  for (const show of [
+    "- Saving works [run][1]\n\n[1]: https://example.com/run/1", // a reference link is a link
+    "- Saving works [run](https://example.com/run/1)\n    four spaces, lazily part of the item",
+    '- Saving works\n  <img src="https://example.com/s.png" alt="s">\n  [run](https://example.com/run/1)', // inside a paragraph, not an HTML block
+    "| a | b | [run](https://example.com/run/1)", // no delimiter row: not a table
+    "-dash at the start [run](https://example.com/run/1)\n\n#69 is an issue [run](https://example.com/run/2)",
+  ]) {
+    assert.deepEqual(rules(page({ Show: show })), [], show);
+  }
+});
+
+nodeTest("command line: without markdown-it it exits 2 and says so", { skip: hasParser && "markdown-it is installed" }, () => {
+  const run = cli(page());
+  assert.equal(run.status, 2, run.stdout + run.stderr);
+  assert.ok(run.stderr.includes(PARSER_MISSING), run.stderr);
 });

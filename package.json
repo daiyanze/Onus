@@ -13,6 +13,7 @@
     "plugin": "rm -f onus.plugin && zip -rq onus.plugin .claude-plugin/plugin.json skills README.md README.zh-CN.md VALIDATION.md -x '*.DS_Store'"
   },
   "devDependencies": {
+    "markdown-it": "^14.0.0",
     "yaml": "^2.0.0"
   }
 }
