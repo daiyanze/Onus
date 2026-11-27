@@ -203,3 +203,44 @@ test("command line: exit 2 when it cannot run", () => {
   assert.equal(spawnSync(process.execPath, [script, "--bogus", "x.md"], { encoding: "utf8" }).status, 2);
   assert.equal(spawnSync(process.execPath, [script, "/nonexistent/exhibit.md"], { encoding: "utf8" }).status, 2);
 });
+
+// Found in review of PR #79: each of these got past the first version.
+
+test("claim-no-evidence: a prose claim or a `+ ` item is a claim too", () => {
+  failsWith("claim-no-evidence", page({ Show: "Saving a draft works now." }));
+  failsWith("claim-no-evidence", page({ Show: "+ Saving a draft works now" }));
+});
+
+test("claim-image-only: GitHub's pasted images, and a markdown image with no extension", () => {
+  const tag = '<img width="600" alt="saved" src="https://github.com/user-attachments/assets/0b1c2d3e-aaaa-bbbb-cccc-1234567890ab" />';
+  failsWith("claim-image-only", page({ Show: `- Saving a draft works ${tag}` }));
+  failsWith("claim-image-only", page({ Show: "- Saving a draft works https://github.com/user-attachments/assets/0b1c2d3e-aaaa-bbbb-cccc-1234567890ab" }));
+  failsWith("claim-image-only", page({ Show: "- Saving a draft works ![saved](https://example.com/shots/saved)" }));
+});
+
+test("links: an autolink and a URL in parentheses count as evidence", () => {
+  assert.deepEqual(rules(page({ Show: "- Saving stores it, `GET /api/drafts/9` <https://example.com/run/3>" })), []);
+  assert.deepEqual(rules(page({ Show: "- Saving stores it, `GET /api/drafts/9` (https://example.com/run/3)" })), []);
+});
+
+test("heading: text before the first heading", () => {
+  failsWith("heading", "Some preamble the length rule would not count.\n\n" + page());
+});
+
+test("heading: a `## ` line inside a code fence is not a heading", () => {
+  assert.deepEqual(rules(page({ Progress: "```text\n## not a heading\n```" })), []);
+});
+
+test("length: code blocks (the Mermaid graph) are not counted", () => {
+  const graph = "```mermaid\ngraph LR\n" + Array.from({ length: 200 }, (_, i) => `  n${i}["issue ${i} exhibit progress"] --> n${i + 1}`).join("\n") + "\n```";
+  assert.deepEqual(rules(page({ Progress: graph })), []);
+});
+
+test("length: Promised vs shown is not counted", () => {
+  const many = Array.from({ length: 60 }, (_, i) => `- #${100 + i} AC1 the graph renders on GitHub: met (kind not judged) · [review](https://example.com/${i})`).join("\n");
+  assert.deepEqual(rules(page({ "Promised vs shown": many })), []);
+});
+
+test("--section: text before the first `###` is checked as a claim", () => {
+  failsWith("claim-image-only", pr("Saving works ![s](https://example.com/s.png)\n\n### Not shown\n\n- Backoff is internal ([CI](https://example.com/ci))"), { mode: "section" });
+});

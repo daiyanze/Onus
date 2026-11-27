@@ -17,20 +17,27 @@
  * docs/plans/visible-progress.md, Design 4 and 5.
  *
  * Words used below:
- * - an item is a list line (`- `, `* ` or `1. `) with the indented lines
- *   that follow it;
- * - a link is `[text](target)` or a bare http(s) URL; a picture is
- *   `![text](target)`, or a link whose target ends in .png, .jpg, .jpeg,
- *   .gif, .webp, .svg, .mp4, .webm or .mov;
- * - claim sections are `Promised vs shown`, `Show`, `Changed since you
- *   accepted`, `Numbers` and `Not shown` (in `--section`: `Show`, `Numbers`,
- *   `Not shown`).
+ * - lines inside a fenced code block (``` or ~~~) are never headings, claims
+ *   or counted words;
+ * - an item is a list line (`- `, `* `, `+ ` or `1. `) with the lines that
+ *   follow it up to a blank line or the next list line; a paragraph (lines
+ *   up to a blank line) that is not an item is one too;
+ * - a link is `[text](target)`, `<https://...>` or an http(s) URL, also in
+ *   parentheses; a picture is `![text](target)`, an HTML `<img src=...>`, or
+ *   a link whose target ends in .png, .jpg, .jpeg, .gif, .webp, .svg, .mp4,
+ *   .webm or .mov, or is on github.com/user-attachments/ or
+ *   private-user-images.githubusercontent.com (what GitHub inserts for a
+ *   pasted image);
+ * - a claim is an item of `Promised vs shown`, `Show`, `Changed since you
+ *   accepted`, `Numbers` or `Not shown`; in `--section`, an item of `Show`,
+ *   `Numbers` or `Not shown`, or anywhere in `## Exhibit` before its first
+ *   `### ` heading.
  *
  * It fails when (whole exhibit):
  * - a `## ` heading is not one of, in this order: Bottom line, Needs you,
  *   Promised vs shown, Show, Changed since you accepted, Numbers, Track
- *   record, Progress, Not shown; or comes out of that order, or twice
- *   (rule `heading`);
+ *   record, Progress, Not shown; or comes out of that order, or twice; or
+ *   any text comes before the first `## ` heading (rule `heading`);
  * - there is no `## Bottom line`, or its first non-empty line is not
  *   `<🟢 On track|🟡 At risk|🔴 Off track> · <n> decision(s) need(s) you ·
  *   <done>/<total> done · updated <YYYY-MM-DD HH:MM>`, optionally followed by
@@ -43,7 +50,7 @@
  * - a `Track record` line holds a percentage and no `<n>/<m>` count (rule
  *   `track-percent`);
  * - the page runs past 300 words, not counting `Needs you` and `Promised vs
- *   shown`, headings, links and pictures (rule `length`).
+ *   shown`, headings, links, pictures and code blocks (rule `length`).
  *
  * It fails when (both modes):
  * - a claim item has no link (rule `claim-no-evidence`);
@@ -94,10 +101,14 @@ const MAX_CRITERION_WORDS = 8;
 
 const BOTTOM_LINE =
   /^(🟢 On track|🟡 At risk|🔴 Off track) · \d+ decisions? needs? you · \d+\/\d+ done · updated \d{4}-\d{2}-\d{2} \d{2}:\d{2}( · not pinned)?( · in flight: unknown)?$/u;
-const ITEM = /^(\s*)([-*]|\d+\.)\s+/;
+const ITEM = /^(\s*)([-*+]|\d+\.)\s+/;
 const MD_LINK = /(!?)\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
-const BARE_URL = /(?<![(<])\bhttps?:\/\/[^\s)>\]]+/g;
+const IMG_TAG = /<img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)[^>]*>/gi;
+const BARE_URL = /\bhttps?:\/\/[^\s)>\]"']+/g;
 const PICTURE_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)(\?[^\s]*)?$/i;
+const PICTURE_HOST = /^https?:\/\/(github\.com\/user-attachments\/|private-user-images\.githubusercontent\.com\/)/i;
+const FENCE = /^\s*(```|~~~)/;
+const isPicture = (target) => PICTURE_EXT.test(target) || PICTURE_HOST.test(target);
 const PERF =
   /(\d(\.\d+)?\s?(ms|µs|us|ns|s|sec|secs|seconds|min|req\/s|rps|ops\/s|qps|kb|mb|gb|kib|mib|gib)\b)|\b(faster|slower|latency|throughput)\b/i;
 const RUNS = /\b\d+\s+runs?\b|\bruns?:\s*\d+|\bn\s*=\s*\d+/i;
@@ -105,17 +116,22 @@ const RUNS = /\b\d+\s+runs?\b|\bruns?:\s*\d+|\bn\s*=\s*\d+/i;
 /** Links in a text: {target, picture}. */
 function links(text) {
   const found = [];
-  const withoutMd = text.replace(MD_LINK, (_, bang, _label, target) => {
-    found.push({ target, picture: bang === "!" || PICTURE_EXT.test(target) });
-    return " ";
-  });
-  for (const url of withoutMd.match(BARE_URL) ?? []) found.push({ target: url, picture: PICTURE_EXT.test(url) });
+  const rest = text
+    .replace(IMG_TAG, (_, target) => {
+      found.push({ target, picture: true });
+      return " ";
+    })
+    .replace(MD_LINK, (_, bang, _label, target) => {
+      found.push({ target, picture: bang === "!" || isPicture(target) });
+      return " ";
+    });
+  for (const url of rest.match(BARE_URL) ?? []) found.push({ target: url, picture: isPicture(url) });
   return found;
 }
 
 /** Words of a line, without links, pictures and markdown punctuation. */
 function words(line) {
-  const text = line.replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
+  const text = line.replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
@@ -126,36 +142,47 @@ function words(line) {
 function sections(lines, level, from = 0, to = lines.length) {
   const mark = "#".repeat(level) + " ";
   const out = [];
-  let current = null;
+  const before = { name: null, line: from + 1, body: [] };
+  let current = before;
+  let fenced = false;
   for (let i = from; i < to; i++) {
     const text = lines[i];
-    if (text.startsWith(mark)) {
+    if (FENCE.test(text)) {
+      current.body.push({ text, line: i + 1, fenced: true });
+      fenced = !fenced;
+      continue;
+    }
+    if (!fenced && text.startsWith(mark)) {
       current = { name: text.slice(mark.length).trim(), line: i + 1, body: [] };
       out.push(current);
-    } else if (current) {
-      current.body.push({ text, line: i + 1 });
+    } else {
+      current.body.push({ text, line: i + 1, fenced });
     }
   }
-  return out;
+  return { before, found: out };
 }
 
 /** Items of a section body: each list line with the indented lines after it. */
 function items(body) {
   const out = [];
   let current = null;
-  for (const { text, line } of body) {
+  for (const { text, line, fenced } of body) {
+    if (fenced || text.trim() === "") {
+      current = null;
+      continue;
+    }
     const m = text.match(ITEM);
-    if (m && m[1].length === 0) {
+    if ((m && m[1].length === 0) || !current) {
       current = { line, text };
       out.push(current);
-    } else if (current && text.trim() !== "" && /^\s+/.test(text)) {
+    } else {
       current.text += "\n" + text;
-    } else if (text.trim() === "") {
-      current = null;
     }
   }
   return out;
 }
+
+const hasText = (body) => body.some((b) => !b.fenced && b.text.trim() !== "");
 
 function checkHeadings(found, allowed, problems) {
   let last = -1;
@@ -195,7 +222,7 @@ function checkClaims(found, claimNames, exists, problems) {
           problems.push({ line: item.line, rule: "picture-missing", message: `picture not found: ${l.target}` });
         }
       }
-      if (s.name === "Numbers" && /\d/.test(item.text.replace(MD_LINK, " ").replace(BARE_URL, " "))) {
+      if (s.name === "Numbers" && /\d/.test(item.text.replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " "))) {
         if (!/`[^`]+`/.test(item.text)) {
           problems.push({ line: item.line, rule: "number-no-command", message: "a number needs the command that produced it, in `code`" });
         }
@@ -217,23 +244,27 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   const problems = [];
 
   if (mode === "section") {
-    const exhibit = sections(lines, 2).find((s) => s.name === "Exhibit");
+    const exhibit = sections(lines, 2).found.find((s) => s.name === "Exhibit");
     if (!exhibit) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
     const end = exhibit.body.length ? exhibit.body[exhibit.body.length - 1].line : exhibit.line;
-    const sub = sections(lines, 3, exhibit.line, end);
+    const { before, found: sub } = sections(lines, 3, exhibit.line, end);
     checkHeadings(sub, SECTION_HEADINGS, problems);
-    checkClaims(sub, SECTION_HEADINGS, exists, problems);
+    checkClaims([{ ...before, name: "Show" }, ...sub], SECTION_HEADINGS, exists, problems);
     return problems.sort((a, b) => a.line - b.line);
   }
 
-  const found = sections(lines, 2);
+  const { before, found } = sections(lines, 2);
   checkHeadings(found, PAGE_HEADINGS, problems);
+  if (hasText(before.body)) {
+    const first = before.body.find((b) => !b.fenced && b.text.trim() !== "");
+    problems.push({ line: first.line, rule: "heading", message: "text before the first heading; an exhibit starts with `## Bottom line`" });
+  }
 
   const bottom = found.find((s) => s.name === "Bottom line");
   if (!bottom) {
     problems.push({ line: 1, rule: "bottom-line", message: "no `## Bottom line`" });
   } else {
-    const first = bottom.body.find((b) => b.text.trim() !== "");
+    const first = bottom.body.find((b) => !b.fenced && b.text.trim() !== "");
     if (!first || !BOTTOM_LINE.test(first.text.trim())) {
       problems.push({
         line: first ? first.line : bottom.line,
@@ -275,7 +306,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   let count = 0;
   for (const s of found) {
     if (LENGTH_EXEMPT.includes(s.name)) continue;
-    for (const b of s.body) count += words(b.text);
+    for (const b of s.body) if (!b.fenced) count += words(b.text);
   }
   if (count > MAX_WORDS) {
     problems.push({ line: 1, rule: "length", message: `${count} words outside Needs you and Promised vs shown; at most ${MAX_WORDS}` });
