@@ -410,3 +410,23 @@ nodeTest("command line: without markdown-it it exits 2 and says so", { skip: has
   assert.equal(run.status, 2, run.stdout + run.stderr);
   assert.ok(run.stderr.includes(PARSER_MISSING), run.stderr);
 });
+
+// Round 7 of PR #79.
+test("links: a bare URL right after a picture or a link, or without a dotted domain, is not evidence", () => {
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG}https://example.com/run/1` }));
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} [s2](https://example.com/s2.png)https://example.com/run/1` }));
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} \`x\`https://example.com/run/1` }));
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} http://localhost:3000/api/drafts/9` }));
+  assert.deepEqual(rules(page({ Show: `- Deleting works ${IMG}\n  https://example.com/run/1` })), []);
+});
+
+test("links: blank link text, or a tiny picture as a link's only content, is not visible", () => {
+  failsWith("claim-no-evidence", page({ Show: "- Saving works [ㅤ](https://example.com/run/1)" }));
+  failsWith("claim-no-evidence", page({ Show: "- Saving works [ﾠ](https://example.com/run/1)" }));
+  failsOn("markup", page({ Show: '- Saving works [<img src="https://example.com/s.png" width="0">](https://example.com/run/1)' }));
+  assert.deepEqual(rules(page({ Show: '- Look-only: the header <img src="https://example.com/h.png" width="320">' })), []);
+});
+
+test("heading: in --section, `## Exhibit` twice", () => {
+  failsOn("heading", `${pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)")}\n## Exhibit\n\n- Deleting works ${IMG}\n`, { mode: "section" });
+});

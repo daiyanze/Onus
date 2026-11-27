@@ -24,15 +24,17 @@
  * - a list one level deep whose items hold only paragraphs;
  * - in `## Progress` only, a fenced code block (the graph).
  * Inline, the only HTML is an `<img>` whose attributes are double-quoted,
- * among src, alt, title, width and height, with an https src. Footnotes and
+ * among src, alt, title, width and height, with an https src and a width
+ * and height, if given, of at least 16. Footnotes and
  * `$...$` (GitHub renders math) are refused too. Without markdown-it the
  * check does not run: it exits 2 and says so.
  *
  * Words used below:
  * - a link is what GitHub renders as one: `[text](target)`, a reference
- *   link, `<https://...>`, or a bare http(s) URL at a line's start or after
- *   a space, `*`, `_`, `~` or `(`. Its text must hold a letter or a digit,
- *   or a picture. Nothing inside a picture (alt text, title, attributes)
+ *   link, `<https://...>`, or a bare http(s) URL with a period in its
+ *   domain, at a line's start or right after a space, `*`, `_`, `~` or `(`
+ *   (not after a picture or a link). Its text must hold a letter or a digit
+ *   that is not a blank filler, or a picture. Nothing inside a picture (alt text, title, attributes)
  *   and nothing in a `code` span is a link;
  * - a picture is `![text](target)`, an allowed `<img>`, or a link whose
  *   target ends in .png, .jpg, .jpeg, .gif, .webp, .svg, .mp4, .webm or
@@ -88,6 +90,7 @@
  * - a fenced code block is in it (rule `fence`);
  * - a block in it is none of those above, with `### ` headings (rule
  *   `format`), or its inline HTML is not an allowed `<img>` (rule `markup`);
+ * - `## Exhibit` appears twice (rule `heading`);
  * - a `### ` heading inside it is not Show, Numbers or Not shown, or comes
  *   out of that order, or twice (rule `heading`).
  *
@@ -130,6 +133,8 @@ const PAGE_CLAIMS = ["Promised vs shown", "Show", "Changed since you accepted", 
 const LENGTH_EXEMPT = ["Needs you", "Promised vs shown"];
 const MAX_WORDS = 300;
 const MAX_CRITERION_WORDS = 8;
+/** An <img> width or height below this is too small to see. */
+const MIN_SIZE = 16;
 
 const BOTTOM_LINE =
   /^(🟢 On track|🟡 At risk|🔴 Off track) · \d+ decisions? needs? you · \d+\/\d+ done · updated \d{4}-\d{2}-\d{2} \d{2}:\d{2}( · not pinned)?( · in flight: unknown)?$/u;
@@ -143,6 +148,15 @@ const PERF =
 const RUNS = /\b\d+\s+runs?\b|\bruns?:\s*\d+|\bn\s*=\s*\d+/i;
 const MATH = /\$[^$]*\$/;
 
+/** Text that renders as something: a letter or digit that is not a blank filler (Hangul fillers, the braille blank). */
+const visible = (text) => /[\p{L}\p{N}]/u.test(text.replace(/[\u115F\u1160\u3164\uFFA0\u2800]/g, ""));
+const hasDomain = (url) => {
+  try {
+    return new URL(url).hostname.includes(".");
+  } catch {
+    return false;
+  }
+};
 const isPicture = (target) => PICTURE_EXT.test(target) || PICTURE_HOST.test(target);
 const countWords = (text) => text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 const lineOf = (token, fallback = 1) => (token.map ? token.map[0] + 1 : fallback);
@@ -176,10 +190,12 @@ function readInline(inline) {
     };
     if (c.type === "link_open") {
       // GitHub links a bare URL only at a line's start or after a space, `*`, `_`, `~` or `(`.
-      const after = /(^|[\s*_~(])$/.test(prev?.type === "text" ? prev.content : prev ? " " : "");
-      link = { target: c.attrGet("href") ?? "", label: "", image: false, dropped: c.markup === "linkify" && !after };
+      // GFM also wants a domain with a period: `http://localhost:3000` is text.
+      const before = !prev || prev.type === "softbreak" || prev.type === "hardbreak" || (prev.type === "text" && /(^|[\s*_~(])$/.test(prev.content));
+      const target = c.attrGet("href") ?? "";
+      link = { target, label: "", image: false, dropped: c.markup === "linkify" && !(before && hasDomain(target)) };
     } else if (c.type === "link_close") {
-      if (link && !link.dropped && (/[\p{L}\p{N}]/u.test(link.label) || link.image)) out.links.push({ target: link.target, picture: isPicture(link.target) });
+      if (link && !link.dropped && (visible(link.label) || link.image)) out.links.push({ target: link.target, picture: isPicture(link.target) });
       link = null;
     } else if (c.type === "image") {
       // The alt text is not rendered as text, and nothing inside it is a link.
@@ -194,7 +210,8 @@ function readInline(inline) {
     } else if (c.type === "softbreak" || c.type === "hardbreak") {
       add("\n");
     } else if (c.type === "html_inline") {
-      const src = IMG_OK.test(c.content) && c.content.match(IMG_SRC);
+      const tiny = [...c.content.matchAll(/\b(?:width|height)="([^"]*)"/g)].some((m) => !/^\d+$/.test(m[1]) || Number(m[1]) < MIN_SIZE);
+      const src = IMG_OK.test(c.content) && !tiny && c.content.match(IMG_SRC);
       if (src) {
         out.links.push({ target: src[1], picture: true });
         if (link) link.image = true;
@@ -395,6 +412,8 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   if (mode === "section") {
     const start = all.findIndex((b) => b.type === "heading" && b.atx && b.level === 2 && b.name === "Exhibit");
     if (start === -1) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
+    const again = all.findIndex((b, i) => i > start && b.type === "heading" && b.atx && b.level === 2 && b.name === "Exhibit");
+    if (again !== -1) problems.push({ line: all[again].line, rule: "heading", message: "`## Exhibit` appears twice" });
     let end = start + 1;
     while (end < all.length && !(all[end].type === "heading" && all[end].level <= 2)) end++;
     const inside = all.slice(start + 1, end);
