@@ -17,11 +17,14 @@
  * docs/plans/visible-progress.md, Design 4 and 5.
  *
  * Words used below:
- * - lines inside a fenced code block are never headings, claims or counted
- *   words. A fence opens with three or more backticks (with no backtick
- *   after them on the line) or tildes, at any indentation, and closes on a
- *   line of the same character, at least as long, and nothing else; a fence
- *   that never closes is not a fence, so its lines are still checked;
+ * - a fenced code block is allowed in one place only: in `## Progress`
+ *   (the graph), opening and closing at the start of a line (three or more
+ *   backticks with no backtick after them, or tildes; closed by a line of the
+ *   same character, at least as long, and nothing else), both inside that
+ *   section. Its lines are never headings, claims or counted words. Nothing
+ *   else is treated as code: rather than follow every markdown rule for
+ *   where a fence ends, the check refuses fences anywhere else, so a claim
+ *   cannot hide in one;
  * - text inside a `code` span or an HTML comment is not a link: GitHub does
  *   not render it as one;
  * - an item is a list line (`- `, `* `, `+ ` or `1. `) with the lines that
@@ -43,8 +46,9 @@
  *   Promised vs shown, Show, Changed since you accepted, Numbers, Track
  *   record, Progress, Not shown; or comes out of that order, or twice; or
  *   any text comes before the first `## ` heading (rule `heading`);
- * - a fenced code block holds a line that is one of those `## ` headings,
- *   so a stray fence swallowed part of the page (rule `fence`);
+ * - a line that starts a code fence (three backticks or tildes, at any
+ *   indentation) is not part of an allowed fence in `## Progress` (rule
+ *   `fence`);
  * - there is no `## Bottom line`, or its first non-empty line is not
  *   `<🟢 On track|🟡 At risk|🔴 Off track> · <n> decision(s) need(s) you ·
  *   <done>/<total> done · updated <YYYY-MM-DD HH:MM>`, optionally followed by
@@ -73,6 +77,7 @@
  *
  * It fails when (`--section`):
  * - there is no `## Exhibit` heading (rule `section-missing`);
+ * - a line in it starts a code fence, at any indentation (rule `fence`);
  * - a `### ` heading inside it is not Show, Numbers or Not shown, or comes
  *   out of that order, or twice (rule `heading`).
  *
@@ -109,28 +114,42 @@ const MAX_CRITERION_WORDS = 8;
 const BOTTOM_LINE =
   /^(🟢 On track|🟡 At risk|🔴 Off track) · \d+ decisions? needs? you · \d+\/\d+ done · updated \d{4}-\d{2}-\d{2} \d{2}:\d{2}( · not pinned)?( · in flight: unknown)?$/u;
 const ITEM = /^(\s*)([-*+]|\d+\.)\s+/;
-const MD_LINK = /(!?)\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+const MD_LINK = /(!?)\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
 const IMG_TAG = /<img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)[^>]*>/gi;
 const BARE_URL = /\bhttps?:\/\/[^\s)>\]"']+/g;
 const PICTURE_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)(\?[^\s]*)?$/i;
 const PICTURE_HOST = /^https?:\/\/(github\.com\/user-attachments\/|private-user-images\.githubusercontent\.com\/)/i;
-const FENCE_OPEN = /^\s*(`{3,}|~{3,})(.*)$/;
+const FENCE_OPEN = /^(`{3,}|~{3,})(.*)$/;
 
-/** Which lines are fenced code, fence lines included. An unclosed fence counts as none. */
-function fencedLines(lines) {
+const FENCE_LIKE = /^\s*(`{3,}|~{3,})/;
+
+/**
+ * Lines of allowed fences between from and to (0-based, end exclusive): a
+ * fence at the start of a line that also closes before `to`.
+ */
+function allowedFences(lines, from, to) {
   const fenced = new Array(lines.length).fill(false);
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = from; i < to; i++) {
     const open = lines[i].match(FENCE_OPEN);
     if (!open || (open[1][0] === "`" && open[2].includes("`"))) continue;
     const char = open[1][0];
-    const close = new RegExp(`^\\s*\\${char}{${open[1].length},}\\s*$`);
+    const close = new RegExp(`^\\${char}{${open[1].length},}\\s*$`);
     let j = i + 1;
-    while (j < lines.length && !close.test(lines[j])) j++;
-    if (j === lines.length) continue;
+    while (j < to && !close.test(lines[j])) j++;
+    if (j === to) continue;
     for (let k = i; k <= j; k++) fenced[k] = true;
     i = j;
   }
   return fenced;
+}
+
+/** A `fence` problem for each fence-like line from..to that is not allowed. */
+function strayFences(lines, from, to, fenced, problems) {
+  for (let i = from; i < to; i++) {
+    if (!fenced[i] && FENCE_LIKE.test(lines[i])) {
+      problems.push({ line: i + 1, rule: "fence", message: "code fences are allowed only in `## Progress`, at the start of a line; put a command in a `code` span" });
+    }
+  }
 }
 
 const HIDDEN = (text) => text.replace(/<!--[\s\S]*?-->/g, " ").replace(/(`+)[\s\S]*?\1/g, " ");
@@ -167,15 +186,14 @@ function words(line) {
  * @returns {{before: Section, found: Section[]}} where Section is
  *   {name: string | null, line: number, body: {text: string, line: number, fenced: boolean}[]}
  */
-function sections(lines, level, from = 0, to = lines.length) {
-  const isFenced = fencedLines(lines);
+function sections(lines, level, from = 0, to = lines.length, isFenced = []) {
   const mark = "#".repeat(level) + " ";
   const out = [];
   const before = { name: null, line: from + 1, body: [] };
   let current = before;
   for (let i = from; i < to; i++) {
     const text = lines[i];
-    const fenced = isFenced[i];
+    const fenced = Boolean(isFenced[i]);
     if (!fenced && text.startsWith(mark)) {
       current = { name: text.slice(mark.length).trim(), line: i + 1, body: [] };
       out.push(current);
@@ -271,20 +289,25 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
     const exhibit = sections(lines, 2).found.find((s) => s.name === "Exhibit");
     if (!exhibit) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
     const end = exhibit.body.length ? exhibit.body[exhibit.body.length - 1].line : exhibit.line;
+    strayFences(lines, exhibit.line, end, [], problems);
     const { before, found: sub } = sections(lines, 3, exhibit.line, end);
     checkHeadings(sub, SECTION_HEADINGS, problems);
     checkClaims([{ ...before, name: "Show" }, ...sub], SECTION_HEADINGS, exists, problems);
     return problems.sort((a, b) => a.line - b.line);
   }
 
-  const { before, found } = sections(lines, 2);
+  // Fences are allowed only inside Progress; find its lines before splitting the page.
+  const progressAt = lines.findIndex((t) => t.trim() === "## Progress");
+  let fenced = [];
+  if (progressAt !== -1) {
+    let end = progressAt + 1;
+    const isPageHeading = (t) => t.startsWith("## ") && PAGE_HEADINGS.includes(t.slice(3).trim());
+    while (end < lines.length && !isPageHeading(lines[end])) end++;
+    fenced = allowedFences(lines, progressAt + 1, end);
+  }
+  strayFences(lines, 0, lines.length, fenced, problems);
+  const { before, found } = sections(lines, 2, 0, lines.length, fenced);
   checkHeadings(found, PAGE_HEADINGS, problems);
-  const isFenced = fencedLines(lines);
-  lines.forEach((text, i) => {
-    if (isFenced[i] && text.startsWith("## ") && PAGE_HEADINGS.includes(text.slice(3).trim())) {
-      problems.push({ line: i + 1, rule: "fence", message: `a code fence swallows the heading "${text.slice(3).trim()}"` });
-    }
-  });
   if (hasText(before.body)) {
     const first = before.body.find((b) => !b.fenced && b.text.trim() !== "");
     problems.push({ line: first.line, rule: "heading", message: "text before the first heading; an exhibit starts with `## Bottom line`" });

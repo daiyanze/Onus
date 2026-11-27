@@ -248,33 +248,41 @@ test("--section: text before the first `###` is checked as a claim", () => {
 // Found in the re-review of PR #79: fences that fail open, and links GitHub does not render.
 
 const F = "```";
+const P1 = "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n  ```\n  GET /x\n\n- Deleting works ![s](https://example.com/s.png)\n\n- Listing works\n  ```\n  out https://example.com/run/2\n  ```\n\n## Progress\n\nA graph: ![g](https://example.com/g.png)\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n";
+const P2 = "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n    ```\n\n- Deleting works ![s](https://example.com/s.png)\n\n- Listing works [run](https://example.com/run/2)\n  ```\n  out https://example.com/run/2\n  ```\n\n## Progress\n\nA graph: ![g](https://example.com/g.png)\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n";
+const S2 = "Closes #1\n\n## Exhibit\n\n### Show\n\n- Saving works [run](https://example.com/run/1)\n  ```\n  GET /x\n\n- Deleting works ![s](https://example.com/s.png)\n\n- Listing works\n  ```\n  out https://example.com/run/2\n  ```\n\n## Scope\n\nx\n";
 
-test("fences: an inline ``` span, a mismatched close, or an unclosed fence hides nothing", () => {
-  // Either the lines that only looked fenced are checked, and the screenshot-only claim is found,
-  // or the fence really runs on and swallows a heading, which fails as `fence`. Never a pass.
-  const has = (text, opts) => {
-    const found = rules(text, opts);
-    assert.ok(found.includes("claim-image-only") || found.includes("fence"), JSON.stringify(checkExhibit(text, opts)));
-  };
-  has(page({ Show: `${F}v2${F} is live, see below\n\n- Saving works ![s](https://example.com/s.png)` }));
-  has(page({ Show: `${F}\n~~~\n- Saving works ![s](https://example.com/s.png)` }));
-  has(page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)` }));
-  failsWith(
-    "claim-image-only",
-    page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)`, Progress: "A graph." }),
-  );
-  has(pr(`### Show\n\n${F}ok${F} below\n\n- Saving works ![s](https://example.com/s.png)`), { mode: "section" });
+test("fence: a fence anywhere but Progress fails, whatever markdown would make of it", () => {
+  // Inputs from the re-reviews of PR #79, where a hand-made fence rule let a claim hide.
+  for (const show of [
+    `${F}v2${F} is live, see below\n\n- Saving works ![s](https://example.com/s.png)`,
+    `${F}\n~~~\n- Saving works ![s](https://example.com/s.png)`,
+    `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)`,
+  ]) {
+    const found = rules(page({ Show: show }));
+    assert.ok(found.includes("fence") && found.includes("claim-image-only"), JSON.stringify(found));
+  }
+  for (const text of [P1, P2]) assert.ok(rules(text).includes("fence"), JSON.stringify(checkExhibit(text)));
+  const once = checkExhibit(page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n\n${F}\nGET /x\n${F}` }));
+  assert.ok(once.some((p) => p.rule === "fence"), JSON.stringify(once)); // its lines are checked as text too
 });
 
-test("fence: a stray fence that swallows a heading", () => {
-  // The unclosed fence in Show closes at the end of the Mermaid block in Progress.
-  const swallowed = page({ Show: `${F}\n- Saving works ![s](https://example.com/s.png)` });
-  assert.ok(rules(swallowed).includes("fence"), JSON.stringify(checkExhibit(swallowed)));
+test("fence: in --section, any fence in the Exhibit fails; fences elsewhere in the PR do not", () => {
+  assert.ok(rules(S2, { mode: "section" }).includes("fence"), JSON.stringify(checkExhibit(S2, { mode: "section" })));
+  const fenced = checkExhibit(pr(`### Show\n\n- Saving stores it [run](https://example.com/run/1)\n\n${F}\nGET /x\n${F}`), { mode: "section" });
+  assert.ok(fenced.some((p) => p.rule === "fence"), JSON.stringify(fenced));
+  assert.deepEqual(rules(`## Why\n\n${F}\nfine outside the Exhibit\n${F}\n\n## Exhibit\n\n### Show\n\n- Saving stores it [run](https://example.com/run/1)\n`, { mode: "section" }), []);
 });
 
-test("fences: a closed fence still hides its lines", () => {
-  assert.deepEqual(rules(page({ Progress: `${F}text\n- not a claim, no link\n${F}` })), []);
-  assert.deepEqual(rules(page({ Progress: `~~~~\n${F}\n## not a heading\n~~~~` })), []);
+test("fence: Progress's own fence opens at the line start, closes properly, inside Progress", () => {
+  assert.deepEqual(rules(page({ Progress: `${F}text\n- not a claim, no link\n## not a heading\n${F}` })), []);
+  assert.ok(rules(page({ Progress: `  ${F}mermaid\ngraph LR\n  ${F}` })).includes("fence"));
+  // A backtick in the info string: not an opener, so the fence never opens.
+  assert.ok(rules(page({ Progress: `${F}a${F}\ngraph LR\n${F}` })).includes("fence"));
+  // A shorter line does not close a longer fence.
+  assert.ok(rules(page({ Progress: `${F}\`\ngraph LR\n${F}` })).includes("fence"));
+  // A fence opened in Progress that closes only after the next page heading.
+  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR`, "Not shown": `- Backoff [CI](https://example.com/ci)\n${F}` })).includes("fence"));
 });
 
 test("claim-no-evidence: a URL in a code span or an HTML comment is not a link", () => {
@@ -284,4 +292,10 @@ test("claim-no-evidence: a URL in a code span or an HTML comment is not a link",
 
 test("claim-image-only: each `+ ` item is its own claim", () => {
   failsWith("claim-image-only", page({ Show: "+ Saving stores it, `GET /x` [run](https://example.com/run/1)\n+ Deleting works ![s](https://example.com/s.png)" }));
+});
+
+test("pictures: titles in single quotes or parentheses, and <url> targets", () => {
+  failsWith("claim-image-only", page({ Show: "- Deleting works ![s](https://example.com/s.png 'https://example.com/run/1')" }));
+  failsWith("claim-image-only", page({ Show: "- Deleting works ![s](https://example.com/s.png (https://example.com/run/1))" }));
+  failsWith("claim-image-only", page({ Show: "- Deleting works [shot](<https://example.com/s.png>)" }));
 });
