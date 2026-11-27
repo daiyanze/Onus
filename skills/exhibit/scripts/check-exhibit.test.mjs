@@ -244,3 +244,44 @@ test("length: Promised vs shown is not counted", () => {
 test("--section: text before the first `###` is checked as a claim", () => {
   failsWith("claim-image-only", pr("Saving works ![s](https://example.com/s.png)\n\n### Not shown\n\n- Backoff is internal ([CI](https://example.com/ci))"), { mode: "section" });
 });
+
+// Found in the re-review of PR #79: fences that fail open, and links GitHub does not render.
+
+const F = "```";
+
+test("fences: an inline ``` span, a mismatched close, or an unclosed fence hides nothing", () => {
+  // Either the lines that only looked fenced are checked, and the screenshot-only claim is found,
+  // or the fence really runs on and swallows a heading, which fails as `fence`. Never a pass.
+  const has = (text, opts) => {
+    const found = rules(text, opts);
+    assert.ok(found.includes("claim-image-only") || found.includes("fence"), JSON.stringify(checkExhibit(text, opts)));
+  };
+  has(page({ Show: `${F}v2${F} is live, see below\n\n- Saving works ![s](https://example.com/s.png)` }));
+  has(page({ Show: `${F}\n~~~\n- Saving works ![s](https://example.com/s.png)` }));
+  has(page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)` }));
+  failsWith(
+    "claim-image-only",
+    page({ Show: `- Saving stores it \`GET /x\` [run](https://example.com/run/1)\n    ${F}\n\n- Deleting works ![s](https://example.com/s.png)`, Progress: "A graph." }),
+  );
+  has(pr(`### Show\n\n${F}ok${F} below\n\n- Saving works ![s](https://example.com/s.png)`), { mode: "section" });
+});
+
+test("fence: a stray fence that swallows a heading", () => {
+  // The unclosed fence in Show closes at the end of the Mermaid block in Progress.
+  const swallowed = page({ Show: `${F}\n- Saving works ![s](https://example.com/s.png)` });
+  assert.ok(rules(swallowed).includes("fence"), JSON.stringify(checkExhibit(swallowed)));
+});
+
+test("fences: a closed fence still hides its lines", () => {
+  assert.deepEqual(rules(page({ Progress: `${F}text\n- not a claim, no link\n${F}` })), []);
+  assert.deepEqual(rules(page({ Progress: `~~~~\n${F}\n## not a heading\n~~~~` })), []);
+});
+
+test("claim-no-evidence: a URL in a code span or an HTML comment is not a link", () => {
+  failsWith("claim-no-evidence", page({ Show: "- Saving stores the draft: `curl -s http://localhost:3000/api/drafts/9` returns it" }));
+  failsWith("claim-no-evidence", page({ Show: "- Saving stores the draft <!-- https://example.com/run/3 -->" }));
+});
+
+test("claim-image-only: each `+ ` item is its own claim", () => {
+  failsWith("claim-image-only", page({ Show: "+ Saving stores it, `GET /x` [run](https://example.com/run/1)\n+ Deleting works ![s](https://example.com/s.png)" }));
+});

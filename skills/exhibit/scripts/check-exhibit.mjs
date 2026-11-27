@@ -17,8 +17,13 @@
  * docs/plans/visible-progress.md, Design 4 and 5.
  *
  * Words used below:
- * - lines inside a fenced code block (``` or ~~~) are never headings, claims
- *   or counted words;
+ * - lines inside a fenced code block are never headings, claims or counted
+ *   words. A fence opens with three or more backticks (with no backtick
+ *   after them on the line) or tildes, at any indentation, and closes on a
+ *   line of the same character, at least as long, and nothing else; a fence
+ *   that never closes is not a fence, so its lines are still checked;
+ * - text inside a `code` span or an HTML comment is not a link: GitHub does
+ *   not render it as one;
  * - an item is a list line (`- `, `* `, `+ ` or `1. `) with the lines that
  *   follow it up to a blank line or the next list line; a paragraph (lines
  *   up to a blank line) that is not an item is one too;
@@ -38,6 +43,8 @@
  *   Promised vs shown, Show, Changed since you accepted, Numbers, Track
  *   record, Progress, Not shown; or comes out of that order, or twice; or
  *   any text comes before the first `## ` heading (rule `heading`);
+ * - a fenced code block holds a line that is one of those `## ` headings,
+ *   so a stray fence swallowed part of the page (rule `fence`);
  * - there is no `## Bottom line`, or its first non-empty line is not
  *   `<🟢 On track|🟡 At risk|🔴 Off track> · <n> decision(s) need(s) you ·
  *   <done>/<total> done · updated <YYYY-MM-DD HH:MM>`, optionally followed by
@@ -107,7 +114,26 @@ const IMG_TAG = /<img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)[^>]*>/gi;
 const BARE_URL = /\bhttps?:\/\/[^\s)>\]"']+/g;
 const PICTURE_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)(\?[^\s]*)?$/i;
 const PICTURE_HOST = /^https?:\/\/(github\.com\/user-attachments\/|private-user-images\.githubusercontent\.com\/)/i;
-const FENCE = /^\s*(```|~~~)/;
+const FENCE_OPEN = /^\s*(`{3,}|~{3,})(.*)$/;
+
+/** Which lines are fenced code, fence lines included. An unclosed fence counts as none. */
+function fencedLines(lines) {
+  const fenced = new Array(lines.length).fill(false);
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].match(FENCE_OPEN);
+    if (!open || (open[1][0] === "`" && open[2].includes("`"))) continue;
+    const char = open[1][0];
+    const close = new RegExp(`^\\s*\\${char}{${open[1].length},}\\s*$`);
+    let j = i + 1;
+    while (j < lines.length && !close.test(lines[j])) j++;
+    if (j === lines.length) continue;
+    for (let k = i; k <= j; k++) fenced[k] = true;
+    i = j;
+  }
+  return fenced;
+}
+
+const HIDDEN = (text) => text.replace(/<!--[\s\S]*?-->/g, " ").replace(/(`+)[\s\S]*?\1/g, " ");
 const isPicture = (target) => PICTURE_EXT.test(target) || PICTURE_HOST.test(target);
 const PERF =
   /(\d(\.\d+)?\s?(ms|µs|us|ns|s|sec|secs|seconds|min|req\/s|rps|ops\/s|qps|kb|mb|gb|kib|mib|gib)\b)|\b(faster|slower|latency|throughput)\b/i;
@@ -116,7 +142,7 @@ const RUNS = /\b\d+\s+runs?\b|\bruns?:\s*\d+|\bn\s*=\s*\d+/i;
 /** Links in a text: {target, picture}. */
 function links(text) {
   const found = [];
-  const rest = text
+  const rest = HIDDEN(text)
     .replace(IMG_TAG, (_, target) => {
       found.push({ target, picture: true });
       return " ";
@@ -131,27 +157,25 @@ function links(text) {
 
 /** Words of a line, without links, pictures and markdown punctuation. */
 function words(line) {
-  const text = line.replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
+  const text = line.replace(/<!--[\s\S]*?-->/g, " ").replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
 /**
- * Splits lines into sections by headings of one level.
- * @returns {{name: string, line: number, body: {text: string, line: number}[]}[]}
+ * Splits lines from..to into sections by headings of one level, outside
+ * fenced code. `before` holds the lines before the first such heading.
+ * @returns {{before: Section, found: Section[]}} where Section is
+ *   {name: string | null, line: number, body: {text: string, line: number, fenced: boolean}[]}
  */
 function sections(lines, level, from = 0, to = lines.length) {
+  const isFenced = fencedLines(lines);
   const mark = "#".repeat(level) + " ";
   const out = [];
   const before = { name: null, line: from + 1, body: [] };
   let current = before;
-  let fenced = false;
   for (let i = from; i < to; i++) {
     const text = lines[i];
-    if (FENCE.test(text)) {
-      current.body.push({ text, line: i + 1, fenced: true });
-      fenced = !fenced;
-      continue;
-    }
+    const fenced = isFenced[i];
     if (!fenced && text.startsWith(mark)) {
       current = { name: text.slice(mark.length).trim(), line: i + 1, body: [] };
       out.push(current);
@@ -162,7 +186,7 @@ function sections(lines, level, from = 0, to = lines.length) {
   return { before, found: out };
 }
 
-/** Items of a section body: each list line with the indented lines after it. */
+/** Claim units of a section body: each list line, or paragraph, with the lines after it up to a blank or the next list line. */
 function items(body) {
   const out = [];
   let current = null;
@@ -255,6 +279,12 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
 
   const { before, found } = sections(lines, 2);
   checkHeadings(found, PAGE_HEADINGS, problems);
+  const isFenced = fencedLines(lines);
+  lines.forEach((text, i) => {
+    if (isFenced[i] && text.startsWith("## ") && PAGE_HEADINGS.includes(text.slice(3).trim())) {
+      problems.push({ line: i + 1, rule: "fence", message: `a code fence swallows the heading "${text.slice(3).trim()}"` });
+    }
+  });
   if (hasText(before.body)) {
     const first = before.body.find((b) => !b.fenced && b.text.trim() !== "");
     problems.push({ line: first.line, rule: "heading", message: "text before the first heading; an exhibit starts with `## Bottom line`" });
