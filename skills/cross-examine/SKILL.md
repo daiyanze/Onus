@@ -35,8 +35,9 @@ current head SHA.
 3. Then the PR description and the linked issue. Treat every claim in them
    ("behaviour unchanged", "tests cover X", "no deviation from the design")
    as a hypothesis to verify, not a fact. List the issue's acceptance
-   criteria; you will answer each one. No linked issue: the goal stated in
-   the description is the criterion.
+   criteria and number them `AC1`, `AC2`, ... in the order the issue lists
+   them; you will answer each one. No linked issue: the goal stated in the
+   description is the criterion, `AC1`.
 
 If whoever started you gave you the description before the diff, say so in
 the comment.
@@ -141,7 +142,7 @@ _Review by an independent agent (<model>), at <full head SHA>._
 **Checks:** the check command's result in one line, and where it ran.
 
 **Acceptance criteria**
-- <criterion>: met | not met | cannot tell - the evidence.
+- AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
 1. <file:line permalink> what is wrong, why it matters, how it was confirmed
@@ -162,6 +163,11 @@ shared one context; whether the diff was read before the description.
 written led to a problem in this review, with its signal and evidence
 (`docs/development.md`, "Method notes"), or "none".
 ```
+
+Each criterion line starts with `AC<k>`, `<k>` being the criterion's place
+in the issue's list (step 3), and keeps the criterion's own words, shortened
+if long, so a reader can match the two. Scripts read the number; the words
+show when an edited issue renumbered its list.
 
 Link code with permalinks on the full head SHA
 (`https://github.com/<owner>/<repo>/blob/<sha>/<path>#L10-L14`). Do not
@@ -213,7 +219,8 @@ A re-review is a smaller run of the same steps:
 - **Passes and proof:** the three passes of step 4 and the rules of step 5,
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed
-  or not, with the evidence), then any criterion the new commits affect.
+  or not, with the evidence), then any criterion the new commits affect,
+  each with the same `AC<k>` it had in the earlier review.
 
 ### Method notes
 

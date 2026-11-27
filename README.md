@@ -248,7 +248,7 @@ _Review by an independent agent (<model>), at <full head SHA>._
 **Checks:** the check command's result, and where it ran.
 
 **Acceptance criteria**
-- <criterion>: met | not met | cannot tell - the evidence.
+- AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
 1. <file:line permalink> what is wrong, why it matters, how it was confirmed.
