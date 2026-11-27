@@ -271,6 +271,14 @@ a `docs/development.md` without the `## Exhibit` heading; its writers read
 the rule from the `charter` skill's own `templates/docs/development.md`, as
 `docket` step 6 already does for the lessons refresh.
 
+**The format is a whitelist** (the owner's decision, 2026-11-27, after three
+re-reviews of PR #79 each found markdown structure that hid a claim from a
+hand-made parser): every line of an exhibit is one of a few shapes (a
+heading, a list line, a two-space continuation right after it, a paragraph
+line, or a fence inside `## Progress`), with no HTML comments and no tag but
+`<img>`; anything else fails. The exhibit skill writes in that format; the
+script's header comment is where the shapes are defined.
+
 The skill never posts a page that fails it.
 
 ### 6. Safe to post

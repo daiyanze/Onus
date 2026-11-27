@@ -16,6 +16,24 @@
  * when" has a test in check-exhibit.test.mjs. Record:
  * docs/plans/visible-progress.md, Design 4 and 5.
  *
+ * The format. An exhibit is written by the exhibit skill, not by hand, so
+ * the check accepts a short list of line shapes instead of parsing markdown:
+ * whatever markdown would make of anything else, it fails. Every line is
+ * one of:
+ * - blank;
+ * - a heading at the start of the line: `## <name>` (in `--section`, inside
+ *   `## Exhibit`: `### <name>`);
+ * - a list line at the start of the line: `- `, `* `, `+ ` or `1. ` and text;
+ * - a continuation: two or more spaces and text, right after a list line or
+ *   another continuation, with no blank line between;
+ * - a paragraph line: text at the start of the line;
+ * - in `## Progress` only, a fenced block (below).
+ * "Text" here never starts with `#`, `>`, `|`, `<` (other than an
+ * `<https://...>` autolink or an `<img ...>` tag), a tab, or a fence, and a
+ * line is never only `-`, `=`, `*` or `_` characters (a setext heading or a
+ * rule). No line holds an HTML comment, or, outside `code` spans, an HTML
+ * tag other than `<img>` (GitHub would hide an unknown tag such as `<k>`).
+ *
  * Words used below:
  * - a fenced code block is allowed in one place only: in `## Progress`
  *   (the graph), opening and closing at the start of a line (three or more
@@ -47,8 +65,11 @@
  *   record, Progress, Not shown; or comes out of that order, or twice; or
  *   any text comes before the first `## ` heading (rule `heading`);
  * - a line that starts a code fence (three backticks or tildes, at any
- *   indentation) is not part of an allowed fence in `## Progress` (rule
- *   `fence`);
+ *   indentation) is not part of an allowed fence in `## Progress`, or is a
+ *   fence-like line inside one other than its opening and closing lines
+ *   (rule `fence`);
+ * - a line is none of the shapes above (rule `format`), or holds an HTML
+ *   comment or a tag other than `<img>` (rule `markup`);
  * - there is no `## Bottom line`, or its first non-empty line is not
  *   `<🟢 On track|🟡 At risk|🔴 Off track> · <n> decision(s) need(s) you ·
  *   <done>/<total> done · updated <YYYY-MM-DD HH:MM>`, optionally followed by
@@ -78,6 +99,9 @@
  * It fails when (`--section`):
  * - there is no `## Exhibit` heading (rule `section-missing`);
  * - a line in it starts a code fence, at any indentation (rule `fence`);
+ * - a line in it is none of the shapes above, with `### ` headings (rule
+ *   `format`), or holds an HTML comment or a tag other than `<img>` (rule
+ *   `markup`);
  * - a `### ` heading inside it is not Show, Numbers or Not shown, or comes
  *   out of that order, or twice (rule `heading`).
  *
@@ -146,7 +170,8 @@ function allowedFences(lines, from, to) {
 /** A `fence` problem for each fence-like line from..to that is not allowed. */
 function strayFences(lines, from, to, fenced, problems) {
   for (let i = from; i < to; i++) {
-    if (!fenced[i] && FENCE_LIKE.test(lines[i])) {
+    const inner = fenced[i] && fenced[i - 1] && fenced[i + 1];
+    if ((!fenced[i] || inner) && FENCE_LIKE.test(lines[i])) {
       problems.push({ line: i + 1, rule: "fence", message: "code fences are allowed only in `## Progress`, at the start of a line; put a command in a `code` span" });
     }
   }
@@ -178,6 +203,61 @@ function links(text) {
 function words(line) {
   const text = line.replace(/<!--[\s\S]*?-->/g, " ").replace(IMG_TAG, " ").replace(MD_LINK, " ").replace(BARE_URL, " ").replace(ITEM, " ").replace(/[`*_>#|]/g, " ");
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+}
+
+const LIST_LINE = /^([-*+]|\d+\.) \S/;
+const CONTINUATION = /^ {2,}\S/;
+const BAD_START = /^([#>|\t]|<(?!https?:\/\/|img\b))/i;
+const RULE_LINE = /^\s*([-=*_])(\s*\1)*\s*$/;
+const TAG = /<\/?([a-z][a-z0-9-]*)(?![a-z0-9-]*:)\b[^>]*>/gi; // not an <https://...> autolink
+
+/**
+ * The format: each line from..to (0-based) is one of the allowed shapes.
+ * `heading` is the heading mark allowed here ("## " or "### "); fenced lines
+ * are an allowed fence and are skipped.
+ */
+function formatProblems(lines, from, to, heading, fenced, problems) {
+  let afterItem = false;
+  for (let i = from; i < to; i++) {
+    const text = lines[i];
+    if (fenced[i]) {
+      afterItem = false;
+      continue;
+    }
+    if (text.includes("<!--")) {
+      problems.push({ line: i + 1, rule: "markup", message: "no HTML comments in an exhibit" });
+    }
+    for (const m of text.replace(/(`+)[^`]*?\1/g, " ").matchAll(TAG)) {
+      if (m[1].toLowerCase() !== "img") {
+        problems.push({ line: i + 1, rule: "markup", message: `no HTML tags but <img> in an exhibit: <${m[1]}>` });
+      }
+    }
+    if (text.trim() === "") {
+      afterItem = false;
+      continue;
+    }
+    if (FENCE_LIKE.test(text)) continue; // reported as `fence`
+    let ok;
+    if (text.startsWith(heading)) {
+      ok = true;
+      afterItem = false;
+    } else if (LIST_LINE.test(text)) {
+      ok = !RULE_LINE.test(text);
+      afterItem = true;
+    } else if (CONTINUATION.test(text)) {
+      ok = afterItem && !BAD_START.test(text.trim()) && !RULE_LINE.test(text);
+    } else {
+      ok = /^\S/.test(text) && !BAD_START.test(text) && !RULE_LINE.test(text);
+      afterItem = false;
+    }
+    if (!ok) {
+      problems.push({
+        line: i + 1,
+        rule: "format",
+        message: `not an exhibit line: use a \`${heading.trim()}\` heading, a list line, a two-space continuation right after it, or a paragraph at the line's start`,
+      });
+    }
+  }
 }
 
 /**
@@ -290,6 +370,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
     if (!exhibit) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
     const end = exhibit.body.length ? exhibit.body[exhibit.body.length - 1].line : exhibit.line;
     strayFences(lines, exhibit.line, end, [], problems);
+    formatProblems(lines, exhibit.line, end, "### ", [], problems);
     const { before, found: sub } = sections(lines, 3, exhibit.line, end);
     checkHeadings(sub, SECTION_HEADINGS, problems);
     checkClaims([{ ...before, name: "Show" }, ...sub], SECTION_HEADINGS, exists, problems);
@@ -297,7 +378,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   }
 
   // Fences are allowed only inside Progress; find its lines before splitting the page.
-  const progressAt = lines.findIndex((t) => t.trim() === "## Progress");
+  const progressAt = lines.findIndex((t) => t === "## Progress" || t === "## Progress ");
   let fenced = [];
   if (progressAt !== -1) {
     let end = progressAt + 1;
@@ -306,6 +387,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
     fenced = allowedFences(lines, progressAt + 1, end);
   }
   strayFences(lines, 0, lines.length, fenced, problems);
+  formatProblems(lines, 0, lines.length, "## ", fenced, problems);
   const { before, found } = sections(lines, 2, 0, lines.length, fenced);
   checkHeadings(found, PAGE_HEADINGS, problems);
   if (hasText(before.body)) {

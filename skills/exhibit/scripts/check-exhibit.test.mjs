@@ -121,7 +121,7 @@ test("length: an exhibit citing every M1 criterion of the plan passes", () => {
   m1.forEach((block, i) => {
     const criteria = block.split("    acceptance:\n")[1].split("\n").filter((l) => l.startsWith("      - "));
     criteria.forEach((c, k) => {
-      const short = c.replace(/^\s*- "?/, "").replace(/[`"*:]/g, "").split(/\s+/).slice(0, 8).join(" ");
+      const short = c.replace(/^\s*- "?/, "").replace(/[`"*:<>]/g, "").split(/\s+/).slice(0, 8).join(" ");
       lines.push(`- #${64 + i} AC${k + 1} ${short}: met (kind not judged) · [review](https://example.com/${i}-${k})`);
     });
   });
@@ -287,7 +287,8 @@ test("fence: Progress's own fence opens at the line start, closes properly, insi
 
 test("claim-no-evidence: a URL in a code span or an HTML comment is not a link", () => {
   failsWith("claim-no-evidence", page({ Show: "- Saving stores the draft: `curl -s http://localhost:3000/api/drafts/9` returns it" }));
-  failsWith("claim-no-evidence", page({ Show: "- Saving stores the draft <!-- https://example.com/run/3 -->" }));
+  const commented = checkExhibit(page({ Show: "- Saving stores the draft <!-- https://example.com/run/3 -->" })).map((p) => p.rule);
+  assert.deepEqual(commented, ["markup", "claim-no-evidence"]);
 });
 
 test("claim-image-only: each `+ ` item is its own claim", () => {
@@ -298,4 +299,52 @@ test("pictures: titles in single quotes or parentheses, and <url> targets", () =
   failsWith("claim-image-only", page({ Show: "- Deleting works ![s](https://example.com/s.png 'https://example.com/run/1')" }));
   failsWith("claim-image-only", page({ Show: "- Deleting works ![s](https://example.com/s.png (https://example.com/run/1))" }));
   failsWith("claim-image-only", page({ Show: "- Deleting works [shot](<https://example.com/s.png>)" }));
+});
+
+// The strict format (owner's choice after the re-reviews of PR #79): inputs from those reviews,
+// each of which the earlier versions let through, now fail.
+
+const probes79d = {"A": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!--\n ## Progress\n--> <span title=\"https://example.com/run/1\"></span>\n\n```\n  ```\n- Deleting works ![s](https://example.com/s.png)\n```\n```\n  ```\n```\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "B": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!-- [x](https://example.com/run/1)\n## Track record\n-->\n\n- Deleting works ![s](https://example.com/s.png)\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "C": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n## Progress\n\nA graph: ![g](https://example.com/g.png)\n\n ## Not shown\n\n- Deleting works ![s](https://example.com/s.png)\n", "D": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\nSaving a draft now keeps it.\n\n## Show\n\n- Deleting works ![s](https://example.com/s.png) <span title=\"https://example.com/run/1\"></span>\n\n## Not shown\n\n- Backoff is internal ([CI](https://github.com/o/r/actions/runs/4))\n\n", "L": "## Bottom line\n\n\ud83d\udfe2 On track \u00b7 1 decision needs you \u00b7 7/8 done \u00b7 updated 2026-12-03 18:02\n\n## Show\n\n- Saving works [run](https://example.com/run/1)\n\n## Progress\n\n```\n  ```\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word\n```\n```\n  ```\n```\n"};
+const probes79dSection = {"E2": "Closes #1\n\n## Exhibit\n\n### Show\n\n- Saving works [run](https://example.com/run/1)\n\n<!-- [x](https://example.com/run/1)\n## Scope\n-->\n\n- Deleting works ![s](https://example.com/s.png)\n\n## Scope\n\nx\n"};
+
+test("format: the re-review probes fail", () => {
+  for (const [name, text] of Object.entries(probes79d)) {
+    assert.notDeepEqual(checkExhibit(text), [], `${name} passed`);
+  }
+  for (const [name, text] of Object.entries(probes79dSection)) {
+    assert.notDeepEqual(checkExhibit(text, { mode: "section" }), [], `${name} passed`);
+  }
+});
+
+test("format: a line with leading spaces that is not a continuation", () => {
+  assert.ok(rules(page({ Show: "- Saving stores it [run](https://example.com/run/1)\n\n ## Not shown" })).includes("format"));
+  assert.ok(rules(page({ Show: "   - Saving stores it [run](https://example.com/run/1)" })).includes("format"));
+  assert.ok(rules(page({ Show: "- Saving stores it [run](https://example.com/run/1)\n\n    indented code" })).includes("format"));
+});
+
+test("format: block quotes, tables, other headings, rules and setext underlines", () => {
+  for (const bad of ["> Saving stores it [run](https://example.com/run/1)", "| a | b |", "### Saving", "Saving stores it [run](https://example.com/run/1)\n---", "***"]) {
+    assert.ok(rules(page({ Show: bad })).includes("format"), bad);
+  }
+});
+
+test("format: two-space continuations right after a list line pass", () => {
+  assert.deepEqual(rules(page({ Show: "- Saving stores it\n  `GET /api/drafts/9` returns it ([run](https://example.com/run/1))\n  ![s](https://example.com/s.png)" })), []);
+});
+
+test("markup: HTML comments and tags other than <img>", () => {
+  assert.ok(rules(page({ Show: "- Saving stores it [run](https://example.com/run/1) <!-- note -->" })).includes("markup"));
+  assert.ok(rules(page({ Show: '- Saving works <span title="https://example.com/run/1">here</span>' })).includes("markup"));
+  assert.deepEqual(rules(page({ Show: '- Look-only: the header <img src="https://example.com/h.png" alt="h">' })), []);
+  assert.deepEqual(rules(page({ Show: "- Saving stores it, `GET /x<k>` ([run](https://example.com/run/1))" })), []);
+});
+
+test("fence: inside Progress's fence, a fence-like line other than its ends fails", () => {
+  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR\n   ${F}\n${F}` })).includes("fence"));
+  assert.ok(rules(page({ Progress: `${F}mermaid\ngraph LR\n  ~~~\n${F}` })).includes("fence"));
+});
+
+test("format: in --section, the same shapes with ### headings", () => {
+  assert.ok(rules(pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)\n\n ### Not shown"), { mode: "section" }).includes("format"));
+  assert.ok(rules(pr("### Show\n\n- Saving works [run](https://example.com/run/1) <!-- x -->"), { mode: "section" }).includes("markup"));
 });
