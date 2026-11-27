@@ -403,7 +403,10 @@ test("what GitHub renders as plain text or a plain link passes", () => {
 });
 
 nodeTest("command line: without markdown-it it exits 2 and says so", { skip: hasParser && "markdown-it is installed" }, () => {
-  const run = cli(page());
+  // Bun installs a missing package on the fly when there is no node_modules; turn that off here.
+  const dir = mkdtempSync(join(tmpdir(), "exhibit-"));
+  writeFileSync(join(dir, "exhibit.md"), page());
+  const run = spawnSync(process.execPath, [...(process.versions.bun ? ["--no-install"] : []), script, join(dir, "exhibit.md")], { encoding: "utf8" });
   assert.equal(run.status, 2, run.stdout + run.stderr);
   assert.ok(run.stderr.includes(PARSER_MISSING), run.stderr);
 });
