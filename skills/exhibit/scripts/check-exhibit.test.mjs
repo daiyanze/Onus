@@ -417,6 +417,8 @@ test("links: a bare URL right after a picture or a link, or without a dotted dom
   failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} [s2](https://example.com/s2.png)https://example.com/run/1` }));
   failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} \`x\`https://example.com/run/1` }));
   failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} http://localhost:3000/api/drafts/9` }));
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} HTTPS://example.com/run/1` }));
+  failsWith("claim-image-only", page({ Show: `- Deleting works ${IMG} ftp://example.com/run/1` }));
   assert.deepEqual(rules(page({ Show: `- Deleting works ${IMG}\n  https://example.com/run/1` })), []);
 });
 
@@ -427,6 +429,7 @@ test("links: blank link text, or a tiny picture as a link's only content, is not
   assert.deepEqual(rules(page({ Show: '- Look-only: the header <img src="https://example.com/h.png" width="320">' })), []);
 });
 
-test("heading: in --section, `## Exhibit` twice", () => {
+test("heading: in --section, a second Exhibit heading, ATX or setext", () => {
+  failsOn("heading", `${pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)")}\nExhibit\n-------\n\n- Deleting works ${IMG}\n`, { mode: "section" });
   failsOn("heading", `${pr("### Show\n\n- Saving stores it [run](https://example.com/run/1)")}\n## Exhibit\n\n- Deleting works ${IMG}\n`, { mode: "section" });
 });

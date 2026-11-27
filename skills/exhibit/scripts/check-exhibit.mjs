@@ -31,7 +31,8 @@
  *
  * Words used below:
  * - a link is what GitHub renders as one: `[text](target)`, a reference
- *   link, `<https://...>`, or a bare http(s) URL with a period in its
+ *   link, `<https://...>`, or a bare `http://` or `https://` URL (in lower
+ *   case) with a period in its
  *   domain, at a line's start or right after a space, `*`, `_`, `~` or `(`
  *   (not after a picture or a link). Its text must hold a letter or a digit
  *   that is not a blank filler, or a picture. Nothing inside a picture (alt text, title, attributes)
@@ -90,7 +91,8 @@
  * - a fenced code block is in it (rule `fence`);
  * - a block in it is none of those above, with `### ` headings (rule
  *   `format`), or its inline HTML is not an allowed `<img>` (rule `markup`);
- * - `## Exhibit` appears twice (rule `heading`);
+ * - an `Exhibit` heading of level 1 or 2 appears after `## Exhibit` (rule
+ *   `heading`);
  * - a `### ` heading inside it is not Show, Numbers or Not shown, or comes
  *   out of that order, or twice (rule `heading`).
  *
@@ -150,6 +152,12 @@ const MATH = /\$[^$]*\$/;
 
 /** Text that renders as something: a letter or digit that is not a blank filler (Hangul fillers, the braille blank). */
 const visible = (text) => /[\p{L}\p{N}]/u.test(text.replace(/[\u115F\u1160\u3164\uFFA0\u2800]/g, ""));
+/** The URL as written, for a bare link: markdown-it lowercases the scheme in href. */
+const sourceUrl = (open, inline) => {
+  const i = inline.children.indexOf(open);
+  const text = inline.children[i + 1];
+  return text?.type === "text" ? text.content : "";
+};
 const hasDomain = (url) => {
   try {
     return new URL(url).hostname.includes(".");
@@ -193,7 +201,7 @@ function readInline(inline) {
       // GFM also wants a domain with a period: `http://localhost:3000` is text.
       const before = !prev || prev.type === "softbreak" || prev.type === "hardbreak" || (prev.type === "text" && /(^|[\s*_~(])$/.test(prev.content));
       const target = c.attrGet("href") ?? "";
-      link = { target, label: "", image: false, dropped: c.markup === "linkify" && !(before && hasDomain(target)) };
+      link = { target, label: "", image: false, dropped: c.markup === "linkify" && !(before && /^https?:\/\//.test(c.attrGet("href") ?? "") && /^https?:\/\//.test(sourceUrl(c, inline)) && hasDomain(target)) };
     } else if (c.type === "link_close") {
       if (link && !link.dropped && (visible(link.label) || link.image)) out.links.push({ target: link.target, picture: isPicture(link.target) });
       link = null;
@@ -412,7 +420,7 @@ export function checkExhibit(markdown, { mode = "page", exists = () => true } = 
   if (mode === "section") {
     const start = all.findIndex((b) => b.type === "heading" && b.atx && b.level === 2 && b.name === "Exhibit");
     if (start === -1) return [{ line: 1, rule: "section-missing", message: "no `## Exhibit` section" }];
-    const again = all.findIndex((b, i) => i > start && b.type === "heading" && b.atx && b.level === 2 && b.name === "Exhibit");
+    const again = all.findIndex((b, i) => i > start && b.type === "heading" && b.level <= 2 && b.name === "Exhibit");
     if (again !== -1) problems.push({ line: all[again].line, rule: "heading", message: "`## Exhibit` appears twice" });
     let end = start + 1;
     while (end < all.length && !(all[end].type === "heading" && all[end].level <= 2)) end++;
