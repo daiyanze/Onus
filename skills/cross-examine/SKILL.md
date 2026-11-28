@@ -115,7 +115,8 @@ context. Each pass returns candidate issues with file, line and reason.
    reserved" so the owner sees it. A project whose `docs/development.md`
    predates `## Default changes` (step 5 there does not name it) has not
    asked for the list: an unlisted default is then a non-blocking note,
-   and scope drift still blocks.
+   unless it is a kind `AGENTS.md` reserves, which you name under
+   "Defaults reserved" all the same; scope drift still blocks.
 
 ## 5. Validate every candidate
 
