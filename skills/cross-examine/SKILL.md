@@ -115,8 +115,9 @@ context. Each pass returns candidate issues with file, line and reason.
    reserved" so the owner sees it. A project whose `docs/development.md`
    predates `## Default changes` (step 5 there does not name it) has not
    asked for the list: an unlisted default is then a non-blocking note,
-   unless it is a kind `AGENTS.md` reserves, which you name under
-   "Defaults reserved" all the same; scope drift still blocks.
+   unless it is a kind `AGENTS.md` reserves: that is a note too, and you
+   name it under "Defaults reserved" all the same; scope drift still
+   blocks.
 
 ## 5. Validate every candidate
 
@@ -218,8 +219,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
-**Defaults reserved:** each `reserved` line of `## Default changes`, or
-"none".
+**Defaults reserved:** each `reserved` line of `## Default changes`, and
+each default of a reserved kind the change sets or changes that the list
+leaves out (question 6), or "none".
 **Method notes:** each place where following this skill or the method as
 written led to a problem in this review, with its signal and evidence
 (`docs/development.md`, "Method notes"), or "none".
