@@ -75,7 +75,8 @@ Everything else in the method follows from this table.
    The owner can grant a long run the right to merge its own PRs: each
    one only with an approving review of its current head (or of an
    earlier one followed only by clean merges of the base branch), green CI,
-   the base branch merged in, and no protected path or CI workflow touched.
+   the base branch merged in, no protected path or CI workflow touched,
+   and no default of a kind the owner reserved.
    The agent never pushes to the base branch, and stops to ask before
    anything that cannot be undone, except a merge your grant allowed to
    deploy.
@@ -219,8 +220,10 @@ Pi loads a project's `.agents/skills` only after you trust the project.
 - **Merges** only if you grant it in the session (`/docket finish milestone
   2, you may merge`), and only a PR it opened that has an approving review
   of its current head (or of an earlier one followed only by clean merges
-  of the base branch), green CI, the base branch merged in, and no
-  protected path, CI workflow or check-command change. It merges that
+  of the base branch), green CI, the base branch merged in, no
+  protected path, CI workflow or check-command change, and no default of a
+  kind you reserved in `AGENTS.md` (that PR waits for you, the rest of the
+  run goes on). It merges that
   exact commit, never with `--admin`. A failed CI run on the base branch
   after a merge stops all merging for the run, and the issues that wait on
   a merge start only after the base branch's CI passes. A new session or a scheduled run needs a new grant.
@@ -260,7 +263,7 @@ _Review by an independent agent (<model>), at <full head SHA>._
 
 **Non-blocking notes**
 **Claims checked** / **Not checked** / **How this review ran**
-**Second model** / **Protected paths touched**
+**Second model** / **Protected paths touched** / **Defaults reserved**
 ```
 
 ### `brief`: design a goal and split it into issues
@@ -293,7 +296,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 - **Records** the decision, with the chosen types as the contract and the
   signs that would mean the shape is wrong.
 - **Splits** it into `docs/plans/<slug>.yaml`: one concern per issue, riskiest
-  first, the contract early, acceptance criteria that are checks.
+  first, the contract early, acceptance criteria that are checks, at most
+  800 hand-written lines each, and a line saying what each will not do.
   `scripts/check-plan.mjs` checks the plan's form and prints the order to
   create the issues in; the comment at its top says what it checks and what
   it does not.

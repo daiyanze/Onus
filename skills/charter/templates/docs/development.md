@@ -77,7 +77,10 @@ this section otherwise.>
    proved, rather than inventing one. Then list what the change reaches:
    the callers of what it changes, the consumers of what it outputs, and
    the stored data it reads or writes. Find them with a command (a search,
-   the type check, a query) and keep the command with the list.
+   the type check, a query) and keep the command with the list. Read the
+   issue's "Not in this issue" section; if it has none, write one for the
+   PR's `## Scope`: what a reader might expect this change to do and it
+   will not.
 2. **Plan.** List assumptions and every point where the plan differs from a
    recorded decision. A difference from a recorded decision is the owner's
    call: ask before building on it. Everything else: decide, note it, carry
@@ -87,7 +90,15 @@ this section otherwise.>
    owns what) and pick the one where each piece of state has one owner and
    callers need to know least. Put both in the PR when the choice was close.
 3. **Code.** Tests first for rules and pure logic. Keep each PR to one
-   concern.
+   concern, and small enough to review: aim for 500 changed lines written
+   by hand, and never more than 800, counted with `git diff --shortstat
+   <base>...HEAD -- . ':!<generated path>'` (generated code, lockfiles and
+   recorded snapshots left out by path; insertions plus deletions). When
+   the change is going to pass 800, stop and split the issue, unless the
+   issue grants more, with the reason and how the commits split for review.
+   Splitting an issue changes what the owner labelled: propose the split in
+   the issue and leave the new issues to the owner (a `docket` run parks
+   it).
 4. **Verify.** Run the check command. Report evidence: commands and their
    results, with the test counts the runner prints (passed, failed,
    skipped) at the base and at the head. A green run of fewer tests is not
@@ -101,16 +112,24 @@ this section otherwise.>
    changed`, `## Scope` (what the change reaches, from step 1, with the
    command that found it; protected paths, deviations from recorded
    decisions, a dependency added or a helper written where a library could
-   do it and why, the product pattern followed, what is left out),
-   `## Verification` (commands and results,
-   and what was not verified locally). Claims such as "behaviour unchanged"
+   do it and why, the product pattern followed, what is left out, and the
+   `--shortstat` line with the paths it left out),
+   `## Default changes`, `## Verification` (commands and results,
+   and what was not verified locally). `## Default changes` lists every
+   default the change sets or changes that a user or caller would notice,
+   one line per behaviour however many files it takes, in plain words:
+   "when X, it now does Y; what that means for users; how to change it".
+   Kinds the owner decides (`AGENTS.md`, "Defaults the owner decides") come
+   first, marked `reserved`. Setting a default the issue needs but does not
+   fix is part of the work; changing one the issue does not need is not. Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
    reviews the PR with the `cross-examine` skill. Only blocking issues send
    a PR back; notes may be fixed or left. The writer fixes blocking issues
    by adding commits: once a review exists, never amend, rebase or
    force-push the branch (merging the base branch in is fine), so the next
-   round can read what changed. A new agent re-reviews. The loop stops when
+   round can read what changed. A new agent re-reviews. A review that only
+   stopped the PR for its size is not a round. The loop stops when
    one blocking item is still not fixed after two rounds, or after three
    rounds without approval. Then do not try another fix: test the premise
    the fixes shared, directly, with a run that checks it. If it is wrong,

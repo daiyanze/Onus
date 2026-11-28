@@ -21,7 +21,22 @@ detection rate, so the diff is read before the description.
 
 Stop without commenting if the PR is closed or a draft, or if it already has
 a comment that starts with `_Review by an independent agent` and names the
-current head SHA.
+current head SHA, unless that comment was a size stop (below) and the
+linked issue has since granted more.
+
+Then count the change: `git diff --shortstat <base>...<head>`, leaving out
+by path only generated code, lockfiles and recorded snapshots
+(`docs/development.md`, step 3). Changed lines are insertions plus
+deletions. Over 800, look in the linked issue for a grant of more (a
+reason, and how the commits split for review), and only for that: this is
+the one look at the issue before the diff, and "How this review ran" says
+so. With no grant, the review is one blocking issue in the "Scope" class:
+the count, and "split it". Post it with the rest of step 7's headings
+marked "not reviewed: over the size limit", and stop. Such a size stop
+reads nothing, so it is not a round: the next review of the PR is a first
+round (step 8's scope does not apply), and the stop does not count toward
+the round limits. A size that differs from the PR's own `--shortstat` line
+is a false statement: say so.
 
 ## 2. Context, in this order
 
@@ -90,6 +105,19 @@ context. Each pass returns candidate issues with file, line and reason.
 4. **Secrets and personal data.** Anything logged, committed or put in
    fixtures that should not be?
 5. **Protected paths.** Does the change touch one the PR does not name?
+6. **Defaults.** Does the change set or change a default a user or caller
+   would notice (a threshold, a limit, a frequency, a permission, a
+   suggestion that now acts) that `## Default changes` does not list, or
+   lists without `reserved` when it is a kind `AGENTS.md` ("Defaults the
+   owner decides") reserves? That is a false statement ("Scope"). A
+   default the issue did not need changed is scope drift ("Scope"). A
+   listed `reserved` default is not an issue: name it under "Defaults
+   reserved" so the owner sees it. A project whose `docs/development.md`
+   predates `## Default changes` (step 5 there does not name it) has not
+   asked for the list: an unlisted default is then a non-blocking note,
+   unless it is a kind `AGENTS.md` reserves: that is a note too, and you
+   name it under "Defaults reserved" all the same; scope drift still
+   blocks.
 
 ## 5. Validate every candidate
 
@@ -136,7 +164,8 @@ needed".
   4. **Test weakening:** a weakened test (step 4), or a behaviour the PR
      claims that no test or run shows.
   5. **Scope:** an acceptance criterion is not met; the change alters what
-     users or callers get in a way the issue did not ask for; or the PR
+     users or callers get in a way the issue did not ask for, or does
+     what the issue's "Not in this issue" section rules out; or the PR
      states something false about what the change does or what enforces a
      rule. "The PR states" means its description and the documents it adds
      or changes for readers to rely on (README, rules, instructions, an
@@ -190,6 +219,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
+**Defaults reserved:** each `reserved` line of `## Default changes`, and
+each default of a reserved kind the change sets or changes that the list
+leaves out (question 6), or "none".
 **Method notes:** each place where following this skill or the method as
 written led to a problem in this review, with its signal and evidence
 (`docs/development.md`, "Method notes"), or "none".
