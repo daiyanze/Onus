@@ -80,6 +80,28 @@ Everything else in the method follows from this table.
    anything that cannot be undone, except a merge your grant allowed to
    deploy.
 
+### One change, end to end
+
+```mermaid
+flowchart TD
+  I["Issue: acceptance criteria,<br/>Not in this issue, ≤ 800 lines"] --> W["Writer: explore, plan, code, verify<br/>test counts at base and head"]
+  W --> PR["PR: Scope with --shortstat,<br/>Default changes, Verification"]
+  PR --> S{"Over 800 lines,<br/>no grant?"}
+  S -- yes --> SPLIT["Sent back unread: split the issue"]
+  SPLIT --> I
+  S -- no --> R["cross-examine: tests first,<br/>three passes, prove every finding"]
+  R --> B{"Blocking issue?<br/>five classes only"}
+  B -- yes --> L{"Same item unfixed 2 rounds,<br/>or 3 rounds?"}
+  L -- no --> FIX["Writer adds commits<br/>re-review: old items + new commits"]
+  FIX --> R
+  L -- yes --> P["Test the premise directly"]
+  P -- wrong --> W
+  P -- "holds / unclear" --> O["Owner decides"]
+  B -- no --> D{"Reserved default?"}
+  D -- yes --> O
+  D -- no --> M["Owner merges,<br/>or docket under a grant"]
+```
+
 ## 🚀 Quickstart
 
 You need a repository on GitHub, the `gh` CLI, and one of the supported

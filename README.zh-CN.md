@@ -66,6 +66,28 @@ Pull Request 中逐渐成形。哪些部分验证过、哪些没有，写在
    内容、没碰受保护路径和 CI workflow。agent 永远不推送到基础分支，在做任何无法撤销的
    事之前都会停下来询问，你授权允许部署的合并除外。
 
+### 一次改动的全流程
+
+```mermaid
+flowchart TD
+  I["Issue：验收标准、<br/>本次不做什么、≤ 800 行"] --> W["Writer：探索、规划、编码、验证<br/>记录基础分支和 head 的测试数"]
+  W --> PR["PR：Scope 附 --shortstat、<br/>Default changes、Verification"]
+  PR --> S{"超过 800 行<br/>且无豁免？"}
+  S -- 是 --> SPLIT["不审直接退回：重新拆单"]
+  SPLIT --> I
+  S -- 否 --> R["cross-examine：先看测试、<br/>三遍查找、每条都要证明"]
+  R --> B{"有阻塞项？<br/>只限五类"}
+  B -- 是 --> L{"同一项两轮没修好，<br/>或已满三轮？"}
+  L -- 否 --> FIX["Writer 追加 commit<br/>复审只查旧问题和新提交"]
+  FIX --> R
+  L -- 是 --> P["直接验证前提"]
+  P -- 前提错 --> W
+  P -- "成立 / 不确定" --> O["所有者拍板"]
+  B -- 否 --> D{"有保留给所有者的默认行为？"}
+  D -- 是 --> O
+  D -- 否 --> M["所有者合并，<br/>或 docket 在授权下合并"]
+```
+
 ## 🚀 快速开始
 
 你需要：一个 GitHub 上的仓库、`gh` CLI，以及任意一个受支持的 agent。
