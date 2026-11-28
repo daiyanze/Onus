@@ -35,7 +35,9 @@ need the owner's approval, whether anything outside the
 repository (users, other services, stored data) depends on its formats and
 APIs yet, and the review models: which model writes, and which models
 review, ideally one from another vendor (written as `Review models` in
-`AGENTS.md`; "none named" is a valid answer).
+`AGENTS.md`; "none named" is a valid answer), and which kinds of default
+are the owner's to decide ("Defaults the owner decides" in `AGENTS.md`;
+offer the template's example list as the recommended answer).
 
 ## 2. Copy the four documents
 

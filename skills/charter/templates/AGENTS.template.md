@@ -35,6 +35,17 @@ must know. A table of concepts if there are more than three.>
    it or where it is computed.>
 2. **<Name>.** <...>
 
+## Defaults the owner decides
+
+A default is what the product does when nobody says otherwise: a
+threshold, a limit, a frequency, whether it suggests or acts. Every PR
+lists the defaults it sets or changes (`docs/development.md`, step 5).
+These are the owner's, even inside an issue the agent may do: <the kinds
+this project reserves, for example "a suggestion turned into an automatic
+action; who may see or do what; how often people are notified; anything
+that charges money; deleting data">. The agent decides every other default
+and lists it, and the owner corrects it afterwards if needed.
+
 ## What enforces each rule
 
 A rule nothing enforces is only as good as the next reader. When a mistake

@@ -183,7 +183,8 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
 - **合并** 只在你于当次会话里授权时进行（`/docket finish milestone 2, you may
   merge`），而且只合并它自己开的 PR：当前 head 有批准审查（或者批准的是更早的
   commit，之后只有干净地合入基础分支）、CI 全绿、已合入基础分支最新内容、没碰受保护
-  路径、CI workflow 或检查命令的定义。它只合并那一个确切的 commit，从不使用 `--admin`。
+  路径、CI workflow 或检查命令的定义，也没改动你在 `AGENTS.md` 里保留给自己决定的那类
+  默认行为（这样的 PR 等你拍板，运行里其余工作照常推进）。它只合并那一个确切的 commit，从不使用 `--admin`。
   合并后基础分支上的 CI 一旦失败，本次运行就停止一切合并；等这次合并的 issue，要在
   基础分支的 CI 通过后才开始。新会话或定时运行需要重新授权。除非 `AGENTS.md` 写明
   合并不会部署任何东西，否则一次合并就算作部署，授权里必须写明允许部署。只有本次运行
@@ -215,7 +216,7 @@ _Review by an independent agent (<model>), at <full head SHA>._
 
 **Non-blocking notes**
 **Claims checked** / **Not checked** / **How this review ran**
-**Second model** / **Protected paths touched**
+**Second model** / **Protected paths touched** / **Defaults reserved**
 ```
 
 ### `brief`：设计一个目标并拆成 issue
