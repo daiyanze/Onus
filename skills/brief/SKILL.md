@@ -255,8 +255,8 @@ gh issue create --title "[<id>] <title>" --body-file <file>
 ```
 
 Add `--milestone "<milestone>"` when the issue has one. The body has
-`## Why` (the goal, and a link to the record), `## What`,
-`## Not in this issue` (the `what`'s last line), `## Acceptance criteria`,
+`## Why` (the goal, and a link to the record), `## What` (the `what`
+without its last line), `## Not in this issue` (that line), `## Acceptance criteria`,
 and `## Depends on` with the numbers of the issues created for its
 `depends_on`, plus any `#123` it names, or `None.`. Do not add the agent
 label: the owner labels the issues the agent may do. If a milestone does not

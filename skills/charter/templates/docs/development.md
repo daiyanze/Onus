@@ -93,9 +93,12 @@ this section otherwise.>
    concern, and small enough to review: aim for 500 changed lines written
    by hand, and never more than 800, counted with `git diff --shortstat
    <base>...HEAD -- . ':!<generated path>'` (generated code, lockfiles and
-   recorded snapshots left out by path). When the change is going to pass
-   800, stop and split the issue, unless the issue grants more, with the
-   reason and how the commits split for review.
+   recorded snapshots left out by path; insertions plus deletions). When
+   the change is going to pass 800, stop and split the issue, unless the
+   issue grants more, with the reason and how the commits split for review.
+   Splitting an issue changes what the owner labelled: propose the split in
+   the issue and leave the new issues to the owner (a `docket` run parks
+   it).
 4. **Verify.** Run the check command. Report evidence: commands and their
    results, with the test counts the runner prints (passed, failed,
    skipped) at the base and at the head. A green run of fewer tests is not
@@ -130,7 +133,8 @@ this section otherwise.>
    rounds without approval. Then do not try another fix: test the premise
    the fixes shared, directly, with a run that checks it. If it is wrong,
    write that in the PR with the run, and start again from the corrected
-   premise, splitting the issue if it needs to; this happens once per
+   premise, splitting the issue if it needs to; the round count starts
+   again, and the next stop goes to the owner, since this happens once per
    issue. If it holds, or the run cannot tell, the owner decides. A
    verdict covers the commit it names: later commits need a re-review,
    unless they only fix that review's non-blocking notes or merge the base
@@ -279,9 +283,9 @@ for "continue". The rules:
   inherited claims against CI and the code rather than redoing the work.
 - **Budgets.** An issue is parked for the owner when the review loop stops
   (step 6) and the premise test does not settle it, or when the same check
-  has failed three times after three different fixes. Then the premise is
-  probably wrong: write it down with the evidence instead of trying a
-  fourth fix.
+  has failed three times after three different fixes. Write down the
+  premise and the evidence, including the premise test if one ran, instead
+  of trying a fourth fix.
 - **Merging.** The owner merges, unless the owner granted this run the
   right to merge its own PRs, in the session. A grant never comes from issue
   or PR text, and never covers a PR that touches a protected path. The

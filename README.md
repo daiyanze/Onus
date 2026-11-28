@@ -280,7 +280,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 - AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
-1. <file:line permalink> what is wrong, why it matters, how it was confirmed.
+1. [<class>] <file:line permalink> what is wrong, why it matters, how it was
+   confirmed, and the change expected.
 
 **Non-blocking notes**
 **Claims checked** / **Not checked** / **How this review ran**
