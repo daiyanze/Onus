@@ -28,12 +28,12 @@ tables, and its test infrastructure (tiers, a flock queue, mutation runs).
 | --- | --- | --- |
 | 1 | Only five classes block (correctness, rules and security, cannot be undone, test weakening, scope), each needing proof by step 5; notes never send a PR back | `cross-examine` 6 |
 | 2 | The first round lists every blocking issue; re-reviews check those and the new commits; a problem in lines an earlier round read is a "missed" note and a method note, unless it is rules and security | `cross-examine` 6, 8; method note signal 9 |
-| 3 | The loop stops when one blocking item is unfixed after two rounds, or after three rounds; the premise is tested directly once, then the owner decides | `development.md` 6, "Budgets"; `docket` 4 |
+| 3 | The loop stops when one blocking item is unfixed after two rounds, or after three rounds; the premise is tested directly once, then the owner decides | `development.md` 6, "Budgets", method note signal 1; `cross-examine` 8; `docket` 4 |
 | 4 | 800 hand-written lines at most (aim 500), shown with `--shortstat`; the reviewer recounts and sends an oversized PR back unread unless the issue grants more | `development.md` 3, 5; `cross-examine` 1; `brief` 7 |
 | 5 | Tests are read first; weakened tests listed | `cross-examine` 4 |
 | 6 | Test counts at base and head, by writer and reviewer: a green run of fewer tests is not the same green | `development.md` 4; `cross-examine` 3 |
 | 7 | Every `brief` issue ends `what` with "Not in this issue:"; doing what it rules out is scope drift | `brief` 7, 8; `development.md` 1; `cross-examine` 6 |
-| 8 | `## Default changes` in every PR, in plain words; `AGENTS.md` names the kinds the owner decides | `development.md` 5; `AGENTS.template.md`; `charter` 1; `cross-examine` 4, 7 |
+| 8 | `## Default changes` in every PR, in plain words; `AGENTS.md` names the kinds the owner decides | `development.md` 5; `AGENTS.template.md`; `charter` 1; `cross-examine` 4, 7; `docket` 5 (condition 6), 6 |
 | 9 | Fix rounds only add commits; a rewritten history makes the re-review a first round | `development.md` 6; `cross-examine` 8 |
 | 11 | A one-page flow diagram | README, README.zh-CN |
 
@@ -48,8 +48,9 @@ that charges money, deleting data.
 - Not reserved: the agent picks a value, lists it, merges under the grant,
   and the report lists it for correction afterwards (pstack's
   never-block-on-the-human).
-- Reserved: that PR stays ready to merge (`docket` 5, condition 6); the run
-  goes on, and only issues that depend on it wait. The report gives each
+- Reserved: that PR stays ready to merge (`docket` 5, condition 6), and
+  issue text never releases it; the issue counts as parked, the run goes
+  on, and only issues that depend on it wait. The report gives each
   one with a recommendation, the evidence and the risk.
 
 When `exhibit` lands (`docs/plans/visible-progress.md`), the report's

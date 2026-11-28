@@ -96,7 +96,7 @@ flowchart TD
   L -- no --> FIX["Writer adds commits<br/>re-review: old items + new commits"]
   FIX --> R
   L -- yes --> P["Test the premise directly"]
-  P -- wrong --> W
+  P -- "wrong (once per issue)" --> W
   P -- "holds / unclear" --> O["Owner decides"]
   B -- no --> D{"Reserved default?"}
   D -- yes --> O
