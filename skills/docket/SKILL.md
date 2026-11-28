@@ -111,7 +111,9 @@ work"):
 - it contradicts a recorded decision, needs a secret or an account, touches
   a protected path it does not mention, or needs an action that cannot be
   undone (other than a merge that step 3 allows to deploy);
-- three review rounds have ended without approval;
+- the review loop stopped (`docs/development.md`, step 6: one blocking item
+  unfixed after two rounds, or three rounds without approval) and the
+  premise test did not settle it;
 - the same check has failed three times after three different fixes. Write
   down the premise those fixes shared, and the evidence, for the owner.
 
