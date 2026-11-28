@@ -122,7 +122,8 @@ this section otherwise.>
    a PR back; notes may be fixed or left. The writer fixes blocking issues
    by adding commits: once a review exists, never amend, rebase or
    force-push the branch (merging the base branch in is fine), so the next
-   round can read what changed. A new agent re-reviews. The loop stops when
+   round can read what changed. A new agent re-reviews. A review that only
+   stopped the PR for its size is not a round. The loop stops when
    one blocking item is still not fixed after two rounds, or after three
    rounds without approval. Then do not try another fix: test the premise
    the fixes shared, directly, with a run that checks it. If it is wrong,
