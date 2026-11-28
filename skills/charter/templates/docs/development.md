@@ -93,9 +93,12 @@ this section otherwise.>
    concern, and small enough to review: aim for 500 changed lines written
    by hand, and never more than 800, counted with `git diff --shortstat
    <base>...HEAD -- . ':!<generated path>'` (generated code, lockfiles and
-   recorded snapshots left out by path). When the change is going to pass
-   800, stop and split the issue, unless the issue grants more, with the
-   reason and how the commits split for review.
+   recorded snapshots left out by path; insertions plus deletions). When
+   the change is going to pass 800, stop and split the issue, unless the
+   issue grants more, with the reason and how the commits split for review.
+   Splitting an issue changes what the owner labelled: propose the split in
+   the issue and leave the new issues to the owner (a `docket` run parks
+   it).
 4. **Verify.** Run the check command. Report evidence: commands and their
    results, with the test counts the runner prints (passed, failed,
    skipped) at the base and at the head. A green run of fewer tests is not

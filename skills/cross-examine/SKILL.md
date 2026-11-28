@@ -25,12 +25,17 @@ current head SHA.
 
 Then count the change: `git diff --shortstat <base>...<head>`, leaving out
 by path only generated code, lockfiles and recorded snapshots
-(`docs/development.md`, step 3). Over 800 changed lines, with no grant of
-more in the linked issue (a reason, and how the commits split for review),
-the review is one blocking issue in the "Scope" class: the count, and
-"split it". Post it with the rest of step 7's headings marked "not
-reviewed: over the size limit", and stop. A size that differs from the
-PR's own `--shortstat` line is a false statement: say so.
+(`docs/development.md`, step 3). Changed lines are insertions plus
+deletions. Over 800, look in the linked issue for a grant of more (a
+reason, and how the commits split for review), and only for that: this is
+the one look at the issue before the diff, and "How this review ran" says
+so. With no grant, the review is one blocking issue in the "Scope" class:
+the count, and "split it". Post it with the rest of step 7's headings
+marked "not reviewed: over the size limit", and stop. Such a size stop
+reads nothing, so it is not a round: the next review of the PR is a first
+round (step 8's scope does not apply), and the stop does not count toward
+the round limits. A size that differs from the PR's own `--shortstat` line
+is a false statement: say so.
 
 ## 2. Context, in this order
 
