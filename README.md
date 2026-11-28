@@ -75,7 +75,8 @@ Everything else in the method follows from this table.
    The owner can grant a long run the right to merge its own PRs: each
    one only with an approving review of its current head (or of an
    earlier one followed only by clean merges of the base branch), green CI,
-   the base branch merged in, and no protected path or CI workflow touched.
+   the base branch merged in, no protected path or CI workflow touched,
+   and no default of a kind the owner reserved.
    The agent never pushes to the base branch, and stops to ask before
    anything that cannot be undone, except a merge your grant allowed to
    deploy.

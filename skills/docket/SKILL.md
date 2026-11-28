@@ -172,11 +172,13 @@ merging, on its current head:
    resolution, the merge needs a new review (condition 3). Then wait for CI
    on the new head.
 6. **No default the owner decides.** The PR's `## Default changes` has no
-   `reserved` line, and the review's "Defaults reserved" says "none",
-   unless the issue itself, labelled by the owner, fixes that default. A
-   PR that fails only this stays open and ready to merge: log a row with
-   phase `reserved`, and put it under the report's decisions for the owner.
-   The run goes on with other issues; only issues that depend on this one
+   `reserved` line, and the review's "Defaults reserved" says "none". Issue
+   text never releases one: it can be edited by others, and a grant never
+   comes from it (step 3). A PR that fails only this stays open and ready
+   to merge: log a row with phase `reserved`, and put it under the
+   report's decisions for the owner. Its issue then counts as parked for
+   the exit condition and for candidates, without changing its label. The
+   run goes on with other issues; only issues that depend on this one
    wait.
 7. **Nothing blocks.** `gh pr view <n> --json mergeStateStatus` gives
    `CLEAN` or `HAS_HOOKS`. `UNKNOWN` means GitHub is still working it out:

@@ -106,7 +106,10 @@ context. Each pass returns candidate issues with file, line and reason.
    owner decides") reserves? That is a false statement ("Scope"). A
    default the issue did not need changed is scope drift ("Scope"). A
    listed `reserved` default is not an issue: name it under "Defaults
-   reserved" so the owner sees it.
+   reserved" so the owner sees it. A project whose `docs/development.md`
+   predates `## Default changes` (step 5 there does not name it) has not
+   asked for the list: an unlisted default is then a non-blocking note,
+   and scope drift still blocks.
 
 ## 5. Validate every candidate
 
