@@ -64,5 +64,7 @@ When `exhibit` lands (`docs/plans/visible-progress.md`), the report's
   own PRs for the owner. The test-count check needs a runner-neutral input
   (the counts a runner prints, or a JUnit report) before it can be one
   script for every project.
+- `check-plan.mjs` (protected) does not yet fail a plan whose `what`
+  lacks the `Not in this issue:` line.
 - A trial on a real project: do re-review rounds fall, and does any
   oversized PR, unlisted default or weakened test get caught?
