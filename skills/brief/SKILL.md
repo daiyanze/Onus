@@ -184,6 +184,7 @@ issues:
     depends_on: []             # ids in this plan, or "#123" (quoted) for an existing issue
     what: |
       What to build, with pointers into the record.
+      Not in this issue: what a reader might expect it to do, and it will not.
     acceptance:
       - A check, such as a test, a command and its result, or what the real app shows.
 ```
@@ -207,6 +208,13 @@ How to split:
   that works end to end; later issues add to it, and each leaves it
   working. No issue takes a working version apart for complexity a later
   issue might need.
+- **Small enough to review.** Each issue's change fits in 800 lines
+  written by hand (`docs/development.md`, step 3). One that cannot, such as
+  a rename across many files, says so in `what`, with the reason and how
+  its commits will split for review: that is its grant of more.
+- **Say what it will not do.** Each `what` ends with a `Not in this issue:`
+  line: the nearby work a builder might add, the abstraction or option no
+  one asked for. It is how a reviewer tells scope drift from the task.
 - **Acceptance criteria are checks.** Each names a test, a command and the
   result it must give, or what the real app shows. "Works well" is not one.
 - **Protected paths are named.** An issue that touches one says so in
@@ -247,8 +255,9 @@ gh issue create --title "[<id>] <title>" --body-file <file>
 ```
 
 Add `--milestone "<milestone>"` when the issue has one. The body has
-`## Why` (the goal, and a link to the record), `## What`, `## Acceptance
-criteria`, and `## Depends on` with the numbers of the issues created for its
+`## Why` (the goal, and a link to the record), `## What`,
+`## Not in this issue` (the `what`'s last line), `## Acceptance criteria`,
+and `## Depends on` with the numbers of the issues created for its
 `depends_on`, plus any `#123` it names, or `None.`. Do not add the agent
 label: the owner labels the issues the agent may do. If a milestone does not
 exist on GitHub, leave it off and list it for the owner.

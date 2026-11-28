@@ -23,6 +23,15 @@ Stop without commenting if the PR is closed or a draft, or if it already has
 a comment that starts with `_Review by an independent agent` and names the
 current head SHA.
 
+Then count the change: `git diff --shortstat <base>...<head>`, leaving out
+by path only generated code, lockfiles and recorded snapshots
+(`docs/development.md`, step 3). Over 800 changed lines, with no grant of
+more in the linked issue (a reason, and how the commits split for review),
+the review is one blocking issue in the "Scope" class: the count, and
+"split it". Post it with the rest of step 7's headings marked "not
+reviewed: over the size limit", and stop. A size that differs from the
+PR's own `--shortstat` line is a false statement: say so.
+
 ## 2. Context, in this order
 
 1. `AGENTS.md`, `docs/development.md` and `docs/lessons.md` (active lessons).
@@ -136,7 +145,8 @@ needed".
   4. **Test weakening:** a weakened test (step 4), or a behaviour the PR
      claims that no test or run shows.
   5. **Scope:** an acceptance criterion is not met; the change alters what
-     users or callers get in a way the issue did not ask for; or the PR
+     users or callers get in a way the issue did not ask for, or does
+     what the issue's "Not in this issue" section rules out; or the PR
      states something false about what the change does or what enforces a
      rule. "The PR states" means its description and the documents it adds
      or changes for readers to rely on (README, rules, instructions, an

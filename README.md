@@ -292,7 +292,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 - **Records** the decision, with the chosen types as the contract and the
   signs that would mean the shape is wrong.
 - **Splits** it into `docs/plans/<slug>.yaml`: one concern per issue, riskiest
-  first, the contract early, acceptance criteria that are checks.
+  first, the contract early, acceptance criteria that are checks, at most
+  800 hand-written lines each, and a line saying what each will not do.
   `scripts/check-plan.mjs` checks the plan's form and prints the order to
   create the issues in; the comment at its top says what it checks and what
   it does not.
