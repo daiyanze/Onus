@@ -251,7 +251,8 @@ A re-review is a smaller run of the same steps:
   had, and the new commits leave alone, are out of scope: an earlier round
   read them. A problem you confirm there anyway was missed: list it as a
   non-blocking note marked "missed in round <k>", and as a method note.
-  Only one in the "Rules and security" class stays blocking.
+  Only one in the "Rules and security" or "Cannot be undone" class stays
+  blocking.
 - **Rewritten history:** if the reviewed commit is not in the head's
   history (an amend, a rebase, a force-push), the new commits cannot be
   told apart. Review the whole diff as a first round, and say so under "How
