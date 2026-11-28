@@ -21,7 +21,8 @@ detection rate, so the diff is read before the description.
 
 Stop without commenting if the PR is closed or a draft, or if it already has
 a comment that starts with `_Review by an independent agent` and names the
-current head SHA.
+current head SHA, unless that comment was a size stop (below) and the
+linked issue has since granted more.
 
 Then count the change: `git diff --shortstat <base>...<head>`, leaving out
 by path only generated code, lockfiles and recorded snapshots
