@@ -114,8 +114,14 @@ this section otherwise.>
    decisions, a dependency added or a helper written where a library could
    do it and why, the product pattern followed, what is left out, and the
    `--shortstat` line with the paths it left out),
-   `## Verification` (commands and results,
-   and what was not verified locally). Claims such as "behaviour unchanged"
+   `## Default changes`, `## Verification` (commands and results,
+   and what was not verified locally). `## Default changes` lists every
+   default the change sets or changes that a user or caller would notice,
+   one line per behaviour however many files it takes, in plain words:
+   "when X, it now does Y; what that means for users; how to change it".
+   Kinds the owner decides (`AGENTS.md`, "Defaults the owner decides") come
+   first, marked `reserved`. Setting a default the issue needs but does not
+   fix is part of the work; changing one the issue does not need is not. Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
    reviews the PR with the `cross-examine` skill. Only blocking issues send

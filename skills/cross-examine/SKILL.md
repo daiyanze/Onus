@@ -105,6 +105,19 @@ context. Each pass returns candidate issues with file, line and reason.
 4. **Secrets and personal data.** Anything logged, committed or put in
    fixtures that should not be?
 5. **Protected paths.** Does the change touch one the PR does not name?
+6. **Defaults.** Does the change set or change a default a user or caller
+   would notice (a threshold, a limit, a frequency, a permission, a
+   suggestion that now acts) that `## Default changes` does not list, or
+   lists without `reserved` when it is a kind `AGENTS.md` ("Defaults the
+   owner decides") reserves? That is a false statement ("Scope"). A
+   default the issue did not need changed is scope drift ("Scope"). A
+   listed `reserved` default is not an issue: name it under "Defaults
+   reserved" so the owner sees it. A project whose `docs/development.md`
+   predates `## Default changes` (step 5 there does not name it) has not
+   asked for the list: an unlisted default is then a non-blocking note,
+   unless it is a kind `AGENTS.md` reserves: that is a note too, and you
+   name it under "Defaults reserved" all the same; scope drift still
+   blocks.
 
 ## 5. Validate every candidate
 
@@ -206,6 +219,9 @@ repository has no `AGENTS.md`; whether the passes were separate agents or
 shared one context; whether the diff was read before the description.
 **Second model:** <model>, or "none available", or "not needed".
 **Protected paths touched:** list them, or "none".
+**Defaults reserved:** each `reserved` line of `## Default changes`, and
+each default of a reserved kind the change sets or changes that the list
+leaves out (question 6), or "none".
 **Method notes:** each place where following this skill or the method as
 written led to a problem in this review, with its signal and evidence
 (`docs/development.md`, "Method notes"), or "none".

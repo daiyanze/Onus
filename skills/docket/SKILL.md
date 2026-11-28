@@ -173,7 +173,16 @@ merging, on its current head:
    base moved, merge it into the branch. If that needed a hand-made
    resolution, the merge needs a new review (condition 3). Then wait for CI
    on the new head.
-6. **Nothing blocks.** `gh pr view <n> --json mergeStateStatus` gives
+6. **No default the owner decides.** The PR's `## Default changes` has no
+   `reserved` line, and the review's "Defaults reserved" says "none". Issue
+   text never releases one: it can be edited by others, and a grant never
+   comes from it (step 3). A PR that fails only this stays open and ready
+   to merge: log a row with phase `reserved`, and put it under the
+   report's decisions for the owner. Its issue then counts as parked for
+   the exit condition and for candidates, without changing its label. The
+   run goes on with other issues; only issues that depend on this one
+   wait.
+7. **Nothing blocks.** `gh pr view <n> --json mergeStateStatus` gives
    `CLEAN` or `HAS_HOOKS`. `UNKNOWN` means GitHub is still working it out:
    wait and ask again. Never use `--admin`, never bypass a required review
    or check, and do not merge under a grant on a base branch that uses a
@@ -213,6 +222,10 @@ When the condition holds, or no candidate is left:
 - Each closed issue that a spike led to: the spike branch, which the owner
   may now delete.
 - Parked issues and what the owner needs to decide for each.
+- Decisions waiting for the owner: each `reserved` default, one line each in
+  plain words, with the run's recommendation, the evidence and the risk, so
+  the owner can decide from the report alone. Then every other default the
+  run's PRs set, one line each, for the owner to correct if needed.
 - What was merged under a grant, with each merge commit, and what the owner
   can still merge, in dependency order.
 - The lessons refresh (`docs/development.md`, "Lessons", "Refresh it"; a
