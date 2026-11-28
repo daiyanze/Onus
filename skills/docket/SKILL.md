@@ -108,6 +108,8 @@ Parking changes its agent label to the owner-and-agent label (default
 words of the log row (`docs/development.md`, "Picking
 work"):
 
+- it is going to pass the size limit and has no grant of more
+  (`docs/development.md`, step 3): park it with the proposed split;
 - it contradicts a recorded decision, needs a secret or an account, touches
   a protected path it does not mention, or needs an action that cannot be
   undone (other than a merge that step 3 allows to deploy);
