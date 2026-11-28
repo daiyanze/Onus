@@ -176,8 +176,9 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
   commit 的批准审查的 open PR。
 - **循环** 执行 `take-case`，直到条件成立或没有候选为止。每个决定在
   `.runs/<date>-<goal>.tsv` 里记一行。
-- **搁置** 某个 issue 交给你并继续往下走的情况：三轮审查都没获批准、同一项检查修了
-  三次仍失败，或者需要一个只有你能做的决定。
+- **搁置** 某个 issue 交给你并继续往下走的情况：审查卡住（同一个阻塞项两轮没修好，
+  或三轮没获批准）且直接验证前提也没能解决、同一项检查修了三次仍失败，或者需要一个
+  只有你能做的决定。
 - **接续** 之前会话停下的地方，依据日志、open PR 和 `git log`，不重复做已完成的工作。
 - **合并** 只在你于当次会话里授权时进行（`/docket finish milestone 2, you may
   merge`），而且只合并它自己开的 PR：当前 head 有批准审查（或者批准的是更早的
@@ -196,6 +197,8 @@ Pi 只有在你信任该项目之后，才会加载项目里的 `.agents/skills`
 - **先读** diff 再读描述，把描述里的每一句声明都当作待验证的假设。
 - **运行** 检查命令（在它自己的 worktree 中），并编写一次性的探针来确认它的怀疑。
 - **分三轮查找**（规则、bug、测试证据），然后丢掉所有它证明不了的候选问题。
+  只有五类问题算阻塞（正确性、规则与安全、不可撤销、测试放水、范围），其余都是不会
+  打回 PR 的备注。第一轮列齐所有阻塞项，之后几轮只查这些和新提交。
 - **发布** 一条评论，并回读确认：
 
 ```text
@@ -208,7 +211,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 - AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
-1. <file:line permalink> what is wrong, why it matters, how it was confirmed.
+1. [<class>] <file:line permalink> what is wrong, why it matters, how it was
+   confirmed, and the change expected.
 
 **Non-blocking notes**
 **Claims checked** / **Not checked** / **How this review ran**

@@ -210,9 +210,10 @@ Pi loads a project's `.agents/skills` only after you trust the project.
   green CI and an approving review that covers its head.
 - **Loops** `take-case` until the condition holds or no candidate is left.
   One row per decision goes into `.runs/<date>-<goal>.tsv`.
-- **Parks** an issue for you, and moves on, after three review rounds
-  without approval, after three failed fixes of the same check, or when it
-  needs a decision only you can make.
+- **Parks** an issue for you, and moves on, when review stalls (one
+  blocking item unfixed after two rounds, or three rounds without approval)
+  and a direct test of the premise does not settle it, after three failed
+  fixes of the same check, or when it needs a decision only you can make.
 - **Picks up** where an earlier session stopped, from the log, the open PRs
   and `git log`, without redoing work.
 - **Merges** only if you grant it in the session (`/docket finish milestone
@@ -238,7 +239,10 @@ Run it in a new session or a new agent, never in the one that wrote the PR.
 - **Runs** the check command in its own worktree, and writes throwaway
   probes to confirm what it suspects.
 - **Finds** in three passes (rules, bugs, test evidence), then drops every
-  candidate it cannot prove.
+  candidate it cannot prove. Only five classes block (correctness, rules and
+  security, cannot be undone, test weakening, scope); everything else is a
+  note that never sends the PR back. The first round lists every blocking
+  issue; later rounds check those and the new commits only.
 - **Posts** one comment and reads it back:
 
 ```text
@@ -251,7 +255,8 @@ _Review by an independent agent (<model>), at <full head SHA>._
 - AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
-1. <file:line permalink> what is wrong, why it matters, how it was confirmed.
+1. [<class>] <file:line permalink> what is wrong, why it matters, how it was
+   confirmed, and the change expected.
 
 **Non-blocking notes**
 **Claims checked** / **Not checked** / **How this review ran**

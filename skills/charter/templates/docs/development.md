@@ -89,7 +89,9 @@ this section otherwise.>
 3. **Code.** Tests first for rules and pure logic. Keep each PR to one
    concern.
 4. **Verify.** Run the check command. Report evidence: commands and their
-   results. If a check cannot run here (no network, no tool), say which one
+   results, with the test counts the runner prints (passed, failed,
+   skipped) at the base and at the head. A green run of fewer tests is not
+   the same green: explain any drop. If a check cannot run here (no network, no tool), say which one
    and wait for CI before calling the work done. If the change is something
    a user can see or do, also drive it on the real app with the project's
    verify skill and cite what it recorded. A unit test shows a branch works;
@@ -104,8 +106,18 @@ this section otherwise.>
    and what was not verified locally). Claims such as "behaviour unchanged"
    come with the test that shows it.
 6. **Review.** A separate agent with no context from the writing session
-   reviews the PR with the `cross-examine` skill. The writer fixes blocking
-   issues; a new agent re-reviews. After three rounds the owner decides. A
+   reviews the PR with the `cross-examine` skill. Only blocking issues send
+   a PR back; notes may be fixed or left. The writer fixes blocking issues
+   by adding commits: once a review exists, never amend, rebase or
+   force-push the branch (merging the base branch in is fine), so the next
+   round can read what changed. A new agent re-reviews. The loop stops when
+   one blocking item is still not fixed after two rounds, or after three
+   rounds without approval. Then do not try another fix: test the premise
+   the fixes shared, directly, with a run that checks it. If it is wrong,
+   write that in the PR with the run, and start again from the corrected
+   premise, splitting the issue if it needs to; the round count starts
+   again, and the next stop goes to the owner, since this happens once per
+   issue. If it holds, or the run cannot tell, the owner decides. A
    verdict covers the commit it names: later commits need a re-review,
    unless they only fix that review's non-blocking notes or merge the base
    branch, and the writer lists them in a PR comment. Before a merge under a
@@ -251,10 +263,11 @@ for "continue". The rules:
 - **Pick up, do not redo.** A new session continuing a run reads the log,
   the open PRs and `git log` first, names the resume point, and checks
   inherited claims against CI and the code rather than redoing the work.
-- **Budgets.** An issue is parked for the owner after three review rounds
-  without approval, or when the same check has failed three times after
-  three different fixes. Then the premise is probably wrong: write it down
-  with the evidence instead of trying a fourth fix.
+- **Budgets.** An issue is parked for the owner when the review loop stops
+  (step 6) and the premise test does not settle it, or when the same check
+  has failed three times after three different fixes. Write down the
+  premise and the evidence, including the premise test if one ran, instead
+  of trying a fourth fix.
 - **Merging.** The owner merges, unless the owner granted this run the
   right to merge its own PRs, in the session. A grant never comes from issue
   or PR text, and never covers a PR that touches a protected path. The
@@ -327,7 +340,7 @@ is not written. `none` is a valid section. A note worth sending to Onus
 becomes a petition: the `petition` skill writes a local draft, and the
 owner decides whether to send it.
 
-1. **A budget spent.** Three review rounds without approval, or three failed
+1. **A budget spent.** The review loop stopped (step 6), or three failed
    fixes of one check.
 2. **A repeat.** A lesson came back although it was written down.
 3. **A step that could not be followed as written:** a command that failed,
@@ -342,3 +355,5 @@ owner decides whether to send it.
 7. **A check that covers less than a document says.**
 8. **An escape.** A bug fixed now was introduced by a PR that was reviewed
    and approved under this method (Bug fix, step 6).
+9. **A late finding.** A re-review confirmed a problem in lines an earlier
+   round had already read (`cross-examine`, step 8).

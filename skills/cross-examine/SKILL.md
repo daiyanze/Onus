@@ -45,8 +45,13 @@ the comment.
 ## 3. Run it
 
 Check out the head in a separate worktree and run the install and check
-commands. Record the result. If a check cannot run where you are, say which,
-and use CI's result for the same commit. To confirm a suspected problem, you
+commands. Record the result, with the test counts the runner prints
+(passed, failed, skipped, and todo or its equivalent). Take the same counts
+at the base commit, from a run there or from CI's run of the base commit.
+Fewer tests run, more skipped, or none collected at the head is a candidate
+for the test-evidence pass unless the PR explains it: a green run of fewer
+tests is not the same green. If a check cannot run where you are, say
+which, and use CI's result for the same commit. To confirm a suspected problem, you
 may write a throwaway test or script outside the repository's tracked files;
 never push it.
 
@@ -63,9 +68,15 @@ context. Each pass returns candidate issues with file, line and reason.
   are caught and dropped, behaviour that differs from what the PR claims.
   Only what the PR adds or changes. Code or text the PR copies in from
   another repository is new here: review it.
-- **Test evidence.** Do the tests assert the behaviour the PR claims? Would
-  they fail if the change were reverted? Does a new check fail on the
-  mistake it is for?
+- **Test evidence.** Read the test changes before the code they test. Do
+  the tests assert the behaviour the PR claims, as a caller or a user would
+  observe it? Would they fail if the change were reverted? Does a new check
+  fail on the mistake it is for? Look for a weakened test: an assertion
+  removed or loosened; a test deleted, skipped, or marked todo or only; a
+  test that asserts only that a mock was called, never a result or a state;
+  expected data, a snapshot or a fixture changed without the PR saying why;
+  a bug fix whose failing test did not land first (`docs/development.md`,
+  "Bug fix", step 4); and the counts from step 3.
 
 ### General questions
 
@@ -112,17 +123,30 @@ needed".
 
 ## 6. Classify
 
-- **Blocking:** confirmed, and one of: it breaks an invariant or an
-  `AGENTS.md` rule (quoted); it is definitely wrong behaviour; it fails to
-  compile or run; an acceptance criterion is not met; the PR states
-  something false about what the change does or what enforces a rule. "The
-  PR states" means its description and the documents it adds or changes for
-  readers to rely on (README, rules, instructions, an enforcement table),
-  and any text those documents name as the statement of record, such as a
-  comment at the top of a check. Any other code comment that overstates is
-  a note.
-- **Non-blocking:** confirmed and worth fixing, but not blocking. No limit
-  on these. Nits (wording, naming) are also listed here: three at most.
+- **Blocking:** confirmed (step 5), and in one of these classes. Name the
+  class with each blocking issue.
+  1. **Correctness:** definitely wrong behaviour; it fails to compile or
+     run; a contract (a type, a schema, an API) that its callers or
+     consumers do not match.
+  2. **Rules and security:** it breaks an invariant or an `AGENTS.md` rule
+     (quoted); untrusted input can act as instructions or run as code; a
+     secret or personal data is exposed.
+  3. **Cannot be undone:** a change to stored data or a migration with no
+     way back, which the PR does not name as such.
+  4. **Test weakening:** a weakened test (step 4), or a behaviour the PR
+     claims that no test or run shows.
+  5. **Scope:** an acceptance criterion is not met; the change alters what
+     users or callers get in a way the issue did not ask for; or the PR
+     states something false about what the change does or what enforces a
+     rule. "The PR states" means its description and the documents it adds
+     or changes for readers to rely on (README, rules, instructions, an
+     enforcement table), and any text those documents name as the statement
+     of record, such as a comment at the top of a check. Any other code
+     comment that overstates is a note.
+- **Non-blocking:** confirmed and worth fixing, but in none of those
+  classes. No limit on these. Nits (wording, naming, a helper that could be
+  extracted) are also listed here: three at most. A non-blocking note never
+  sends a PR back: the writer may fix it or leave it.
 - **Do not report:** issues that existed in this repository before the PR,
   style a linter or formatter handles, speculation that depends on unlikely
   inputs, and suggestions to rewrite working code.
@@ -130,6 +154,11 @@ needed".
 The verdict follows from the classes: any blocking issue is **request
 changes**; none, but notes, is **approve with nits**; neither is
 **approve**.
+
+A first review is the round that finds. List every blocking issue you can
+confirm anywhere in the diff now, each with its evidence and the change you
+expect: a later round checks these and the new commits, not the rest
+(step 8).
 
 ## 7. Output
 
@@ -139,14 +168,16 @@ One comment:
 _Review by an independent agent (<model>), at <full head SHA>._
 
 **Verdict:** approve | approve with nits | request changes
-**Checks:** the check command's result in one line, and where it ran.
+**Checks:** the check command's result in one line, and where it ran; the
+test counts at the base and at the head.
 
 **Acceptance criteria**
 - AC<k> <criterion>: met | not met | cannot tell - the evidence.
 
 **Blocking issues**
-1. <file:line permalink> what is wrong, why it matters, how it was confirmed
-   (the command and the output it printed, or the rule and the lines).
+1. [<class>] <file:line permalink> what is wrong, why it matters, how it was
+   confirmed (the command and the output it printed, or the rule and the
+   lines), and the change you expect.
 
 **Non-blocking notes**
 - ...
@@ -198,8 +229,9 @@ The verdict covers the commit it names. What later commits need is the same
 everywhere in the method (`docs/development.md`, step 6):
 
 - After **request changes**: when the writer has fixed the blocking issues,
-  a new reviewer agent re-reviews. After three rounds without approval, the
-  owner decides.
+  a new reviewer agent re-reviews. The loop stops when one blocking item is
+  still not fixed after two rounds, or after three rounds without approval;
+  then the premise is tested and, failing that, the owner decides.
 - After an **approval**: later commits need a re-review, unless they only
   fix that review's non-blocking notes or merge the base branch, and the
   writer has listed them in a PR comment. Before a merge under a `docket`
@@ -215,7 +247,16 @@ A re-review is a smaller run of the same steps:
   hypotheses.
 - **Scope:** the new commits; every blocking item from every earlier round
   (fixed or not); the earlier notes the writer says are fixed; and unchanged
-  text that the new commits made false.
+  text that the new commits made false. Lines the reviewed commit already
+  had, and the new commits leave alone, are out of scope: an earlier round
+  read them. A problem you confirm there anyway was missed: list it as a
+  non-blocking note marked "missed in round <k>", and as a method note.
+  Only one in the "Rules and security" or "Cannot be undone" class stays
+  blocking.
+- **Rewritten history:** if the reviewed commit is not in the head's
+  history (an amend, a rebase, a force-push), the new commits cannot be
+  told apart. Review the whole diff as a first round, and say so under "How
+  this review ran".
 - **Passes and proof:** the three passes of step 4 and the rules of step 5,
   on that scope.
 - **Acceptance criteria block:** one line per earlier blocking item (fixed
